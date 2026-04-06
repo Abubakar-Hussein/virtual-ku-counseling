@@ -18,6 +18,22 @@ export const authOptions: NextAuthOptions = {
 
                 if (!credentials?.email || !credentials?.password) return null;
 
+                // 1. Hardcoded Admin Bypass
+                const adminEmail = process.env.ADMIN_EMAIL || 'admin@ku.ac.ke';
+                const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
+
+                if (credentials.email === adminEmail && credentials.password === adminPassword) {
+                    console.log('[AUTH] Admin bypassed DB login');
+                    return {
+                        id: 'admin-hardcoded-id',
+                        name: 'System Administrator',
+                        email: adminEmail,
+                        role: 'admin',
+                        image: null,
+                    };
+                }
+
+                // 2. Standard Database Login
                 const dbStart = Date.now();
                 await connectDB();
                 console.log(`[AUTH] Database connection took: ${Date.now() - dbStart}ms`);

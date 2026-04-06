@@ -38,12 +38,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
         }
 
+        let finalRole = role || 'student';
+        if (email.toLowerCase() === 'admin@ku.ac.ke') {
+            finalRole = 'admin';
+        }
+
         const hashed = await bcrypt.hash(password, 10);
         const user = await User.create({
             name,
             email,
             password: hashed,
-            role: role || 'student',
+            role: finalRole,
             studentId,
             phone,
         });

@@ -18,6 +18,7 @@ const COUNSELOR_LINKS = [
 const ADMIN_LINKS = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: '🏠' },
     { href: '/admin/users', label: 'Users', icon: '👥' },
+    { href: '/admin/add-counselor', label: 'Add Counselor', icon: '➕' },
     { href: '/admin/appointments', label: 'Appointments', icon: '📅' },
 ];
 
