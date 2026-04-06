@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
 
 export default async function DashboardRedirect() {
+    const start = Date.now();
     const session = await getServerSession(authOptions);
+    console.log(`[DASHBOARD-REDIRECT] getServerSession took: ${Date.now() - start}ms`);
 
     if (!session) {
         redirect('/login');

@@ -26,8 +26,9 @@ export async function connectDB() {
     };
 
     console.log('[MONGODB] Attempting to connect...');
+    const start = Date.now();
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log('[MONGODB] Connected successfully');
+      console.log(`[MONGODB] Connected successfully in ${Date.now() - start}ms`);
       return mongoose;
     }).catch((err) => {
       console.error('[MONGODB] Connection error:', err.message);
