@@ -123,6 +123,38 @@ export default function VirtualAssistant() {
         }, 500);
     };
 
+    const handleTextSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const form = e.target as HTMLFormElement;
+        const val = (form.elements.namedItem('chatInput') as HTMLInputElement).value;
+        if (!val.trim()) return;
+
+        if (step === 'reason') {
+            handleReasonSubmit(val);
+            form.reset();
+            return;
+        }
+
+        addMessage(val, 'user');
+        form.reset();
+
+        const lower = val.toLowerCase();
+        if (lower.includes('schedule') || lower.includes('book') || lower.includes('appointment') || lower.includes('session')) {
+             setStep('specialization');
+             setTimeout(() => {
+                 addMessage("Of course! What area would you like to focus on?", 'assistant');
+             }, 500);
+        } else if (['hi', 'hello', 'hey'].includes(lower)) {
+             setTimeout(() => {
+                 addMessage("Hello there! I can help you schedule a counseling session. Just let me know when you're ready.", 'assistant');
+             }, 500);
+        } else {
+             setTimeout(() => {
+                 addMessage("I am a virtual assistant designed to help book counseling sessions. You can select an option above or type 'book a session'.", 'assistant');
+             }, 500);
+        }
+    };
+
     const handleConfirm = async () => {
         setLoading(true);
         try {
@@ -280,13 +312,6 @@ export default function VirtualAssistant() {
                             </div>
                         )}
 
-                        {step === 'reason' && (
-                            <form onSubmit={(e) => { e.preventDefault(); handleReasonSubmit((e.target as any).reason.value); }} style={{ display: 'flex', gap: 8 }}>
-                                <input name="reason" className="form-input" placeholder="Type reason..." required autoFocus style={{ fontSize: '0.85rem' }} />
-                                <button type="submit" className="btn-primary" style={{ padding: '0 12px' }}>Send</button>
-                            </form>
-                        )}
-
                         {step === 'confirm' && !loading && (
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <button onClick={handleConfirm} className="btn-primary" style={{ flex: 1, justifyContent: 'center' }}>Confirm</button>
@@ -300,6 +325,23 @@ export default function VirtualAssistant() {
                             </button>
                         )}
                     </div>
+
+                    {/* Chat Input Field */}
+                    {step !== 'success' && step !== 'confirm' && (
+                        <div style={{ padding: '0 20px 20px', background: 'rgba(255,255,255,0.02)' }}>
+                            <form onSubmit={handleTextSubmit} style={{ display: 'flex', gap: 8 }}>
+                                <input 
+                                    name="chatInput" 
+                                    className="form-input" 
+                                    placeholder={step === 'reason' ? "Type reason..." : "Type a message..."} 
+                                    autoComplete="off" 
+                                    autoFocus={step === 'reason'}
+                                    style={{ fontSize: '0.85rem', flex: 1 }} 
+                                />
+                                <button type="submit" className="btn-primary" style={{ padding: '0 12px' }}>Send</button>
+                            </form>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
