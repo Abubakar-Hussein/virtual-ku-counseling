@@ -27,8 +27,8 @@ export default function LoginPage() {
             return;
         }
 
-        // Fast client-side push to the redirection page
-        router.push('/dashboard');
+        // Hard navigation to ensure cookies are sent to the server component
+        window.location.href = '/dashboard';
     };
 
     return (
