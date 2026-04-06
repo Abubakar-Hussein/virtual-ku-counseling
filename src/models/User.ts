@@ -33,9 +33,5 @@ const UserSchema = new Schema<IUser>(
     { timestamps: true }
 );
 
-// Force recompile model in development to ensure schema changes apply
-if (mongoose.models.User) {
-    delete mongoose.models.User;
-}
-
-export default model<IUser>('User', UserSchema);
+const User = models.User || model<IUser>('User', UserSchema);
+export default User;

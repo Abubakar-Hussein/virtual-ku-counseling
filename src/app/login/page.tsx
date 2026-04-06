@@ -18,7 +18,7 @@ export default function LoginPage() {
         const result = await signIn('credentials', {
             email: form.email,
             password: form.password,
-            redirect: false,
+            redirect: false, // Keep false to handle error messages manually
         });
 
         if (result?.error) {
@@ -27,14 +27,8 @@ export default function LoginPage() {
             return;
         }
 
-        // Redirect based on role — fetch session
-        const res = await fetch('/api/auth/session');
-        const session = await res.json();
-        const role = session?.user?.role ?? 'student';
-
-        if (role === 'admin') router.push('/admin/dashboard');
-        else if (role === 'counselor') router.push('/counselor/dashboard');
-        else router.push('/student/dashboard');
+        // Fast client-side push to the redirection page
+        router.push('/dashboard');
     };
 
     return (
