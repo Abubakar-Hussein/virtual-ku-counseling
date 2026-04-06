@@ -6,29 +6,23 @@ import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const urlError = searchParams?.get('error');
+
     const [form, setForm] = useState({ email: '', password: '' });
-    const [error, setError] = useState('');
+    const [error, setError] = useState(urlError === 'CredentialsSignin' ? 'Invalid email or password. Please try again.' : '');
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
-        const result = await signIn('credentials', {
+        signIn('credentials', {
             email: form.email,
             password: form.password,
-            redirect: false, // Keep false to handle error messages manually
+            callbackUrl: '/dashboard',
         });
-
-        if (result?.error) {
-            setError('Invalid email or password. Please try again.');
-            setLoading(false);
-            return;
-        }
-
-        // Hard navigation to ensure cookies are sent to the server component
-        window.location.href = '/dashboard';
     };
 
     return (
