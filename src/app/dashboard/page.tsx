@@ -8,10 +8,12 @@ export default async function DashboardRedirect() {
     console.log(`[DASHBOARD-REDIRECT] getServerSession took: ${Date.now() - start}ms`);
 
     if (!session) {
+        console.log('[DASHBOARD-REDIRECT] Session is null, redirecting back to /login');
         redirect('/login');
     }
 
-    const role = (session.user as any).role;
+    const role = (session.user as any)?.role;
+    console.log('[DASHBOARD-REDIRECT] Session found for role:', role);
 
     if (role === 'admin') {
         redirect('/admin/dashboard');
