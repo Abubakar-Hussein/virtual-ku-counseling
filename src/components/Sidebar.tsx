@@ -8,12 +8,14 @@ const STUDENT_LINKS = [
     { href: '/student/dashboard', label: 'Dashboard', icon: '🏠' },
     { href: '/student/counselors', label: 'Find Counselors', icon: '👤' },
     { href: '/student/appointments', label: 'My Appointments', icon: '📅' },
+    { href: '/profile', label: 'My Profile', icon: '⚙️' },
 ];
 
 const COUNSELOR_LINKS = [
     { href: '/counselor/dashboard', label: 'Dashboard', icon: '🏠' },
     { href: '/counselor/appointments', label: 'Appointments', icon: '📅' },
     { href: '/counselor/schedule', label: 'My Schedule', icon: '🗓️' },
+    { href: '/profile', label: 'My Profile', icon: '⚙️' },
 ];
 
 const ADMIN_LINKS = [
@@ -21,6 +23,7 @@ const ADMIN_LINKS = [
     { href: '/admin/users', label: 'Users', icon: '👥' },
     { href: '/admin/add-counselor', label: 'Add Counselor', icon: '➕' },
     { href: '/admin/appointments', label: 'Appointments', icon: '📅' },
+    { href: '/profile', label: 'My Profile', icon: '⚙️' },
 ];
 
 export default function Sidebar() {
