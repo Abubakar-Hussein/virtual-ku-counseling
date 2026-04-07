@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import Appointment from '@/models/Appointment';
 import Notification from '@/models/Notification';
+import User from '@/models/User';
+import CounselorProfile from '@/models/CounselorProfile';
+import { sendBookingConfirmationEmail } from '@/lib/email';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -36,6 +39,31 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
                 message: `Your appointment on ${appt.date.toDateString()} at ${appt.timeSlot} has been ${body.status}`,
                 type: body.status === 'confirmed' ? 'confirmation' : 'cancellation',
             });
+
+            // Send confirmation email if status is 'confirmed'
+            if (body.status === 'confirmed') {
+                try {
+                    const [studentUser, counselorUser, cProfile] = await Promise.all([
+                        User.findById(appt.studentId).select('email name').lean(),
+                        User.findById(appt.counselorId).select('name').lean(),
+                        CounselorProfile.findOne({ userId: appt.counselorId }).select('meetLink').lean()
+                    ]);
+
+                    if (studentUser) {
+                        await sendBookingConfirmationEmail({
+                            studentName: (studentUser as any).name,
+                            studentEmail: (studentUser as any).email,
+                            counselorName: (counselorUser as any)?.name ?? 'Your Counselor',
+                            date: appt.date,
+                            timeSlot: appt.timeSlot,
+                            specialization: appt.specialization,
+                            meetLink: (cProfile as any)?.meetLink || null,
+                        });
+                    }
+                } catch (emailErr) {
+                    console.error('[APPOINTMENT STATUS] Email send failed:', emailErr);
+                }
+            }
         }
 
         return NextResponse.json(appt);

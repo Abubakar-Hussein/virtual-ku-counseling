@@ -87,35 +87,6 @@ export async function POST(req: NextRequest) {
             type: 'confirmation',
         });
 
-        // Send booking confirmation email to student (fire-and-forget; never blocks booking)
-        try {
-            console.log(`[EMAIL SEND] Preparing to send email for appointment ${appointment._id}`);
-            const [studentUser, counselorUser, cProfile] = await Promise.all([
-                User.findById(user.id).select('email name').lean(),
-                User.findById(counselorId).select('name').lean(),
-                CounselorProfile.findOne({ userId: counselorId }).select('meetLink').lean()
-            ]);
-            console.log(`[EMAIL SEND] Found Student:`, !!studentUser, `, Counselor:`, !!counselorUser);
-
-            if (studentUser) {
-                console.log(`[EMAIL SEND] Calling sendBookingConfirmationEmail for ${(studentUser as any).email}...`);
-                await sendBookingConfirmationEmail({
-                    studentName: (studentUser as any).name ?? user.name,
-                    studentEmail: (studentUser as any).email,
-                    counselorName: (counselorUser as any)?.name ?? 'Your Counselor',
-                    date: new Date(date),
-                    timeSlot,
-                    specialization,
-                    meetLink: (cProfile as any)?.meetLink || null,
-                });
-                console.log(`[EMAIL SEND] Call to sendBookingConfirmationEmail completed successfully.`);
-            } else {
-                console.warn(`[EMAIL SEND] Skipping email because student user was not found.`);
-            }
-        } catch (emailErr) {
-            console.error('[APPOINTMENTS] Email send failed (non-fatal error):', emailErr);
-        }
-
         return NextResponse.json(appointment, { status: 201 });
     } catch (err) {
         console.error('[APPOINTMENTS POST]', err);

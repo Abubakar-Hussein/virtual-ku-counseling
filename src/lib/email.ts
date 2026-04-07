@@ -121,7 +121,7 @@ export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
                       <tr>
                         <td style="font-size:13px;color:#6b7280;font-weight:600;padding:6px 0;text-transform:uppercase;letter-spacing:0.5px;">Status</td>
                         <td style="padding:6px 0;">
-                          <span style="background:#fef3c7;color:#92400e;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;">Pending Confirmation</span>
+                          <span style="background:#f0fdf4;color:#166534;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;">Confirmed</span>
                         </td>
                       </tr>
                     </table>
@@ -162,8 +162,7 @@ export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
               `}
 
               <p style="font-size:13px;color:#9ca3af;line-height:1.6;margin:0;">
-                ⚠️ Please ensure the session is confirmed by your counselor before joining. 
-                You will receive another notification once your booking is confirmed.
+                Kenyatta University Student Counseling Services
               </p>
             </td>
           </tr>
@@ -196,10 +195,10 @@ Counselor: ${counselorName}
 Specialization: ${specialization}
 Date: ${formattedDate}
 Time: ${timeSlot}
-Status: Pending Confirmation
+Status: Confirmed
 
 Google Meet Link:
-${meetLink || 'Pending - Your counselor will provide the link soon.'}
+${meetLink || 'Your counselor will provide the link via the dashboard or student portal.'}
 
 Please ensure the session is confirmed by your counselor before joining.
 `.trim();
