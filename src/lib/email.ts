@@ -25,9 +25,10 @@ interface SendEmailOptions {
     to: string;
     subject: string;
     html: string;
+    text?: string;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailOptions) {
+export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
     const from = process.env.EMAIL_FROM || 'noreply@ku.ac.ke';
 
     // Skip silently if credentials are not configured
@@ -37,7 +38,7 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
     }
 
     const transporter = createTransporter();
-    await transporter.sendMail({ from, to, subject, html });
+    await transporter.sendMail({ from, to, subject, html, text });
     console.log('[EMAIL] Sent to', to, '—', subject);
 }
 
@@ -181,9 +182,28 @@ export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
 </html>
   `.trim();
 
+    const text = `
+Hi ${studentName},
+
+Your counseling session has been successfully booked.
+
+Details:
+Counselor: ${counselorName}
+Specialization: ${specialization}
+Date: ${formattedDate}
+Time: ${timeSlot}
+Status: Pending Confirmation
+
+Google Meet Link:
+${meetLink}
+
+Please ensure the session is confirmed by your counselor before joining.
+`.trim();
+
     await sendEmail({
         to: studentEmail,
         subject: `✅ Session Booked – ${formattedDate} at ${timeSlot} | KU Counseling`,
         html,
+        text,
     });
 }
