@@ -28,9 +28,11 @@ export async function GET(req: Request) {
             if (cProfile) {
                 profileData.bio = cProfile.bio;
                 profileData.specializations = cProfile.specializations;
+                profileData.meetLink = cProfile.meetLink || '';
             } else {
                 profileData.bio = '';
                 profileData.specializations = [];
+                profileData.meetLink = '';
             }
         }
 
@@ -47,7 +49,7 @@ export async function PUT(req: Request) {
         if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await req.json();
-        const { name, phone, password, bio, specializations } = body;
+        const { name, phone, password, bio, specializations, meetLink } = body;
 
         await connectDB();
         const user = await User.findById((session.user as any).id);
@@ -68,6 +70,7 @@ export async function PUT(req: Request) {
         if (user.role === 'counselor') {
             const updateFields: any = {};
             if (bio !== undefined) updateFields.bio = bio;
+            if (meetLink !== undefined) updateFields.meetLink = meetLink;
             if (specializations && Array.isArray(specializations)) {
                 updateFields.specializations = specializations;
             }

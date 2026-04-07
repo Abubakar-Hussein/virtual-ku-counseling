@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/mongodb';
 import Appointment from '@/models/Appointment';
 import Notification from '@/models/Notification';
 import User from '@/models/User';
+import CounselorProfile from '@/models/CounselorProfile';
 import { sendBookingConfirmationEmail } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
@@ -89,9 +90,10 @@ export async function POST(req: NextRequest) {
         // Send booking confirmation email to student (fire-and-forget; never blocks booking)
         try {
             console.log(`[EMAIL SEND] Preparing to send email for appointment ${appointment._id}`);
-            const [studentUser, counselorUser] = await Promise.all([
+            const [studentUser, counselorUser, cProfile] = await Promise.all([
                 User.findById(user.id).select('email name').lean(),
                 User.findById(counselorId).select('name').lean(),
+                CounselorProfile.findOne({ userId: counselorId }).select('meetLink').lean()
             ]);
             console.log(`[EMAIL SEND] Found Student:`, !!studentUser, `, Counselor:`, !!counselorUser);
 
@@ -104,7 +106,7 @@ export async function POST(req: NextRequest) {
                     date: new Date(date),
                     timeSlot,
                     specialization,
-                    appointmentId: (appointment._id as string).toString(),
+                    meetLink: (cProfile as any)?.meetLink || null,
                 });
                 console.log(`[EMAIL SEND] Call to sendBookingConfirmationEmail completed successfully.`);
             } else {

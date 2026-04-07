@@ -53,20 +53,11 @@ interface BookingEmailParams {
     date: Date;
     timeSlot: string;
     specialization: string;
-    appointmentId: string;
-}
-
-function buildMeetLink(appointmentId: string): string {
-    const base = process.env.GOOGLE_MEET_BASE_URL || 'https://meet.google.com';
-    // Generate a short, unique-ish meet code from the appointment's ID
-    const code = appointmentId.slice(-10).replace(/(.{3})(.{4})(.{3})/, '$1-$2-$3');
-    return `${base}/${code}`;
+    meetLink?: string | null;
 }
 
 export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
-    const { studentName, studentEmail, counselorName, date, timeSlot, specialization, appointmentId } = params;
-
-    const meetLink = buildMeetLink(appointmentId);
+    const { studentName, studentEmail, counselorName, date, timeSlot, specialization, meetLink } = params;
     const formattedDate = date.toLocaleDateString('en-KE', {
         weekday: 'long',
         year: 'numeric',
@@ -139,6 +130,7 @@ export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
               </table>
 
               <!-- Google Meet CTA -->
+              ${meetLink ? `
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:28px;">
                 <tr>
                   <td style="padding:20px 28px;">
@@ -156,6 +148,18 @@ export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
                   </td>
                 </tr>
               </table>
+              ` : `
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;margin-bottom:28px;">
+                <tr>
+                  <td style="padding:20px 28px;">
+                    <p style="margin:0 0 4px;font-size:13px;color:#9a3412;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">⏳ Meeting Link Pending</p>
+                    <p style="margin:0 0 0;font-size:13px;color:#9a3412;line-height:1.5;">
+                      Your counselor has not yet assigned a Google Meet link for this session. The link will be provided to you soon.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              `}
 
               <p style="font-size:13px;color:#9ca3af;line-height:1.6;margin:0;">
                 ⚠️ Please ensure the session is confirmed by your counselor before joining. 
@@ -195,7 +199,7 @@ Time: ${timeSlot}
 Status: Pending Confirmation
 
 Google Meet Link:
-${meetLink}
+${meetLink || 'Pending - Your counselor will provide the link soon.'}
 
 Please ensure the session is confirmed by your counselor before joining.
 `.trim();

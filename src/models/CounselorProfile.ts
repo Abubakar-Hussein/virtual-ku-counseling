@@ -14,6 +14,7 @@ export interface ICounselorProfile extends Document {
     bio: string;
     availableSlots: ITimeSlot[];
     maxDailyBookings: number;
+    meetLink?: string;
 }
 
 const TimeSlotSchema = new Schema<ITimeSlot>({
@@ -29,6 +30,7 @@ const CounselorProfileSchema = new Schema<ICounselorProfile>(
         bio: { type: String, default: '' },
         availableSlots: [TimeSlotSchema],
         maxDailyBookings: { type: Number, default: 8 },
+        meetLink: { type: String, default: '' },
     },
     { timestamps: true }
 );

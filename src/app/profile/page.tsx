@@ -22,6 +22,7 @@ export default function ProfilePage() {
         role: 'student',
         password: '',
         bio: '',
+        meetLink: '',
         specializations: [] as string[]
     });
 
@@ -70,6 +71,7 @@ export default function ProfilePage() {
                     phone: profile.phone,
                     password: profile.password || undefined,
                     bio: profile.role === 'counselor' ? profile.bio : undefined,
+                    meetLink: profile.role === 'counselor' ? profile.meetLink : undefined,
                     specializations: profile.role === 'counselor' ? profile.specializations : undefined
                 })
             });
@@ -155,6 +157,16 @@ export default function ProfilePage() {
                                 <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--ku-gold)', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
                                     Professional Profile
                                 </h2>
+                                <div className="form-group">
+                                    <label>Personal Google Meet Link</label>
+                                    <input 
+                                        type="url"
+                                        className="form-input" 
+                                        value={profile.meetLink} 
+                                        onChange={e => setProfile({ ...profile, meetLink: e.target.value })} 
+                                        placeholder="https://meet.google.com/xxx-yyyy-zzz"
+                                    />
+                                </div>
                                 <div className="form-group">
                                     <label>Brief Bio / Introduction</label>
                                     <textarea 
