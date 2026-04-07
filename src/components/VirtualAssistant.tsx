@@ -210,7 +210,7 @@ export default function VirtualAssistant() {
             {isOpen && (
                 <div className="glass fade-up" style={{
                     position: 'absolute', bottom: 80, right: 0,
-                    width: '380px', maxHeight: '600px', height: '80vh',
+                    width: 'calc(100vw - 40px)', maxWidth: '380px', maxHeight: '600px', height: '80vh',
                     borderRadius: 24, display: 'flex', flexDirection: 'column',
                     overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.2)',
                     border: '1px solid rgba(255,255,255,0.1)',

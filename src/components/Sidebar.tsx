@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -27,22 +28,27 @@ export default function Sidebar() {
     const pathname = usePathname();
     const role = (session?.user as any)?.role ?? 'student';
 
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+    // Close sidebar on route change
+    useEffect(() => {
+        setIsMobileOpen(false);
+    }, [pathname]);
+
     const links =
         role === 'admin' ? ADMIN_LINKS :
             role === 'counselor' ? COUNSELOR_LINKS :
                 STUDENT_LINKS;
 
     return (
-        <aside style={{
-            width: 240,
-            minHeight: '100vh',
-            background: 'var(--bg-card)',
-            borderRight: '1px solid var(--border)',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '24px 0',
-            flexShrink: 0,
-        }}>
+        <>
+            <button className="mobile-menu-btn" onClick={() => setIsMobileOpen(!isMobileOpen)}>
+                {isMobileOpen ? '✕' : '☰'}
+            </button>
+
+            <div className={`mobile-menu-overlay ${isMobileOpen ? 'open' : ''}`} onClick={() => setIsMobileOpen(false)} />
+
+            <aside className={`sidebar ${isMobileOpen ? 'open' : ''}`}>
             {/* Logo */}
             <div style={{ padding: '0 24px 28px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -109,5 +115,6 @@ export default function Sidebar() {
                 </button>
             </div>
         </aside>
+        </>
     );
 }
