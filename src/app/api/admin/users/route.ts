@@ -62,7 +62,7 @@ export async function PUT(req: NextRequest) {
         if (user && oldRole !== role) {
             await logAction({
                 userId: (session.user as any).id,
-                userName: session.user.name || 'Admin',
+                userName: session.user?.name || 'Admin',
                 action: 'UPDATE_PROFILE',
                 resource: 'USER',
                 details: `Updated role for ${user.name} (${user.email}): ${oldRole} -> ${role}`,
@@ -99,7 +99,7 @@ export async function DELETE(req: NextRequest) {
         
         await logAction({
             userId: (session.user as any).id,
-            userName: session.user.name || 'Admin',
+            userName: session.user?.name || 'Admin',
             action: 'DELETE_USER',
             resource: 'USER',
             details: `Deleted user ${user.name} (${user.email})`,
