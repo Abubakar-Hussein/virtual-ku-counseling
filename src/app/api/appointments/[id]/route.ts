@@ -34,8 +34,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (body.status) {
             // ── When counselor confirms: use counselor's dedicated meeting link ──
             if (body.status === 'confirmed') {
+                // Look up the counselor's dedicated meeting link assigned by admin
+                const counselorIdStr = appt.counselorId.toString();
                 const profile = await CounselorProfile.findOne({ userId: appt.counselorId }).lean();
-                const meetLink = (profile as any)?.meetLink || null;
+                const meetLink = (profile as any)?.meetLink && (profile as any).meetLink.trim() !== '' 
+                    ? (profile as any).meetLink.trim() 
+                    : null;
+
+                console.log('[APPOINTMENT CONFIRM] counselorId:', counselorIdStr, '| profile found:', !!profile, '| meetLink:', meetLink);
 
                 const linkLine = meetLink
                     ? `\n🔗 Virtual Meeting Link: ${meetLink}`
@@ -61,6 +67,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
                         User.findById(appt.studentId).select('email name').lean(),
                         User.findById(appt.counselorId).select('email name').lean(),
                     ]);
+
+                    console.log('[APPOINTMENT CONFIRM] studentUser:', !!(studentUser), '| counselorUser:', !!(counselorUser), '| meetLink for email:', meetLink);
 
                     if (studentUser && counselorUser) {
                         await Promise.allSettled([

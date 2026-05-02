@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { connectDB } from '@/lib/mongodb';
 import { sendRegistrationEmail, sendCounselorPendingApprovalEmail } from '@/lib/email';
 import User from '@/models/User';
+import CounselorProfile from '@/models/CounselorProfile';
 import { logAction } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
@@ -88,6 +89,15 @@ export async function POST(req: NextRequest) {
             details: `New account created with role: ${finalRole}${isCounselor ? ' (pending approval)' : ''}`,
             ipAddress: req.headers.get('x-forwarded-for') || undefined
         });
+
+        // Create a CounselorProfile so admin can assign meeting links immediately
+        if (isCounselor) {
+            await CounselorProfile.findOneAndUpdate(
+                { userId: user._id },
+                { $setOnInsert: { userId: user._id, specializations: [], bio: '', availableSlots: [], meetLink: '' } },
+                { upsert: true, new: true }
+            );
+        }
 
         if (isCounselor) {
             // Notify admin that a counselor needs approval
