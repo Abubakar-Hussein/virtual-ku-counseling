@@ -51,7 +51,7 @@ export default function CounselorNotesPage({ params }: { params: Promise<{ appoi
     return (
         <div className="dashboard-layout">
             <Sidebar />
-            <main className="dashboard-content">
+            <main className="dashboard-content page-transition">
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                     <div>
                         <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Session Notes</h1>

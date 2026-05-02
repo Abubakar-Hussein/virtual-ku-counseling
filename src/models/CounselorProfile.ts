@@ -15,6 +15,8 @@ export interface ICounselorProfile extends Document {
     availableSlots: ITimeSlot[];
     maxDailyBookings: number;
     meetLink?: string;
+    averageRating: number;
+    totalRatings: number;
 }
 
 const TimeSlotSchema = new Schema<ITimeSlot>({
@@ -31,6 +33,8 @@ const CounselorProfileSchema = new Schema<ICounselorProfile>(
         availableSlots: [TimeSlotSchema],
         maxDailyBookings: { type: Number, default: 8 },
         meetLink: { type: String, default: '' },
+        averageRating: { type: Number, default: 0 },
+        totalRatings: { type: Number, default: 0 },
     },
     { timestamps: true }
 );

@@ -1,7 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
+import { useToast } from '@/components/Toast';
+import Avatar from '@/components/Avatar';
 
 const SPECIALIZATIONS = [
     { value: 'academic', label: 'Academic Support' },
@@ -10,6 +13,8 @@ const SPECIALIZATIONS = [
 ];
 
 export default function ProfilePage() {
+    const { data: session, update } = useSession();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
@@ -22,7 +27,7 @@ export default function ProfilePage() {
         role: 'student',
         password: '',
         bio: '',
-        meetLink: '',
+        profileImage: '' as string | null,
         specializations: [] as string[]
     });
 
@@ -51,6 +56,22 @@ export default function ProfilePage() {
         });
     };
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 1024 * 1024) { // 1MB limit
+            showToast('Image must be less than 1MB', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setProfile(prev => ({ ...prev, profileImage: reader.result as string }));
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
@@ -58,8 +79,19 @@ export default function ProfilePage() {
 
         if (profile.password && profile.password.length < 8) {
             setMessage({ text: 'Password must be at least 8 characters', type: 'error' });
+            showToast('Password must be at least 8 characters', 'error');
             setSaving(false);
             return;
+        }
+
+        if (profile.phone) {
+            const phoneRegex = /^\+2547\d{8}$/;
+            if (!phoneRegex.test(profile.phone)) {
+                setMessage({ text: 'Phone must be in format +2547XXXXXXXX', type: 'error' });
+                showToast('Phone must be in format +2547XXXXXXXX', 'error');
+                setSaving(false);
+                return;
+            }
         }
 
         try {
@@ -71,20 +103,25 @@ export default function ProfilePage() {
                     phone: profile.phone,
                     password: profile.password || undefined,
                     bio: profile.role === 'counselor' ? profile.bio : undefined,
-                    meetLink: profile.role === 'counselor' ? profile.meetLink : undefined,
+                    profileImage: profile.profileImage || undefined,
                     specializations: profile.role === 'counselor' ? profile.specializations : undefined
                 })
             });
 
             if (res.ok) {
                 setMessage({ text: 'Profile updated successfully!', type: 'success' });
+                showToast('Profile updated successfully!', 'success');
                 setProfile({ ...profile, password: '' });
+                // Update session to reflect changes (like profileImage) globally
+                update();
             } else {
                 const data = await res.json();
                 setMessage({ text: data.error || 'Failed to update', type: 'error' });
+                showToast(data.error || 'Failed to update profile', 'error');
             }
         } catch (err) {
             setMessage({ text: 'An unexpected error occurred.', type: 'error' });
+            showToast('An unexpected error occurred', 'error');
         } finally {
             setSaving(false);
         }
@@ -102,7 +139,7 @@ export default function ProfilePage() {
     return (
         <div className="dashboard-layout">
             <Sidebar />
-            <main className="dashboard-content">
+            <main className="dashboard-content page-transition">
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                     <div>
                         <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>My Profile</h1>
@@ -129,6 +166,43 @@ export default function ProfilePage() {
                             <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--ku-green-light)', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
                                 Personal Information
                             </h2>
+                            
+                            {/* Avatar Upload */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 16 }}>
+                                <Avatar name={profile.name} src={profile.profileImage} size={80} fontSize="1.8rem" />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Profile Photo</label>
+                                    <div style={{ display: 'flex', gap: 12 }}>
+                                        <button 
+                                            type="button" 
+                                            className="btn-secondary" 
+                                            onClick={() => document.getElementById('avatar-input')?.click()}
+                                            style={{ padding: '8px 16px', fontSize: '0.75rem' }}
+                                        >
+                                            Change Photo
+                                        </button>
+                                        <input 
+                                            id="avatar-input" 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={handleImageChange} 
+                                            style={{ display: 'none' }} 
+                                        />
+                                        {profile.profileImage && (
+                                            <button 
+                                                type="button" 
+                                                className="btn-danger" 
+                                                onClick={() => setProfile({ ...profile, profileImage: null })}
+                                                style={{ padding: '8px 16px', fontSize: '0.75rem', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>JPG or PNG. Max size of 1MB.</p>
+                                </div>
+                            </div>
+
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
                                 <div className="form-group">
                                     <label>Full Name</label>
@@ -136,7 +210,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="form-group">
                                     <label>Phone Number</label>
-                                    <input type="tel" className="form-input" value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} placeholder="e.g. +254 700 000000" />
+                                    <input type="tel" className="form-input" value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} placeholder="+254700000000" maxLength={13} title="Format: +2547 followed by 8 digits" />
                                 </div>
                                 <div className="form-group" style={{ opacity: 0.6 }}>
                                     <label>Email Address 🔒</label>
@@ -157,16 +231,7 @@ export default function ProfilePage() {
                                 <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--ku-gold)', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
                                     Professional Profile
                                 </h2>
-                                <div className="form-group">
-                                    <label>Personal Google Meet Link</label>
-                                    <input 
-                                        type="url"
-                                        className="form-input" 
-                                        value={profile.meetLink} 
-                                        onChange={e => setProfile({ ...profile, meetLink: e.target.value })} 
-                                        placeholder="https://meet.google.com/xxx-yyyy-zzz"
-                                    />
-                                </div>
+                
                                 <div className="form-group">
                                     <label>Brief Bio / Introduction</label>
                                     <textarea 

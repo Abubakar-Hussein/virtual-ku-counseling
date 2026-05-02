@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcrypt';
 import { connectDB } from './mongodb';
 import User from '@/models/User';
+import { logAction } from './audit';
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -11,6 +12,7 @@ export const authOptions: NextAuthOptions = {
             credentials: {
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' },
+                expectedRole: { label: 'Expected Role', type: 'text' },
             },
             async authorize(credentials) {
                 const start = Date.now();
@@ -18,11 +20,17 @@ export const authOptions: NextAuthOptions = {
 
                 if (!credentials?.email || !credentials?.password) return null;
 
+                const expectedRole = credentials.expectedRole;
+
                 // 1. Hardcoded Admin Bypass
                 const adminEmail = process.env.ADMIN_EMAIL || 'admin@ku.ac.ke';
                 const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
 
                 if (credentials.email === adminEmail && credentials.password === adminPassword) {
+                    if (expectedRole && expectedRole !== 'admin') {
+                        console.log(`[AUTH] Admin login rejected: Expected role ${expectedRole} but user is admin`);
+                        return null; // Return null intentionally to fail login if portal mismatch
+                    }
                     console.log('[AUTH] Admin bypassed DB login');
                     return {
                         id: 'admin-hardcoded-id',
@@ -56,14 +64,24 @@ export const authOptions: NextAuthOptions = {
                     return null;
                 }
 
+                // Block counselors who haven't been approved yet
+                if (user.role === 'counselor' && user.approvalStatus === 'pending') {
+                    console.log('[AUTH] Counselor account pending approval:', user.email);
+                    throw new Error('PENDING_APPROVAL');
+                }
+
                 console.log(`[AUTH] Total authorization took: ${Date.now() - start}ms`);
+
+                if (expectedRole && user.role !== expectedRole) {
+                    console.log(`[AUTH] Login rejected: Expected role ${expectedRole} but user is ${user.role}`);
+                    return null;
+                }
 
                 return {
                     id: user._id.toString(),
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    image: user.profileImage ?? null,
                 };
             },
         }),
@@ -83,6 +101,21 @@ export const authOptions: NextAuthOptions = {
             }
             return session;
         },
+    },
+    events: {
+        async signIn({ user }) {
+            try {
+                await logAction({
+                    userId: user.id,
+                    userName: user.name || 'Unknown',
+                    action: 'LOGIN',
+                    resource: 'AUTH',
+                    details: 'User logged in successfully',
+                });
+            } catch (err) {
+                console.error('[AUTH EVENT ERROR]:', err);
+            }
+        }
     },
     session: { strategy: 'jwt' },
     pages: {

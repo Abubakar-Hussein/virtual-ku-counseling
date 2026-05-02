@@ -3,11 +3,14 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
+import { useToast } from '@/components/Toast';
+import EmptyState from '@/components/EmptyState';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const;
 
 export default function CounselorSchedulePage() {
     const { data: session } = useSession();
+    const { showToast } = useToast();
     const [profile, setProfile] = useState<any>(null);
     const [slots, setSlots] = useState<any[]>([]);
     const [bio, setBio] = useState('');
@@ -15,7 +18,6 @@ export default function CounselorSchedulePage() {
     const [maxBookings, setMaxBookings] = useState(8);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState('');
 
     useEffect(() => {
         if (!session?.user) return;
@@ -56,7 +58,6 @@ export default function CounselorSchedulePage() {
 
     const handleSave = async () => {
         setSaving(true);
-        setMessage('');
         try {
             const res = await fetch(`/api/counselors/${(session?.user as any).id}/availability`, {
                 method: 'PUT',
@@ -64,11 +65,16 @@ export default function CounselorSchedulePage() {
                 body: JSON.stringify({ slots, bio, specializations: specs, maxDailyBookings: maxBookings }),
             });
             if (res.ok) {
-                setMessage('Availability updated successfully!');
-                setTimeout(() => setMessage(''), 3000);
+                showToast('Availability updated successfully!', 'success');
+            } else {
+                showToast('Failed to update availability', 'error');
             }
-        } catch (err) { console.error(err); }
-        finally { setSaving(false); }
+        } catch (err) {
+            console.error(err);
+            showToast('An error occurred', 'error');
+        } finally {
+            setSaving(false);
+        }
     };
 
     if (loading) return <div style={{ background: 'var(--bg-dark)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Loading...</div>;
@@ -76,7 +82,7 @@ export default function CounselorSchedulePage() {
     return (
         <div className="dashboard-layout">
             <Sidebar />
-            <main className="dashboard-content">
+            <main className="dashboard-content page-transition">
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                     <div>
                         <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>My Professional Profile</h1>
@@ -90,23 +96,31 @@ export default function CounselorSchedulePage() {
                         <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 24 }}>Weekly Availability</h2>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            {slots.map((slot, i) => (
-                                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                                    <select
-                                        className="form-input"
-                                        style={{ maxWidth: 140 }}
-                                        value={slot.day}
-                                        onChange={e => updateSlot(i, 'day', e.target.value)}
-                                    >
-                                        {DAYS.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
-                                    </select>
-                                    <input type="time" className="form-input" style={{ maxWidth: 120 }} value={slot.startTime} onChange={e => updateSlot(i, 'startTime', e.target.value)} />
-                                    <span style={{ color: 'var(--text-muted)' }}>to</span>
-                                    <input type="time" className="form-input" style={{ maxWidth: 120 }} value={slot.endTime} onChange={e => updateSlot(i, 'endTime', e.target.value)} />
-                                    <button onClick={() => removeSlot(i)} style={{ color: '#f87171', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
-                                </div>
-                            ))}
-                            <button onClick={addSlot} className="btn-secondary" style={{ alignSelf: 'flex-start', borderStyle: 'dashed' }}>+ Add Time Block</button>
+                            {slots.length === 0 ? (
+                                <EmptyState 
+                                    icon="⏰"
+                                    title="No availability set"
+                                    description="You haven't added any working hours yet. Students won't be able to book you until you define your weekly blocks."
+                                />
+                            ) : (
+                                slots.map((slot, i) => (
+                                    <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)' }}>
+                                        <select
+                                            className="form-input"
+                                            style={{ maxWidth: 140 }}
+                                            value={slot.day}
+                                            onChange={e => updateSlot(i, 'day', e.target.value)}
+                                        >
+                                            {DAYS.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+                                        </select>
+                                        <input type="time" className="form-input" style={{ maxWidth: 120 }} value={slot.startTime} onChange={e => updateSlot(i, 'startTime', e.target.value)} />
+                                        <span style={{ color: 'var(--text-muted)' }}>to</span>
+                                        <input type="time" className="form-input" style={{ maxWidth: 120 }} value={slot.endTime} onChange={e => updateSlot(i, 'endTime', e.target.value)} />
+                                        <button onClick={() => removeSlot(i)} style={{ color: '#f87171', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+                                    </div>
+                                ))
+                            )}
+                            <button onClick={addSlot} className="btn-secondary" style={{ alignSelf: 'center', borderStyle: 'dashed', marginTop: 12, width: '100%', maxWidth: 200 }}>+ Add Time Block</button>
                         </div>
                     </section>
 
@@ -138,6 +152,21 @@ export default function CounselorSchedulePage() {
                                     ))}
                                 </div>
                             </div>
+
+                            <div className="form-group" style={{ marginTop: 20 }}>
+                                <label>Max Daily Bookings</label>
+                                <input 
+                                    type="number" 
+                                    className="form-input" 
+                                    min="1" 
+                                    max="20" 
+                                    value={maxBookings} 
+                                    onChange={e => setMaxBookings(parseInt(e.target.value) || 1)} 
+                                />
+                                <small style={{ color: 'var(--text-muted)', marginTop: 4 }}>
+                                    Limit how many sessions students can book per day.
+                                </small>
+                            </div>
                         </section>
 
                         <button
@@ -148,10 +177,10 @@ export default function CounselorSchedulePage() {
                         >
                             {saving ? 'Saving...' : 'Save Profile Changes'}
                         </button>
-                        {message && <p style={{ color: 'var(--ku-green-light)', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600 }}>{message}</p>}
                     </div>
                 </div>
             </main>
         </div>
     );
 }
+

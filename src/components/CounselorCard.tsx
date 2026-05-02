@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Avatar from './Avatar';
 
 const SPEC_LABELS: Record<string, string> = {
     academic: 'Academic',
@@ -26,19 +27,27 @@ export default function CounselorCard({ counselor }: { counselor: any }) {
             }}>
             {/* Avatar + name */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{
-                    width: 52, height: 52, borderRadius: '50%',
-                    background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.4rem', flexShrink: 0,
-                }}>
-                    {counselor.name?.[0]?.toUpperCase() ?? '?'}
-                </div>
+                <Avatar 
+                    name={counselor.name} 
+                    src={profile?.profileImage} 
+                    size={52} 
+                />
                 <div>
-                    <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
                         {counselor.name}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>KU Counselor</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        {profile?.averageRating > 0 ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <span style={{ color: '#facc15', fontSize: '0.9rem' }}>★</span>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{profile.averageRating}</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({profile.totalRatings})</span>
+                            </div>
+                        ) : (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>New</span>
+                        )}
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• KU Counselor</span>
+                    </div>
                 </div>
             </div>
 

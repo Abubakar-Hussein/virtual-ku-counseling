@@ -1,0 +1,32 @@
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface IAuditLog extends Document {
+    userId: string;
+    userName: string;
+    action: string; // 'LOGIN', 'BOOK_APPOINTMENT', 'DELETE_USER', 'UPDATE_PROFILE', etc.
+    details: string;
+    resource: string; // 'USER', 'APPOINTMENT', 'PROFILE'
+    ipAddress?: string;
+    createdAt: Date;
+}
+
+const AuditLogSchema: Schema = new Schema({
+    userId: { type: String, required: true },
+    userName: { type: String, required: true },
+    action: { type: String, required: true },
+    details: { type: String, required: true },
+    resource: { type: String, required: true },
+    ipAddress: { type: String },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// Index for faster searching by admin
+AuditLogSchema.index({ createdAt: -1 });
+AuditLogSchema.index({ userId: 1 });
+AuditLogSchema.index({ resource: 1 });
+
+// Force schema update in development
+if (mongoose.models.AuditLog) {
+    delete mongoose.models.AuditLog;
+}
+export default mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);

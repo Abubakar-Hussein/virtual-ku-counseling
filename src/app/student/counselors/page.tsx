@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import CounselorCard from '@/components/CounselorCard';
 import NotificationBell from '@/components/NotificationBell';
+import EmptyState from '@/components/EmptyState';
+import { CounselorCardSkeleton } from '@/components/Skeleton';
 
 export default function CounselorListPage() {
     const [counselors, setCounselors] = useState<any[]>([]);
@@ -28,7 +30,7 @@ export default function CounselorListPage() {
     return (
         <div className="dashboard-layout">
             <Sidebar />
-            <main className="dashboard-content">
+            <main className="dashboard-content page-transition">
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                     <div>
                         <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Our Counselors</h1>
@@ -60,11 +62,21 @@ export default function CounselorListPage() {
                 </div>
 
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>Finding counselors...</div>
-                ) : counselors.length === 0 ? (
-                    <div className="glass" style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
-                        No counselors found matching this criteria.
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }}>
+                        <CounselorCardSkeleton />
+                        <CounselorCardSkeleton />
+                        <CounselorCardSkeleton />
                     </div>
+                ) : counselors.length === 0 ? (
+                    <EmptyState 
+                        icon="🧑‍⚕️"
+                        title="No counselors found"
+                        description={filter 
+                            ? `We couldn't find any specialists in ${filter.replace('_', ' ')} right now. Try another category.` 
+                            : "There are currently no counselors registered in the system."}
+                        actionLabel={filter ? "Show All Counselors" : undefined}
+                        actionHref="/student/counselors"
+                    />
                 ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }}>
                         {counselors.map((c) => (

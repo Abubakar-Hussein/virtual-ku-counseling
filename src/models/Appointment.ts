@@ -11,6 +11,8 @@ export interface IAppointment extends Document {
     status: AppointmentStatus;
     reason: string;
     notes?: string; // counselor-only notes
+    rating?: number; // 1-5 stars
+    feedback?: string; // student feedback
     createdAt: Date;
     updatedAt: Date;
 }
@@ -29,6 +31,8 @@ const AppointmentSchema = new Schema<IAppointment>(
         },
         reason: { type: String, required: true },
         notes: { type: String, default: '' },
+        rating: { type: Number, min: 1, max: 5 },
+        feedback: { type: String },
     },
     { timestamps: true }
 );

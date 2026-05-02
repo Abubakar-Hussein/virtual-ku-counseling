@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { connectDB } from '@/lib/mongodb';
+import { sendRegistrationEmail, sendCounselorPendingApprovalEmail } from '@/lib/email';
 import User from '@/models/User';
+import { logAction } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { name, email, password, role, studentId, phone } = body;
+        const { firstName, lastName, name: providedName, email, password, role, studentId, phone } = body;
+
+        let name = providedName;
+        if (!name && firstName && lastName) {
+            name = `${firstName} ${lastName}`;
+        }
 
         if (!name || !email || !password || !role) {
             return NextResponse.json({ error: 'Name, email, password and role are required' }, { status: 400 });
@@ -14,21 +21,33 @@ export async function POST(req: NextRequest) {
 
         const isStudentEmail = /^[^\s@]+@students\.ku\.ac\.ke$/.test(email);
         const isStaffEmail = /^[^\s@]+@ku\.ac\.ke$/.test(email);
+        const isGmail = /^[^\s@]+@gmail\.com$/.test(email);
 
         if (role === 'student' && !isStudentEmail) {
             return NextResponse.json({ error: 'Students must use a @students.ku.ac.ke email' }, { status: 400 });
         }
 
-        if ((role === 'counselor' || role === 'admin') && !isStaffEmail) {
-            return NextResponse.json({ error: 'Staff must use a @ku.ac.ke email' }, { status: 400 });
+        if (role === 'admin' && !isStaffEmail) {
+            return NextResponse.json({ error: 'Administrators must use a @ku.ac.ke email' }, { status: 400 });
         }
 
-        if (!isStudentEmail && !isStaffEmail) {
-            return NextResponse.json({ error: 'Email must be a valid university address' }, { status: 400 });
+        if (role === 'counselor' && !isStaffEmail && !isGmail) {
+            return NextResponse.json({ error: 'Counselors must use a @ku.ac.ke or @gmail.com email' }, { status: 400 });
+        }
+
+        if (!isStudentEmail && !isStaffEmail && !isGmail) {
+            return NextResponse.json({ error: 'Email must be a valid university (@ku.ac.ke) or @gmail.com address' }, { status: 400 });
         }
 
         if (password.length < 8) {
             return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+        }
+
+        if (phone) {
+            const phoneRegex = /^\+2547\d{8}$/;
+            if (!phoneRegex.test(phone)) {
+                return NextResponse.json({ error: 'Phone number must be in format +2547XXXXXXXX (13 characters)' }, { status: 400 });
+            }
         }
 
         await connectDB();
@@ -43,15 +62,59 @@ export async function POST(req: NextRequest) {
             finalRole = 'admin';
         }
 
+        // Counselors must be approved by admin before they can log in
+        const isCounselor = finalRole === 'counselor';
+        const approvalStatus = isCounselor ? 'pending' : 'approved';
+
         const hashed = await bcrypt.hash(password, 10);
         const user = await User.create({
+            firstName,
+            lastName,
             name,
             email,
             password: hashed,
             role: finalRole,
+            approvalStatus,
             studentId,
             phone,
         });
+
+        // Audit Log
+        await logAction({
+            userId: user._id.toString(),
+            userName: user.name,
+            action: 'REGISTER',
+            resource: 'USER',
+            details: `New account created with role: ${finalRole}${isCounselor ? ' (pending approval)' : ''}`,
+            ipAddress: req.headers.get('x-forwarded-for') || undefined
+        });
+
+        if (isCounselor) {
+            // Notify admin that a counselor needs approval
+            try {
+                const adminEmail = process.env.ADMIN_EMAIL || 'admin@ku.ac.ke';
+                await sendCounselorPendingApprovalEmail({
+                    counselorName: name,
+                    counselorEmail: email,
+                    adminEmail,
+                    counselorId: user._id.toString(),
+                });
+            } catch (err) {
+                console.error('[EMAIL ERROR]: Failed to send admin notification', err);
+            }
+
+            return NextResponse.json(
+                { message: 'Registration submitted. Your account is pending admin approval. You will receive an email once approved.', userId: user._id.toString(), pending: true },
+                { status: 201 }
+            );
+        }
+
+        // Non-counselor: send welcome email immediately
+        try {
+            await sendRegistrationEmail({ name, email, role: finalRole });
+        } catch (err) {
+            console.error('[EMAIL ERROR]: Failed to send registration email', err);
+        }
 
         return NextResponse.json(
             { message: 'Account created successfully', userId: user._id.toString() },
@@ -60,7 +123,6 @@ export async function POST(req: NextRequest) {
     } catch (err: any) {
         console.error('[REGISTER ERROR FULL]:', err);
 
-        // Handle Mongoose validation errors specifically
         if (err.name === 'ValidationError') {
             const messages = Object.values(err.errors).map((val: any) => val.message);
             return NextResponse.json({ error: messages.join(', ') }, { status: 400 });

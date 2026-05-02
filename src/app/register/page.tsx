@@ -2,15 +2,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import PasswordStrength from '@/components/PasswordStrength';
+import { useToast } from '@/components/Toast';
 
 export default function RegisterPage() {
     const router = useRouter();
     const [form, setForm] = useState({
-        name: '', email: '', password: '', confirmPassword: '',
+        firstName: '', lastName: '', email: '', password: '', confirmPassword: '',
         role: 'student', studentId: '', phone: '',
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const { showToast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,6 +22,14 @@ export default function RegisterPage() {
         if (form.password !== form.confirmPassword) {
             setError('Passwords do not match');
             return;
+        }
+
+        if (form.phone) {
+            const phoneRegex = /^\+2547\d{8}$/;
+            if (!phoneRegex.test(form.phone)) {
+                setError('Phone number must be in format +2547 followed by 8 digits (e.g., +254700000000)');
+                return;
+            }
         }
 
         setLoading(true);
@@ -31,10 +42,12 @@ export default function RegisterPage() {
 
         if (!res.ok) {
             setError(data.error ?? 'Registration failed');
+            showToast(data.error ?? 'Registration failed', 'error');
             setLoading(false);
             return;
         }
 
+        showToast('Account created successfully! Redirecting to login...', 'success');
         router.push('/login?registered=true');
     };
 
@@ -55,12 +68,12 @@ export default function RegisterPage() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '1.8rem', margin: '0 auto 16px',
                         boxShadow: '0 8px 32px rgba(0,102,51,0.4)',
-                    }}>🎓</div>
+                    }}>🌱</div>
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 6 }}>
                         <span className="gradient-text">Create Account</span>
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                        Join KU Counseling with your university email
+                        Join Wellness Connect with your university or personal email
                     </p>
                 </div>
 
@@ -76,22 +89,31 @@ export default function RegisterPage() {
                         )}
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                <label htmlFor="reg-name">Full Name</label>
-                                <input id="reg-name" type="text" className="form-input" placeholder="Your full name"
-                                    value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                            <div className="form-group">
+                                <label htmlFor="reg-firstname">First Name</label>
+                                <input id="reg-firstname" type="text" className="form-input" placeholder="First Name"
+                                    value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} required />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="reg-lastname">Last Name</label>
+                                <input id="reg-lastname" type="text" className="form-input" placeholder="Last Name"
+                                    value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} required />
                             </div>
 
                             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                <label htmlFor="reg-email">University Email</label>
-                                <input id="reg-email" type="email" className="form-input" placeholder="12673.2022@students.ku.ac.ke"
+                                <label htmlFor="reg-email">Email Address</label>
+                                <input id="reg-email" type="email" className="form-input" placeholder={form.role === 'student' ? "12673.2022@students.ku.ac.ke" : "your.name@gmail.com"}
                                     value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                    {form.role === 'student' ? 'Students must use @students.ku.ac.ke' : 'Counselors can use @ku.ac.ke or @gmail.com'}
+                                </p>
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="reg-password">Password</label>
-                                <input id="reg-password" type="password" className="form-input" placeholder="Min. 8 characters"
+                                <input id="reg-password" type="password" className="form-input" placeholder="Min. 8 characters (letters & numbers)"
                                     value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
+                                <PasswordStrength password={form.password} />
                             </div>
 
                             <div className="form-group">
@@ -119,8 +141,9 @@ export default function RegisterPage() {
 
                             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                 <label htmlFor="reg-phone">Phone (optional)</label>
-                                <input id="reg-phone" type="tel" className="form-input" placeholder="+254 700 000 000"
-                                    value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                                <input id="reg-phone" type="tel" className="form-input" placeholder="+254700000000"
+                                    value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
+                                    pattern="^\+2547\d{8}$" maxLength={13} title="Format: +2547 followed by 8 digits" />
                             </div>
                         </div>
 

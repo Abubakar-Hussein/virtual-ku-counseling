@@ -19,7 +19,7 @@ export default function Navbar() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '1rem',
                 }}>🎓</div>
-                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>KU Counseling</span>
+                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>KU Wellness Connect</span>
             </Link>
 
             <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import { ThemeToggle } from './ThemeToggle';
+import Avatar from './Avatar';
 
 const STUDENT_LINKS = [
     { href: '/student/dashboard', label: 'Dashboard', icon: '🏠' },
@@ -14,16 +16,20 @@ const STUDENT_LINKS = [
 const COUNSELOR_LINKS = [
     { href: '/counselor/dashboard', label: 'Dashboard', icon: '🏠' },
     { href: '/counselor/appointments', label: 'Appointments', icon: '📅' },
+    { href: '/counselor/records', label: 'Session Records', icon: '📁' },
     { href: '/counselor/schedule', label: 'My Schedule', icon: '🗓️' },
     { href: '/profile', label: 'My Profile', icon: '⚙️' },
 ];
 
 const ADMIN_LINKS = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: '🏠' },
-    { href: '/admin/users', label: 'Users', icon: '👥' },
-    { href: '/admin/add-counselor', label: 'Add Counselor', icon: '➕' },
-    { href: '/admin/appointments', label: 'Appointments', icon: '📅' },
-    { href: '/profile', label: 'My Profile', icon: '⚙️' },
+    { href: '/admin/dashboard',    label: 'Dashboard',       icon: '🏠' },
+    { href: '/admin/users',        label: 'Users',           icon: '👥' },
+    { href: '/admin/add-counselor',label: 'Add Counselor',   icon: '➕' },
+    { href: '/admin/appointments', label: 'Appointments',    icon: '📅' },
+    { href: '/admin/links',        label: 'Meeting Links',   icon: '🔗' },
+    { href: '/admin/reports',      label: 'Reports',         icon: '📊' },
+    { href: '/admin/insights',     label: 'Insights',        icon: '🧠' },
+    { href: '/profile',            label: 'My Profile',      icon: '⚙️' },
 ];
 
 export default function Sidebar() {
@@ -32,6 +38,19 @@ export default function Sidebar() {
     const role = (session?.user as any)?.role ?? 'student';
 
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [profileImg, setProfileImg] = useState<string | null>(null);
+
+    // Fetch profile image
+    useEffect(() => {
+        if (session?.user) {
+            fetch('/api/profile')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.profileImage) setProfileImg(data.profileImage);
+                })
+                .catch(() => {});
+        }
+    }, [session]);
 
     // Close sidebar on route change
     useEffect(() => {
@@ -61,10 +80,10 @@ export default function Sidebar() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 18,
                     }}>
-                        🎓
+                        🌱
                     </div>
                     <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>KU Counseling</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Wellness Connect</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{role}</div>
                     </div>
                 </div>
@@ -98,23 +117,39 @@ export default function Sidebar() {
             </nav>
 
             {/* User info */}
-            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
-                    {session?.user?.name}
+            <div style={{ padding: '24px 20px 16px', background: 'var(--bg-card)', marginTop: 'auto' }}>
+                <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Appearance</div>
+                    <ThemeToggle />
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                    {session?.user?.email}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <Avatar 
+                        name={session?.user?.name || 'User'} 
+                        src={profileImg} 
+                        size={38}
+                    />
+                    <div style={{ overflow: 'hidden' }}>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {session?.user?.name}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {session?.user?.email}
+                        </div>
+                    </div>
                 </div>
+
                 <button
                     onClick={() => signOut({ callbackUrl: '/login' })}
                     style={{
                         width: '100%', background: 'transparent',
-                        border: '1px solid var(--border)', borderRadius: 8,
-                        color: 'var(--text-muted)', padding: '8px', cursor: 'pointer',
-                        fontSize: '0.85rem', transition: 'all 0.2s',
+                        border: '1px solid var(--border)', borderRadius: 10,
+                        color: 'var(--text-secondary)', padding: '10px', cursor: 'pointer',
+                        fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
                     }}
                 >
-                    Sign out
+                    <span>🚪</span> Sign out
                 </button>
             </div>
         </aside>
