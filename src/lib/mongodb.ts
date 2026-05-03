@@ -19,18 +19,18 @@ export async function connectDB() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      maxPoolSize: 10,
-      minPoolSize: 5,
-      socketTimeoutMS: 30000,
-      connectTimeoutMS: 10000,
+      maxPoolSize: 5,
+      minPoolSize: 1,
+      socketTimeoutMS: 20000,
+      connectTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 5000,
     };
 
-    console.log('[MONGODB] Attempting to connect...');
-    const start = Date.now();
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log(`[MONGODB] Connected successfully in ${Date.now() - start}ms`);
+      console.log('[MONGODB] Connected');
       return mongoose;
     }).catch((err) => {
+      cached.promise = null; // Allow retry on next request
       console.error('[MONGODB] Connection error:', err.message);
       throw err;
     });
