@@ -34,6 +34,10 @@ export default function StudentDashboard() {
                 showToast('Log in successful', 'success');
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
+            if (params.get('booked') === 'success') {
+                showToast('Appointment booked successfully! Waiting for counselor confirmation.', 'success');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
         }
 
         async function fetchData() {
