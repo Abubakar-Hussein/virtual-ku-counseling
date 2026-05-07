@@ -174,7 +174,7 @@ export default function LoginPage() {
                         {cfg ? (
                             <span style={{ color: cfg.color }}>{cfg.label} Portal</span>
                         ) : (
-                            <span className="gradient-text">Wellness Connect</span>
+                            <span className="gradient-text">Wellness System</span>
                         )}
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5 }}>

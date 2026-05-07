@@ -114,7 +114,7 @@ export default function LandingPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(0, 102, 51, 0.3)',
           }}>🎓</div>
-          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness Connect</span>
+          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
         </div>
         <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
           <ThemeToggle />
@@ -213,7 +213,7 @@ export default function LandingPage() {
       {/* Features Section */}
       <section id="features" style={{ padding: '100px 5vw', position: 'relative', zIndex: 1, borderTop: '1px solid var(--border)' }}>
         <div style={{ textAlign: 'center', marginBottom: 60 }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: 16 }}>Why Choose Wellness Connect?</h2>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: 16 }}>Why Choose Wellness System?</h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: 600, margin: '0 auto' }}>Designed to ensure every student has access to the support they need to succeed.</p>
         </div>
 
@@ -390,10 +390,10 @@ export default function LandingPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '1.4rem', margin: '0 auto 24px',
         }}>🌱</div>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>© {new Date().getFullYear()} Kenyatta University — Wellness Connect Hub</p>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>© {new Date().getFullYear()} Kenyatta University — Wellness System Hub</p>
         <div style={{ display: 'flex', gap: 32, justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
           <Link href="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>Privacy Policy</Link>
-          <span style={{ cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>Contact Support</span>
+          <Link href="/contact" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>Contact Support</Link>
         </div>
       </footer>
     </main>

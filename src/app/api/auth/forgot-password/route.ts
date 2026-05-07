@@ -1,10 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import User from '@/models/User';
 import { connectDB } from '@/lib/mongodb';
 import { sendResetPasswordEmail } from '@/lib/email';
+import { createRateLimiter } from '@/lib/rateLimit';
 
-export async function POST(req: Request) {
+// 3 forgot-password attempts per IP per 15 minutes
+const forgotPasswordLimiter = createRateLimiter({ limit: 3, windowMs: 15 * 60 * 1000 });
+
+export async function POST(req: NextRequest) {
+    const limited = forgotPasswordLimiter(req);
+    if (limited) return limited;
+
     try {
         const { email } = await req.json();
 

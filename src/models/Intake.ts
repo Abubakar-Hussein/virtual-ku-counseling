@@ -12,7 +12,7 @@ export interface IIntake extends Document {
 }
 
 const IntakeSchema: Schema = new Schema({
-    studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     appointmentId: { type: Schema.Types.ObjectId, ref: 'Appointment', required: true, index: true },
     mood: { type: Number, required: true, min: 1, max: 10 },
     concerns: [{ type: String }],

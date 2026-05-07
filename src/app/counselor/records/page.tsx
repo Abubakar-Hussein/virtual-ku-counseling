@@ -1,62 +1,145 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import EmptyState from '@/components/EmptyState';
 import { useToast } from '@/components/Toast';
 import Avatar from '@/components/Avatar';
-import { useSession } from 'next-auth/react';
+
+const PROGRESS_COLORS: Record<string, string> = {
+    'Improved':     '#4ade80',
+    'Stable':       '#60a5fa',
+    'Declined':     '#f87171',
+    'Not Evaluated':'#94a3b8',
+};
+
+const PROGRESS_ICONS: Record<string, string> = {
+    'Improved':     '↑',
+    'Stable':       '→',
+    'Declined':     '↓',
+    'Not Evaluated':'—',
+};
+
+function formatDate(d: any) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatSpec(s: string) {
+    return (s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function MoodBar({ value }: { value: number }) {
+    const color = value < 4 ? '#f87171' : value > 7 ? '#4ade80' : '#facc15';
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4 }}>
+                <div style={{ height: '100%', width: `${value * 10}%`, background: color, borderRadius: 4, transition: 'width 0.4s' }} />
+            </div>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color, minWidth: 28 }}>{value}/10</span>
+        </div>
+    );
+}
 
 export default function SessionRecordsPage() {
-    const { data: session } = useSession();
     const { showToast } = useToast();
     const [records, setRecords] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [progressFilter, setProgressFilter] = useState('all');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-    useEffect(() => {
-        async function fetchRecords() {
-            try {
-                const res = await fetch('/api/counselors/records');
-                const data = await res.json();
-                if (Array.isArray(data)) setRecords(data);
-            } catch (err) {
-                console.error(err);
-                showToast('Failed to load session records', 'error');
-            } finally {
-                setLoading(false);
-            }
+    const fetchRecords = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (progressFilter !== 'all') params.set('progress', progressFilter);
+            if (dateRange.start) params.set('startDate', dateRange.start);
+            if (dateRange.end) params.set('endDate', dateRange.end);
+            const res = await fetch(`/api/counselors/records?${params}`);
+            const data = await res.json();
+            if (Array.isArray(data)) setRecords(data);
+        } catch {
+            showToast('Failed to load session records', 'error');
+        } finally {
+            setLoading(false);
         }
-        fetchRecords();
-    }, []);
+    }, [search, progressFilter, dateRange]);
 
-    const filtered = records.filter(r => {
-        const matchesProgress = progressFilter === 'all' || r.progressIndicator === progressFilter;
-        const matchesSearch = !search ||
-            (r.studentId?.name || '').toLowerCase().includes(search.toLowerCase()) ||
-            (r.notes || '').toLowerCase().includes(search.toLowerCase());
-        return matchesProgress && matchesSearch;
-    });
+    useEffect(() => { fetchRecords(); }, [fetchRecords]);
 
-    const progressOptions = ['all', 'Improved', 'Stable', 'Declined', 'Not Evaluated'];
+    const toggle = (id: string) => setExpandedId(prev => prev === id ? null : id);
 
-    const progressColor: Record<string, string> = {
-        'Improved': '#4ade80',
-        'Stable': '#60a5fa',
-        'Declined': '#f87171',
-        'Not Evaluated': 'var(--text-muted)',
+    const handlePrint = (record: any) => {
+        const w = window.open('', '_blank');
+        if (!w) return;
+        const appt = record.appointment;
+        const intake = record.intake;
+        w.document.write(`
+            <html><head><title>Clinical Record — ${record.studentId?.name}</title>
+            <style>
+                body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; color: #111; line-height: 1.6; }
+                h1 { font-size: 1.4rem; border-bottom: 2px solid #006633; padding-bottom: 8px; }
+                h2 { font-size: 1rem; color: #006633; margin-top: 24px; }
+                .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; background: #eee; }
+                .meta { display: flex; gap: 32px; margin: 16px 0; font-size: 0.9rem; color: #555; }
+                .confidential { color: #c00; font-weight: bold; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
+                p { margin: 8px 0; }
+                pre { background: #f5f5f5; padding: 12px; border-radius: 4px; white-space: pre-wrap; font-family: inherit; }
+            </style></head><body>
+            <p class="confidential">🔒 Confidential — Clinical Record — Not for Unauthorised Distribution</p>
+            <h1>Session Record — ${record.studentId?.name || 'Unknown'}</h1>
+            <div class="meta">
+                <span><strong>Date:</strong> ${formatDate(appt?.date)}</span>
+                <span><strong>Time:</strong> ${appt?.timeSlot || '—'}</span>
+                <span><strong>Session #${record.sessionNumber || '?'}</strong></span>
+                <span><strong>Type:</strong> ${formatSpec(appt?.specialization)}</span>
+                <span><strong>Status:</strong> ${appt?.status || '—'}</span>
+            </div>
+            ${intake?.isUrgent ? '<p style="color:red;font-weight:bold">⚠ CRISIS TRIAGE — Urgent Care Flagged</p>' : ''}
+            <h2>Pre-Session Intake</h2>
+            <p><strong>Self-Reported Mood:</strong> ${intake?.mood ?? '—'}/10</p>
+            <p><strong>Primary Concerns:</strong> ${(intake?.concerns || []).join(', ') || 'None'}</p>
+            <p><strong>Prior Therapy:</strong> ${intake?.previousTherapy ? 'Yes' : 'No'}</p>
+            <p><strong>Reason for Visit:</strong> ${appt?.reason || '—'}</p>
+            <h2>Clinical Notes</h2>
+            <pre>${record.notes || 'No notes recorded.'}</pre>
+            <h2>Action Items / Homework</h2>
+            <pre>${record.actionItems || 'None specified.'}</pre>
+            <h2>Progress Indicator</h2>
+            <p><span class="badge">${record.progressIndicator}</span></p>
+            ${appt?.rating ? `<h2>Student Feedback</h2><p>Rating: ${'★'.repeat(appt.rating)}${'☆'.repeat(5 - appt.rating)} (${appt.rating}/5)</p>${appt.feedback ? `<p>${appt.feedback}</p>` : ''}` : ''}
+            <br/><hr/><p style="font-size:0.75rem;color:#999">Generated by KU Wellness System — ${new Date().toLocaleString()}</p>
+            </body></html>`);
+        w.document.close();
+        w.print();
+    };
+
+    const statCounts = {
+        total: records.length,
+        improved: records.filter(r => r.progressIndicator === 'Improved').length,
+        stable: records.filter(r => r.progressIndicator === 'Stable').length,
+        declined: records.filter(r => r.progressIndicator === 'Declined').length,
+        urgent: records.filter(r => r.intake?.isUrgent).length,
     };
 
     return (
         <div className="dashboard-layout">
             <Sidebar />
             <main className="dashboard-content page-transition">
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
+                {/* Header */}
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
                     <div>
-                        <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Session Records</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginTop: 4 }}>
-                            Clinical notes and session summaries for your students.
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                            <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Session Records</h1>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', padding: '3px 8px', borderRadius: 4, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)', textTransform: 'uppercase' }}>
+                                🔒 Confidential
+                            </span>
+                        </div>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                            Clinical notes, intake data and session outcomes for your caseload.
                         </p>
                     </div>
                     <NotificationBell />
@@ -64,171 +147,220 @@ export default function SessionRecordsPage() {
 
                 {/* Summary Stats */}
                 {!loading && records.length > 0 && (
-                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
                         {[
-                            { label: 'Total Records', value: records.length, color: '#60a5fa' },
-                            { label: 'Improved', value: records.filter(r => r.progressIndicator === 'Improved').length, color: '#4ade80' },
-                            { label: 'Stable', value: records.filter(r => r.progressIndicator === 'Stable').length, color: '#94a3b8' },
-                            { label: 'Declined', value: records.filter(r => r.progressIndicator === 'Declined').length, color: '#f87171' },
-                        ].map(stat => (
-                            <div key={stat.label} className="glass" style={{ padding: '12px 20px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <span style={{ fontSize: '1.4rem', fontWeight: 800, color: stat.color }}>{stat.value}</span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{stat.label}</span>
+                            { label: 'Total Sessions', value: statCounts.total, color: '#60a5fa' },
+                            { label: 'Improved', value: statCounts.improved, color: '#4ade80' },
+                            { label: 'Stable', value: statCounts.stable, color: '#60a5fa' },
+                            { label: 'Declined', value: statCounts.declined, color: '#f87171' },
+                            { label: 'Urgent Flags', value: statCounts.urgent, color: '#fb923c' },
+                        ].map(s => (
+                            <div key={s.label} className="glass" style={{ padding: '10px 18px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: '1.3rem', fontWeight: 800, color: s.color }}>{s.value}</span>
+                                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{s.label}</span>
                             </div>
                         ))}
                     </div>
                 )}
 
                 {/* Filters */}
-                <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by student name or notes..."
-                        style={{
-                            flex: 1,
-                            minWidth: 220,
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid var(--border)',
-                            borderRadius: 10,
-                            padding: '9px 14px',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.875rem',
-                            outline: 'none',
-                        }}
-                    />
-                    <div style={{ display: 'flex', gap: 6 }}>
-                        {progressOptions.map(p => (
-                            <button
-                                key={p}
-                                onClick={() => setProgressFilter(p)}
-                                style={{
-                                    padding: '7px 14px',
-                                    borderRadius: 20,
-                                    border: `1px solid ${progressFilter === p ? (progressColor[p] || 'var(--ku-green-light)') : 'var(--border)'}`,
-                                    background: progressFilter === p ? `${progressColor[p] || 'var(--ku-green-light)'}22` : 'transparent',
-                                    color: progressFilter === p ? (progressColor[p] || 'var(--ku-green-light)') : 'var(--text-muted)',
-                                    fontSize: '0.78rem',
-                                    fontWeight: progressFilter === p ? 700 : 400,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {p === 'all' ? 'All Progress' : p}
-                            </button>
-                        ))}
+                <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }} className="glass" >
+                    <div style={{ padding: '12px 16px', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', width: '100%' }}>
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="🔍  Search student, notes, concern type..."
+                            style={{ flex: 1, minWidth: 200, background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
+                        />
+                        <input type="date" value={dateRange.start} onChange={e => setDateRange(p => ({ ...p, start: e.target.value }))}
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', color: 'var(--text-primary)', fontSize: '0.82rem', outline: 'none' }} />
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>→</span>
+                        <input type="date" value={dateRange.end} onChange={e => setDateRange(p => ({ ...p, end: e.target.value }))}
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', color: 'var(--text-primary)', fontSize: '0.82rem', outline: 'none' }} />
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {['all', 'Improved', 'Stable', 'Declined', 'Not Evaluated'].map(p => {
+                                const col = PROGRESS_COLORS[p] || 'var(--ku-green-light)';
+                                const active = progressFilter === p;
+                                return (
+                                    <button key={p} onClick={() => setProgressFilter(p)} style={{
+                                        padding: '6px 12px', borderRadius: 16, fontSize: '0.78rem', cursor: 'pointer', transition: 'all 0.2s',
+                                        border: `1px solid ${active ? col : 'var(--border)'}`,
+                                        background: active ? `${col}22` : 'transparent',
+                                        color: active ? col : 'var(--text-muted)',
+                                        fontWeight: active ? 700 : 400,
+                                    }}>
+                                        {p === 'all' ? 'All' : `${PROGRESS_ICONS[p]} ${p}`}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
-                {/* Records Grid */}
-                {loading ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
-                        {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="glass skeleton" style={{ height: 200, borderRadius: 14 }} />
-                        ))}
+                {/* Result count */}
+                {!loading && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 14 }}>
+                        {records.length} record{records.length !== 1 ? 's' : ''} found
                     </div>
-                ) : filtered.length === 0 ? (
-                    <EmptyState
-                        icon="📁"
-                        title="No session records found"
-                        description={search || progressFilter !== 'all'
-                            ? 'No records match your current filters.'
-                            : 'You have not recorded any clinical session notes yet. Notes appear here after you save them from the Clinical Workspace.'}
-                    />
+                )}
+
+                {/* Records List */}
+                {loading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {[1,2,3,4].map(i => <div key={i} className="glass skeleton" style={{ height: 72, borderRadius: 12 }} />)}
+                    </div>
+                ) : records.length === 0 ? (
+                    <EmptyState icon="📁" title="No session records found"
+                        description="No clinical records match your filters, or you haven't saved any session notes yet." />
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
-                        {filtered.map(record => {
-                            const color = progressColor[record.progressIndicator] || 'var(--text-muted)';
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {/* Column headers */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 100px', gap: 12, padding: '0 16px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            <span>Patient</span>
+                            <span>Session Date</span>
+                            <span>Type</span>
+                            <span>Progress</span>
+                            <span></span>
+                        </div>
+
+                        {records.map(record => {
+                            const appt = record.appointment;
+                            const intake = record.intake;
+                            const color = PROGRESS_COLORS[record.progressIndicator] || '#94a3b8';
+                            const isOpen = expandedId === record._id;
+
                             return (
-                                <div
-                                    key={record._id}
-                                    className="glass"
-                                    style={{
-                                        padding: 24,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: 14,
-                                        borderLeft: `3px solid ${color}`,
-                                        borderRadius: 14,
-                                    }}
-                                >
-                                    {/* Header */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div key={record._id} style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${isOpen ? color + '55' : 'var(--border)'}`, transition: 'border-color 0.2s', background: 'rgba(255,255,255,0.02)' }}>
+                                    {/* Row */}
+                                    <div
+                                        onClick={() => toggle(record._id)}
+                                        style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 100px', gap: 12, padding: '14px 16px', alignItems: 'center', cursor: 'pointer', borderLeft: `3px solid ${color}` }}
+                                    >
+                                        {/* Patient */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <Avatar name={record.studentId?.name || '?'} src={record.studentId?.profileImage} size={36} fontSize="0.8rem" />
+                                            <Avatar name={record.studentId?.name || '?'} src={record.studentId?.profileImage} size={34} fontSize="0.75rem" />
                                             <div>
-                                                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                                                    {record.studentId?.name || 'Unknown Student'}
-                                                </div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                    {new Date(record.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{record.studentId?.name || 'Unknown'}</div>
+                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                                    Session #{record.sessionNumber || '?'}
+                                                    {intake?.isUrgent && <span style={{ marginLeft: 6, color: '#f87171', fontWeight: 700 }}>⚠ Urgent</span>}
                                                 </div>
                                             </div>
                                         </div>
-                                        <span style={{
-                                            fontSize: '0.7rem',
-                                            fontWeight: 700,
-                                            padding: '3px 10px',
-                                            borderRadius: 20,
-                                            background: `${color}22`,
-                                            color,
-                                            border: `1px solid ${color}44`,
-                                        }}>
-                                            {record.progressIndicator}
-                                        </span>
+                                        {/* Date */}
+                                        <div>
+                                            <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{formatDate(appt?.date)}</div>
+                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{appt?.timeSlot || '—'}</div>
+                                        </div>
+                                        {/* Type */}
+                                        <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{formatSpec(appt?.specialization)}</div>
+                                        {/* Progress */}
+                                        <div>
+                                            <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: `${color}22`, color, border: `1px solid ${color}44` }}>
+                                                {PROGRESS_ICONS[record.progressIndicator]} {record.progressIndicator}
+                                            </span>
+                                        </div>
+                                        {/* Expand */}
+                                        <div style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', userSelect: 'none' }}>
+                                            {isOpen ? '▲ Collapse' : '▼ Expand'}
+                                        </div>
                                     </div>
 
-                                    {/* Notes */}
-                                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                                        <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Session Notes</strong>
-                                        <p style={{ marginTop: 4, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                            {record.notes || 'No notes recorded.'}
-                                        </p>
-                                    </div>
+                                    {/* Expanded Detail */}
+                                    {isOpen && (
+                                        <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--border)' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 16 }}>
 
-                                    {/* Action Items */}
-                                    {record.actionItems && (
-                                        <div style={{ fontSize: '0.875rem', color: 'var(--ku-gold)', lineHeight: 1.5 }}>
-                                            <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Action Items</strong>
-                                            <p style={{ marginTop: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                                {record.actionItems}
-                                            </p>
+                                                {/* Left: Clinical Notes + Action Items */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 8 }}>Clinical Notes</div>
+                                                        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6, background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, whiteSpace: 'pre-wrap', maxHeight: 200, overflowY: 'auto' }}>
+                                                            {record.notes || 'No notes recorded.'}
+                                                        </div>
+                                                    </div>
+                                                    {record.actionItems && (
+                                                        <div>
+                                                            <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 8 }}>Action Items / Homework</div>
+                                                            <div style={{ fontSize: '0.875rem', color: '#fbbf24', lineHeight: 1.6, background: 'rgba(251,191,36,0.05)', padding: 12, borderRadius: 8, whiteSpace: 'pre-wrap' }}>
+                                                                {record.actionItems}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {appt?.rating && (
+                                                        <div>
+                                                            <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 8 }}>Student Feedback</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                <span style={{ color: '#facc15', fontSize: '1rem' }}>{'★'.repeat(appt.rating)}{'☆'.repeat(5 - appt.rating)}</span>
+                                                                <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>{appt.rating}/5</span>
+                                                            </div>
+                                                            {appt.feedback && <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: 6 }}>"{appt.feedback}"</p>}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Right: Intake Data */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, background: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 10, border: '1px solid var(--border)' }}>
+                                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Pre-Session Intake</div>
+
+                                                    {intake?.isUrgent && (
+                                                        <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600 }}>
+                                                            ⚠ CRISIS TRIAGE — Urgent Care Flagged
+                                                        </div>
+                                                    )}
+
+                                                    {intake ? (
+                                                        <>
+                                                            <div>
+                                                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 6 }}>Self-Reported Mood</div>
+                                                                <MoodBar value={intake.mood} />
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 6 }}>Primary Concerns</div>
+                                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                                    {(intake.concerns || []).length > 0 ? intake.concerns.map((c: string) => (
+                                                                        <span key={c} style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: 10, background: 'rgba(0,102,51,0.12)', color: 'var(--ku-green-light)', border: '1px solid rgba(0,102,51,0.2)' }}>{c}</span>
+                                                                    )) : <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>None specified</span>}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: 16 }}>
+                                                                <div>
+                                                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Prior Therapy</div>
+                                                                    <div style={{ fontSize: '0.85rem', fontWeight: 600, marginTop: 2 }}>{intake.previousTherapy ? 'Yes' : 'No'}</div>
+                                                                </div>
+                                                                <div>
+                                                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Student Email</div>
+                                                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 2 }}>{record.studentId?.email || '—'}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 4 }}>Reason for Visit</div>
+                                                                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontStyle: 'italic', background: 'rgba(255,255,255,0.03)', padding: 8, borderRadius: 6 }}>"{appt?.reason || '—'}"</p>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No intake data for this session.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                                                <button onClick={() => handlePrint(record)} style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                                    🖨 Print Record
+                                                </button>
+                                                <a href={`https://mail.google.com/mail/?view=cm&to=${record.studentId?.email}`} target="_blank" rel="noopener noreferrer"
+                                                    style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'none', transition: 'all 0.2s' }}>
+                                                    📧 Email Student
+                                                </a>
+                                                <a href={`/counselor/appointments/${record.appointmentId}`}
+                                                    style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: 8, border: '1px solid var(--ku-green-light)', color: 'var(--ku-green-light)', textDecoration: 'none', transition: 'all 0.2s' }}>
+                                                    Open Clinical Workspace →
+                                                </a>
+                                            </div>
                                         </div>
                                     )}
-
-                                    {/* Footer */}
-                                    <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                            {record.studentId?.email || ''}
-                                        </span>
-                                        <div style={{ display: 'flex', gap: 8 }}>
-                                            <a
-                                                href={`/counselor/appointments/${record.appointmentId}`}
-                                                style={{
-                                                    fontSize: '0.75rem',
-                                                    padding: '5px 10px',
-                                                    borderRadius: 8,
-                                                    border: '1px solid var(--ku-green-light)',
-                                                    color: 'var(--ku-green-light)',
-                                                    textDecoration: 'none',
-                                                    transition: 'all 0.2s',
-                                                }}
-                                            >
-                                                Open Workspace
-                                            </a>
-                                            <a
-                                                href={`https://mail.google.com/mail/?view=cm&to=${record.studentId?.email}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn-secondary"
-                                                style={{ fontSize: '0.75rem', padding: '5px 10px', textDecoration: 'none' }}
-                                            >
-                                                📧
-                                            </a>
-                                        </div>
-                                    </div>
                                 </div>
                             );
                         })}

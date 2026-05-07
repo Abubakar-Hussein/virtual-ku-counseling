@@ -83,7 +83,7 @@ export default function Sidebar() {
                         🌱
                     </div>
                     <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Wellness Connect</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Wellness System</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{role}</div>
                     </div>
                 </div>

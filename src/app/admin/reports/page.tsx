@@ -3,15 +3,14 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import { useToast } from '@/components/Toast';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+
 
 export default function ReportsPage() {
     const { showToast } = useToast();
-    const [generatingUsers, setGeneratingUsers] = useState(false);
-    const [generatingAppointments, setGeneratingAppointments] = useState(false);
-    const [generatingAuditLogs, setGeneratingAuditLogs] = useState(false);
-    const [generatingClinical, setGeneratingClinical] = useState(false);
+    const [printingUsers, setPrintingUsers] = useState(false);
+    const [printingAppointments, setPrintingAppointments] = useState(false);
+    const [printingAuditLogs, setPrintingAuditLogs] = useState(false);
+    const [printingClinical, setPrintingClinical] = useState(false);
     
     // Preview States
     const [previewType, setPreviewType] = useState<string | null>(null);
@@ -52,39 +51,54 @@ export default function ReportsPage() {
         end: new Date().toISOString().split('T')[0]
     });
 
-const downloadPDF = (data: any[], fileName: string, title: string) => {
-        const doc = new jsPDF('l', 'mm', 'a4'); 
-        doc.setFontSize(20);
-        doc.setTextColor(155, 126, 73);
-        doc.text('KU WELLNESS CONNECT', 14, 20);
-        
-        doc.setFontSize(14);
-        doc.setTextColor(40, 40, 40);
-        doc.text(title, 14, 30);
-        
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 38);
-        doc.text(`Report Range: ${dateRange.start} to ${dateRange.end}`, 14, 44);
-
-        if (data.length > 0) {
-            const headers = Object.keys(data[0]);
-            const body = data.map(row => headers.map(h => String(row[h])));
-
-            autoTable(doc, {
-                startY: 52,
-                head: [headers.map(h => h.replace(/([A-Z])/g, ' $1').toUpperCase())],
-                body: body,
-                theme: 'grid',
-                headStyles: { fillColor: [155, 126, 73], textColor: [255, 255, 255], fontSize: 9 },
-                styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
-                margin: { horizontal: 14 },
-            });
-        } else {
-            doc.text('No data available for the selected period.', 14, 60);
-        }
-
-        doc.save(fileName);
+    const handlePrintReport = (data: any[], title: string, rangeLabel: string) => {
+        const w = window.open('', '_blank');
+        if (!w) return;
+        const headers = data.length > 0 ? Object.keys(data[0]) : [];
+        const tableRows = data.map(row =>
+            `<tr>${headers.map(h => `<td>${typeof row[h] === 'object' ? (row[h]?.name || row[h]?.email || JSON.stringify(row[h])) : String(row[h] ?? '—')}</td>`).join('')}</tr>`
+        ).join('');
+        w.document.write(`
+            <html><head><title>${title} — KU Wellness System</title>
+            <style>
+                body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 1100px; margin: 32px auto; color: #111; line-height: 1.5; padding: 0 24px; }
+                .header { border-bottom: 3px solid #9b7e49; padding-bottom: 12px; margin-bottom: 20px; }
+                .header h1 { font-size: 1.5rem; color: #9b7e49; margin: 0 0 4px; letter-spacing: 0.04em; }
+                .header h2 { font-size: 1.1rem; color: #333; margin: 0 0 8px; font-weight: 600; }
+                .meta { display: flex; gap: 24px; font-size: 0.82rem; color: #666; }
+                .confidential { color: #9b7e49; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.8rem; }
+                th { background: #9b7e49; color: #fff; padding: 8px 10px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+                td { padding: 7px 10px; border-bottom: 1px solid #e5e5e5; vertical-align: top; max-width: 220px; overflow-wrap: break-word; }
+                tr:nth-child(even) { background: #fafaf8; }
+                .footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 0.72rem; color: #999; display: flex; justify-content: space-between; }
+                .count { font-size: 0.82rem; color: #555; margin-top: 12px; }
+                @media print { body { margin: 16px; } }
+            </style></head><body>
+            <div class="header">
+                <p class="confidential">🔒 Confidential — Administrative Report</p>
+                <h1>KU WELLNESS SYSTEM</h1>
+                <h2>${title}</h2>
+                <div class="meta">
+                    <span><strong>Report Range:</strong> ${rangeLabel}</span>
+                    <span><strong>Generated:</strong> ${new Date().toLocaleString()}</span>
+                    <span><strong>Records:</strong> ${data.length}</span>
+                </div>
+            </div>
+            ${data.length > 0 ? `
+                <table>
+                    <thead><tr>${headers.map(h => `<th>${h.replace(/([A-Z])/g, ' $1').trim()}</th>`).join('')}</tr></thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+                <p class="count">${data.length} record${data.length !== 1 ? 's' : ''} total</p>
+            ` : '<p style="color:#888;margin-top:32px;">No data available for the selected period.</p>'}
+            <div class="footer">
+                <span>Generated by KU Wellness System — Administrative Reports</span>
+                <span>${new Date().toLocaleString()}</span>
+            </div>
+            </body></html>`);
+        w.document.close();
+        w.print();
     };
 
     // Build the users API URL with all active filters
@@ -97,8 +111,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
         return `/api/admin/users?${params.toString()}`;
     };
 
-    const generateUsersReport = async () => {
-        setGeneratingUsers(true);
+    const printUsersReport = async () => {
+        setPrintingUsers(true);
         try {
             const res = await fetch(buildUsersUrl(), { cache: 'no-store' });
             const data = await res.json();
@@ -114,12 +128,12 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                 const roleLabel = userRole === 'all'
                     ? 'All Roles'
                     : userRole.charAt(0).toUpperCase() + userRole.slice(1) + 's';
-                downloadPDF(
+                handlePrintReport(
                     formattedData,
-                    `Users_Report_${roleLabel}_${userDateRange.start}_to_${userDateRange.end}.pdf`,
-                    `Users Demographic Report — ${roleLabel} (${userDateRange.start} → ${userDateRange.end})`
+                    `Users Demographic Report — ${roleLabel}`,
+                    `${userDateRange.start} → ${userDateRange.end}`
                 );
-                showToast(`Users report downloaded! (${formattedData.length} records)`, 'success');
+                showToast(`Users report ready to print! (${formattedData.length} records)`, 'success');
             } else {
                 showToast('No user data found for the selected filters.', 'error');
             }
@@ -127,7 +141,7 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
             console.error('Error generating users report:', error);
             showToast('Failed to generate users report.', 'error');
         } finally {
-            setGeneratingUsers(false);
+            setPrintingUsers(false);
         }
     };
 
@@ -141,8 +155,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
         return `/api/appointments?${params.toString()}`;
     };
 
-    const generateAppointmentsReport = async () => {
-        setGeneratingAppointments(true);
+    const printAppointmentsReport = async () => {
+        setPrintingAppointments(true);
         try {
             const res = await fetch(buildAppointmentsUrl(), { cache: 'no-store' });
             const data = await res.json();
@@ -159,12 +173,12 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                     BookedOn: new Date(a.createdAt).toLocaleDateString()
                 }));
                 const statusLabel = apptStatus === 'all' ? 'All Statuses' : apptStatus.charAt(0).toUpperCase() + apptStatus.slice(1);
-                downloadPDF(
+                handlePrintReport(
                     formattedData,
-                    `Appointments_Report_${statusLabel}_${apptDateRange.start}_to_${apptDateRange.end}.pdf`,
-                    `Counseling Appointments History — ${statusLabel} (${apptDateRange.start} → ${apptDateRange.end})`
+                    `Counseling Appointments History — ${statusLabel}`,
+                    `${apptDateRange.start} → ${apptDateRange.end}`
                 );
-                showToast(`Appointments report downloaded! (${formattedData.length} records)`, 'success');
+                showToast(`Appointments report ready to print! (${formattedData.length} records)`, 'success');
             } else {
                 showToast('No appointments found for the selected filters.', 'error');
             }
@@ -172,7 +186,7 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
             console.error('Error generating appointments report:', error);
             showToast('Failed to generate appointments report.', 'error');
         } finally {
-            setGeneratingAppointments(false);
+            setPrintingAppointments(false);
         }
     };
 
@@ -187,8 +201,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
         return `/api/admin/reports/audit-logs?${params.toString()}`;
     };
 
-    const generateAuditLogsReport = async () => {
-        setGeneratingAuditLogs(true);
+    const printAuditLogsReport = async () => {
+        setPrintingAuditLogs(true);
         try {
             const res = await fetch(buildAuditLogsUrl(), { cache: 'no-store' });
             const data = await res.json();
@@ -203,24 +217,24 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                 }));
                 const actionLabel   = auditAction   === 'all' ? 'All Actions'   : auditAction;
                 const resourceLabel = auditResource === 'all' ? 'All Resources' : auditResource;
-                downloadPDF(
+                handlePrintReport(
                     formattedData,
-                    `Audit_Logs_${actionLabel}_${resourceLabel}_${auditDateRange.start}_to_${auditDateRange.end}.pdf`,
-                    `System Audit Logs — ${actionLabel} / ${resourceLabel} (${auditDateRange.start} → ${auditDateRange.end})`
+                    `System Audit Logs — ${actionLabel} / ${resourceLabel}`,
+                    `${auditDateRange.start} → ${auditDateRange.end}`
                 );
-                showToast(`Audit logs downloaded! (${formattedData.length} records)`, 'success');
+                showToast(`Audit logs ready to print! (${formattedData.length} records)`, 'success');
             } else {
                 showToast('No logs found for the selected filters.', 'error');
             }
         } catch (err) {
             showToast('Failed to export logs', 'error');
         } finally {
-            setGeneratingAuditLogs(false);
+            setPrintingAuditLogs(false);
         }
     };
 
-    const generateClinicalReport = async () => {
-        setGeneratingClinical(true);
+    const printClinicalReport = async () => {
+        setPrintingClinical(true);
         try {
             const res = await fetch(`/api/admin/reports/clinical-summary?startDate=${clinicalDateRange.start}&endDate=${clinicalDateRange.end}`, { cache: 'no-store' });
             const data = await res.json();
@@ -234,19 +248,19 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                     Notes_Snippet: n.notes.substring(0, 50) + '...',
                     ActionItems: n.actionItems
                 }));
-                downloadPDF(
-                    formattedData, 
-                    `Clinical_Summary_${clinicalDateRange.start}_to_${clinicalDateRange.end}.pdf`, 
-                    `Clinical Session Progress Summary (${clinicalDateRange.start} → ${clinicalDateRange.end})`
+                handlePrintReport(
+                    formattedData,
+                    `Clinical Session Progress Summary`,
+                    `${clinicalDateRange.start} → ${clinicalDateRange.end}`
                 );
-                showToast(`Clinical report downloaded! (${formattedData.length} records)`, 'success');
+                showToast(`Clinical report ready to print! (${formattedData.length} records)`, 'success');
             } else {
                 showToast('No clinical data found for the selected filters.', 'error');
             }
         } catch (err) {
             showToast('Failed to export clinical data', 'error');
         } finally {
-            setGeneratingClinical(false);
+            setPrintingClinical(false);
         }
     };
 
@@ -288,14 +302,14 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                     <button 
                         className="btn-primary" 
                         onClick={() => {
-                            if (previewType === 'users') generateUsersReport();
-                            else if (previewType === 'appointments') generateAppointmentsReport();
-                            else if (previewType === 'audit') generateAuditLogsReport();
-                            else if (previewType === 'clinical') generateClinicalReport();
+                            if (previewType === 'users') printUsersReport();
+                            else if (previewType === 'appointments') printAppointmentsReport();
+                            else if (previewType === 'audit') printAuditLogsReport();
+                            else if (previewType === 'clinical') printClinicalReport();
                         }}
                         style={{ fontSize: '0.8rem', padding: '6px 12px' }}
                     >
-                        Download Full PDF
+                        🖨 Print Full Report
                     </button>
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
@@ -332,7 +346,7 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                     <div>
                         <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>System Reports</h1>
-                        <p style={{ color: 'var(--text-secondary)' }}>Generate and download system-wide activity reports.</p>
+                        <p style={{ color: 'var(--text-secondary)' }}>Generate and print system-wide activity reports.</p>
                     </div>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <div className="glass" style={{ padding: '6px 12px', display: 'flex', gap: 12, alignItems: 'center', borderRadius: 12 }}>
@@ -454,8 +468,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                 {previewLoading && previewType === 'users' ? '⏳ Loading...' : '👁 Preview'}
                             </button>
                             <button
-                                onClick={generateUsersReport}
-                                disabled={generatingUsers}
+                                onClick={printUsersReport}
+                                disabled={printingUsers}
                                 style={{
                                     flex: 1,
                                     padding: '10px 16px',
@@ -465,8 +479,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                     color: 'var(--ku-gold)',
                                     fontWeight: 600,
                                     fontSize: '0.85rem',
-                                    cursor: generatingUsers ? 'not-allowed' : 'pointer',
-                                    opacity: generatingUsers ? 0.6 : 1,
+                                    cursor: printingUsers ? 'not-allowed' : 'pointer',
+                                    opacity: printingUsers ? 0.6 : 1,
                                     transition: 'all 0.2s',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -474,7 +488,7 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                     gap: 6
                                 }}
                             >
-                                {generatingUsers ? '⏳ Generating...' : '⬇ Download PDF'}
+                                {printingUsers ? '⏳ Preparing...' : '🖨 Print Report'}
                             </button>
                         </div>
                     </div>
@@ -582,8 +596,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                 {previewLoading && previewType === 'appointments' ? '⏳ Loading...' : '👁 Preview'}
                             </button>
                             <button
-                                onClick={generateAppointmentsReport}
-                                disabled={generatingAppointments}
+                                onClick={printAppointmentsReport}
+                                disabled={printingAppointments}
                                 style={{
                                     flex: 1,
                                     padding: '10px 16px',
@@ -593,8 +607,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                     color: 'var(--ku-gold)',
                                     fontWeight: 600,
                                     fontSize: '0.85rem',
-                                    cursor: generatingAppointments ? 'not-allowed' : 'pointer',
-                                    opacity: generatingAppointments ? 0.6 : 1,
+                                    cursor: printingAppointments ? 'not-allowed' : 'pointer',
+                                    opacity: printingAppointments ? 0.6 : 1,
                                     transition: 'all 0.2s',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -602,7 +616,7 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                     gap: 6
                                 }}
                             >
-                                {generatingAppointments ? '⏳ Generating...' : '⬇ Download PDF'}
+                                {printingAppointments ? '⏳ Preparing...' : '🖨 Print Report'}
                             </button>
                         </div>
                     </div>
@@ -744,8 +758,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                 {previewLoading && previewType === 'audit' ? '⏳ Loading...' : '👁 Preview'}
                             </button>
                             <button
-                                onClick={generateAuditLogsReport}
-                                disabled={generatingAuditLogs}
+                                onClick={printAuditLogsReport}
+                                disabled={printingAuditLogs}
                                 style={{
                                     flex: 1,
                                     padding: '10px 16px',
@@ -755,8 +769,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                     color: '#94a3b8',
                                     fontWeight: 600,
                                     fontSize: '0.85rem',
-                                    cursor: generatingAuditLogs ? 'not-allowed' : 'pointer',
-                                    opacity: generatingAuditLogs ? 0.6 : 1,
+                                    cursor: printingAuditLogs ? 'not-allowed' : 'pointer',
+                                    opacity: printingAuditLogs ? 0.6 : 1,
                                     transition: 'all 0.2s',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -764,7 +778,7 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                     gap: 6
                                 }}
                             >
-                                {generatingAuditLogs ? '⏳ Generating...' : '⬇ Download PDF'}
+                                {printingAuditLogs ? '⏳ Preparing...' : '🖨 Print Report'}
                             </button>
                         </div>
                     </div>
@@ -830,8 +844,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                 {previewLoading && previewType === 'clinical' ? '⏳ Loading...' : '👁 Preview'}
                             </button>
                             <button
-                                onClick={generateClinicalReport}
-                                disabled={generatingClinical}
+                                onClick={printClinicalReport}
+                                disabled={printingClinical}
                                 style={{
                                     flex: 1,
                                     padding: '10px 16px',
@@ -841,8 +855,8 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                     color: '#f472b6',
                                     fontWeight: 600,
                                     fontSize: '0.85rem',
-                                    cursor: generatingClinical ? 'not-allowed' : 'pointer',
-                                    opacity: generatingClinical ? 0.6 : 1,
+                                    cursor: printingClinical ? 'not-allowed' : 'pointer',
+                                    opacity: printingClinical ? 0.6 : 1,
                                     transition: 'all 0.2s',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -850,7 +864,7 @@ const downloadPDF = (data: any[], fileName: string, title: string) => {
                                     gap: 6
                                 }}
                             >
-                                {generatingClinical ? '⏳ Generating...' : '⬇ Download PDF'}
+                                {printingClinical ? '⏳ Preparing...' : '🖨 Print Report'}
                             </button>
                         </div>
                     </div>

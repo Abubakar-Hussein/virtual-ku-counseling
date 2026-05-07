@@ -40,5 +40,9 @@ const AppointmentSchema = new Schema<IAppointment>(
 // Index for efficient counselor schedule queries
 AppointmentSchema.index({ counselorId: 1, date: 1 });
 AppointmentSchema.index({ studentId: 1, date: -1 });
+// Index for status-filtered dashboard queries
+AppointmentSchema.index({ studentId: 1, status: 1 });
+AppointmentSchema.index({ counselorId: 1, status: 1 });
+AppointmentSchema.index({ status: 1, date: -1 });
 
 export default models.Appointment || model<IAppointment>('Appointment', AppointmentSchema);

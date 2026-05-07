@@ -11,6 +11,11 @@ import CounselorProfile from '@/models/CounselorProfile';
 import Intake from '@/models/Intake';
 import { sendBookingConfirmationEmail, sendBookingRequestEmails } from '@/lib/email';
 import { logAction } from '@/lib/audit';
+import { createRateLimiter } from '@/lib/rateLimit';
+
+// 10 appointment booking attempts per IP per hour
+const appointmentLimiter = createRateLimiter({ limit: 10, windowMs: 60 * 60 * 1000 });
+
 
 export async function GET(req: NextRequest) {
     try {
@@ -41,7 +46,10 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        if (status && status !== 'all') {
+        if (status === 'active') {
+            // Dashboard shorthand: only pending + confirmed (skip completed/cancelled history)
+            matchStage.status = { $in: ['pending', 'confirmed'] };
+        } else if (status && status !== 'all') {
             matchStage.status = status;
         }
 
@@ -77,6 +85,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+    const limited = appointmentLimiter(req);
+    if (limited) return limited;
+
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

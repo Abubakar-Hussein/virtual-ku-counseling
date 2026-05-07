@@ -73,7 +73,7 @@ export default function RegisterPage() {
                         <span className="gradient-text">Create Account</span>
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                        Join Wellness Connect with your university or personal email
+                        Join Wellness System with your university or personal email
                     </p>
                 </div>
 

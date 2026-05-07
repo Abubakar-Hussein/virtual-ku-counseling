@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(0, 102, 51, 0.3)',
           }}>🎓</div>
-          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness Connect</span>
+          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
         </Link>
         <ThemeToggle />
       </nav>

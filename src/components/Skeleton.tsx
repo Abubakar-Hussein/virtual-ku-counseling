@@ -91,15 +91,17 @@ export function TableRowSkeleton({ columns = 3 }: { columns?: number }) {
 }
 
 /** Renders multiple skeletons for a dashboard page */
-export function DashboardSkeleton() {
+export function DashboardSkeleton({ hideStats = false }: { hideStats?: boolean }) {
     return (
         <>
-            {/* Stats row */}
-            <section className="stats-grid">
-                <StatsCardSkeleton />
-                <StatsCardSkeleton />
-                <StatsCardSkeleton />
-            </section>
+            {/* Stats row — omitted when stats are already rendered */}
+            {!hideStats && (
+                <section className="stats-grid">
+                    <StatsCardSkeleton />
+                    <StatsCardSkeleton />
+                    <StatsCardSkeleton />
+                </section>
+            )}
 
             {/* Content area */}
             <section style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 8 }}>

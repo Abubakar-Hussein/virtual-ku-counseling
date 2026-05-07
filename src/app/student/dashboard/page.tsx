@@ -16,9 +16,14 @@ import EmptyState from '@/components/EmptyState';
 export default function StudentDashboard() {
     const { data: session } = useSession();
     const { showToast } = useToast();
+
+    // Stats load independently and fast (no joins)
     const [stats, setStats] = useState({ upcoming: 0, pending: 0, past: 0 });
+    const [statsLoading, setStatsLoading] = useState(true);
+
+    // Appointments list loads separately (heavy aggregation)
     const [appointments, setAppointments] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [apptLoading, setApptLoading] = useState(true);
 
     // Search & filter state
     const [search, setSearch] = useState('');
@@ -40,25 +45,40 @@ export default function StudentDashboard() {
             }
         }
 
-        async function fetchData() {
+        // Fire both fetches in parallel — stats resolves first (no joins)
+        // and renders immediately while the heavier list is still loading.
+        async function fetchStats() {
             try {
-                const res = await fetch('/api/appointments');
+                const res = await fetch('/api/appointments/stats');
+                const data = await res.json();
+                if (data && !data.error) {
+                    setStats({ upcoming: data.upcoming, pending: data.pending, past: data.past });
+                }
+            } catch (err) {
+                console.error('[STATS]', err);
+            } finally {
+                setStatsLoading(false);
+            }
+        }
+
+        async function fetchAppointments() {
+            try {
+                // Only fetch active appointments for the dashboard view
+                const res = await fetch('/api/appointments?status=active');
                 const data = await res.json();
                 if (Array.isArray(data)) {
                     setAppointments(data);
-                    const upcoming = data.filter(a => a.status === 'confirmed').length;
-                    const pending = data.filter(a => a.status === 'pending').length;
-                    const past = data.filter(a => a.status === 'completed').length;
-                    setStats({ upcoming, pending, past });
                 }
             } catch (err) {
-                console.error(err);
+                console.error('[APPOINTMENTS]', err);
                 showToast('Failed to load appointments', 'error');
             } finally {
-                setLoading(false);
+                setApptLoading(false);
             }
         }
-        fetchData();
+
+        // Kick off both at the same time
+        Promise.all([fetchStats(), fetchAppointments()]);
     }, []);
 
     const handleCancel = async (id: string) => {
@@ -66,6 +86,8 @@ export default function StudentDashboard() {
             const res = await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setAppointments(prev => prev.map(a => a._id === id ? { ...a, status: 'cancelled' } : a));
+                // Decrement pending count if it was pending
+                setStats(prev => ({ ...prev, pending: Math.max(0, prev.pending - 1) }));
                 showToast('Appointment cancelled successfully', 'success');
             } else {
                 showToast('Failed to cancel appointment', 'error');
@@ -104,77 +126,87 @@ export default function StudentDashboard() {
                     <NotificationBell />
                 </header>
 
-                {loading ? (
-                    <DashboardSkeleton />
-                ) : (
-                    <>
-                        <section className="stats-grid">
+                {/* Stats render as soon as the lightweight /stats endpoint responds */}
+                <section className="stats-grid">
+                    {statsLoading ? (
+                        <>
+                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
+                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
+                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
+                        </>
+                    ) : (
+                        <>
                             <StatsCard label="Confirmed Sessions" value={stats.upcoming} icon="📅" color="var(--ku-green-light)" />
                             <StatsCard label="Pending Requests" value={stats.pending} icon="⏳" color="#facc15" />
                             <StatsCard label="Past Sessions" value={stats.past} icon="✅" color="#60a5fa" />
-                        </section>
+                        </>
+                    )}
+                </section>
 
-                        <section className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32 }}>
-                            <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Upcoming Appointments</h2>
-                                    <Link href="/student/counselors" className="btn-primary" style={{ textDecoration: 'none', padding: '8px 16px', fontSize: '0.85rem' }}>
-                                        + Book New
-                                    </Link>
-                                </div>
+                {/* Appointments list renders once the heavier query resolves */}
+                {apptLoading ? (
+                    <DashboardSkeleton hideStats />
+                ) : (
+                    <section className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32 }}>
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Upcoming Appointments</h2>
+                                <Link href="/student/counselors" className="btn-primary" style={{ textDecoration: 'none', padding: '8px 16px', fontSize: '0.85rem' }}>
+                                    + Book New
+                                </Link>
+                            </div>
 
-                                <SearchFilter
-                                    searchValue={search}
-                                    onSearchChange={setSearch}
-                                    statusFilter={statusFilter}
-                                    onStatusChange={setStatusFilter}
-                                    searchPlaceholder="Search by counselor, reason..."
+                            <SearchFilter
+                                searchValue={search}
+                                onSearchChange={setSearch}
+                                statusFilter={statusFilter}
+                                onStatusChange={setStatusFilter}
+                                searchPlaceholder="Search by counselor, reason..."
+                            />
+
+                            {activeAppointments.length === 0 ? (
+                                <EmptyState
+                                    icon="🏝️"
+                                    title={statusFilter !== 'all' ? "No sessions found" : "All caught up!"}
+                                    description={statusFilter !== 'all'
+                                        ? `We couldn't find any ${statusFilter} appointments matching your filters.`
+                                        : "You don't have any upcoming appointments. Taking regular time to talk can help maintain your mental wellness."}
+                                    actionLabel={statusFilter === 'all' && search === '' ? "Book a Session" : undefined}
+                                    actionHref="/student/counselors"
                                 />
-
-                                {activeAppointments.length === 0 ? (
-                                    <EmptyState 
-                                        icon="🏝️"
-                                        title={statusFilter !== 'all' ? "No sessions found" : "All caught up!"}
-                                        description={statusFilter !== 'all' 
-                                            ? `We couldn't find any ${statusFilter} appointments matching your filters.` 
-                                            : "You don't have any upcoming appointments. Taking regular time to talk can help maintain your mental wellness."}
-                                        actionLabel={statusFilter === 'all' && search === '' ? "Book a Session" : undefined}
-                                        actionHref="/student/counselors"
-                                    />
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                        {activeAppointments
-                                            .slice(0, 10)
-                                            .map(appt => (
-                                                <AppointmentCard
-                                                    key={appt._id}
-                                                    appointment={appt}
-                                                    viewerRole="student"
-                                                    onCancel={(id) => setCancelTarget(id)}
-                                                />
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>Health Tips</h2>
-                                <div className="glass" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
-                                    {[
-                                        { title: 'The 5-4-3-2-1 Rule', desc: 'A grounding technique to help when you are feeling overwhelmed.' },
-                                        { title: 'Sleep Hygiene', desc: 'Try to maintain a consistent sleep schedule even during exams.' },
-                                        { title: 'Stay Hydrated', desc: 'Physical health directly impacts your mental clarity.' }
-                                    ].map((tip, i) => (
-                                        <div key={i} style={{ borderBottom: i === 2 ? '' : '1px solid var(--border)', paddingBottom: i === 2 ? 0 : 16 }}>
-                                            <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--ku-green-light)' }}>{tip.title}</div>
-                                            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{tip.desc}</div>
-                                        </div>
-                                    ))}
-                                    <Link href="#" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', textDecoration: 'none' }}>View more resources →</Link>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                    {activeAppointments
+                                        .slice(0, 10)
+                                        .map(appt => (
+                                            <AppointmentCard
+                                                key={appt._id}
+                                                appointment={appt}
+                                                viewerRole="student"
+                                                onCancel={(id) => setCancelTarget(id)}
+                                            />
+                                        ))}
                                 </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>Health Tips</h2>
+                            <div className="glass" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                                {[
+                                    { title: 'The 5-4-3-2-1 Rule', desc: 'A grounding technique to help when you are feeling overwhelmed.' },
+                                    { title: 'Sleep Hygiene', desc: 'Try to maintain a consistent sleep schedule even during exams.' },
+                                    { title: 'Stay Hydrated', desc: 'Physical health directly impacts your mental clarity.' }
+                                ].map((tip, i) => (
+                                    <div key={i} style={{ borderBottom: i === 2 ? '' : '1px solid var(--border)', paddingBottom: i === 2 ? 0 : 16 }}>
+                                        <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--ku-green-light)' }}>{tip.title}</div>
+                                        <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{tip.desc}</div>
+                                    </div>
+                                ))}
+                                <Link href="#" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', textDecoration: 'none' }}>View more resources →</Link>
                             </div>
-                        </section>
-                    </>
+                        </div>
+                    </section>
                 )}
             </main>
 

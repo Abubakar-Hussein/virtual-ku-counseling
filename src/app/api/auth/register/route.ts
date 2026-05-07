@@ -5,8 +5,15 @@ import { sendRegistrationEmail, sendCounselorPendingApprovalEmail } from '@/lib/
 import User from '@/models/User';
 import CounselorProfile from '@/models/CounselorProfile';
 import { logAction } from '@/lib/audit';
+import { createRateLimiter } from '@/lib/rateLimit';
+
+// 5 registration attempts per IP per 15 minutes
+const registerLimiter = createRateLimiter({ limit: 5, windowMs: 15 * 60 * 1000 });
 
 export async function POST(req: NextRequest) {
+    const limited = registerLimiter(req);
+    if (limited) return limited;
+
     try {
         const body = await req.json();
         const { firstName, lastName, name: providedName, email, password, role, studentId, phone } = body;

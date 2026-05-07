@@ -7,6 +7,44 @@ import { useToast } from '@/components/Toast';
 import EmptyState from '@/components/EmptyState';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const;
+const HOURS_12 = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
+const MINUTES = ['00', '15', '30', '45'];
+
+// Convert 24h "HH:MM" to { hour12, minute, period }
+function to12Hour(time24: string): { hour: string; minute: string; period: 'AM' | 'PM' } {
+    const [hStr, mStr] = time24.split(':');
+    let h = parseInt(hStr, 10);
+    const minute = mStr || '00';
+    const period: 'AM' | 'PM' = h >= 12 ? 'PM' : 'AM';
+    if (h === 0) h = 12;
+    else if (h > 12) h -= 12;
+    return { hour: String(h), minute, period };
+}
+
+// Convert { hour12, minute, period } back to 24h "HH:MM"
+function to24Hour(hour: string, minute: string, period: 'AM' | 'PM'): string {
+    let h = parseInt(hour, 10);
+    if (period === 'AM' && h === 12) h = 0;
+    else if (period === 'PM' && h !== 12) h += 12;
+    return `${String(h).padStart(2, '0')}:${minute}`;
+}
+
+// Convert "HH:MM" to total minutes for comparison
+function timeToMinutes(time: string): number {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+}
+
+// Check if a slot has a valid time range
+function isSlotValid(slot: { startTime: string; endTime: string }): boolean {
+    return timeToMinutes(slot.endTime) > timeToMinutes(slot.startTime);
+}
+
+// Format time for display: "9:00 AM"
+function formatTimeDisplay(time24: string): string {
+    const { hour, minute, period } = to12Hour(time24);
+    return `${hour}:${minute} ${period}`;
+}
 
 export default function CounselorSchedulePage() {
     const { data: session } = useSession();
@@ -52,11 +90,40 @@ export default function CounselorSchedulePage() {
         setSlots(newSlots);
     };
 
+    const updateSlotTime = (index: number, field: 'startTime' | 'endTime', hour: string, minute: string, period: 'AM' | 'PM') => {
+        const time24 = to24Hour(hour, minute, period);
+        const newSlots = [...slots];
+        newSlots[index] = { ...newSlots[index], [field]: time24 };
+
+        // Auto-correct: if setting start time and end time is now invalid, bump end time
+        if (field === 'startTime') {
+            const startMins = timeToMinutes(time24);
+            const endMins = timeToMinutes(newSlots[index].endTime);
+            if (endMins <= startMins) {
+                // Set end time to 1 hour after start, capped at 23:45
+                const newEndMins = Math.min(startMins + 60, 23 * 60 + 45);
+                const endH = Math.floor(newEndMins / 60);
+                const endM = newEndMins % 60;
+                newSlots[index].endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+            }
+        }
+
+        setSlots(newSlots);
+    };
+
     const toggleSpec = (s: string) => {
         setSpecs(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
     };
 
+    const hasInvalidSlots = slots.some(slot => !isSlotValid(slot));
+
     const handleSave = async () => {
+        // Validate all slots before saving
+        if (hasInvalidSlots) {
+            showToast('Please fix invalid time ranges before saving. End time must be after start time.', 'error');
+            return;
+        }
+
         setSaving(true);
         try {
             const res = await fetch(`/api/counselors/${(session?.user as any).id}/availability`, {
@@ -75,6 +142,33 @@ export default function CounselorSchedulePage() {
         } finally {
             setSaving(false);
         }
+    };
+
+    // Shared styles for the time picker selects
+    const timeSelectStyle: React.CSSProperties = {
+        padding: '8px 6px',
+        background: '#1e293b',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 8,
+        color: '#e2e8f0',
+        fontSize: '0.82rem',
+        cursor: 'pointer',
+        outline: 'none',
+        minWidth: 52,
+        textAlign: 'center',
+    };
+    const periodSelectStyle: React.CSSProperties = {
+        ...timeSelectStyle,
+        minWidth: 58,
+        fontWeight: 600,
+        background: '#1e3a2f',
+        color: '#86efac',
+    };
+    const optionStyle: React.CSSProperties = {
+        background: '#1e293b',
+        color: '#e2e8f0',
     };
 
     if (loading) return <div style={{ background: 'var(--bg-dark)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Loading...</div>;
@@ -103,22 +197,77 @@ export default function CounselorSchedulePage() {
                                     description="You haven't added any working hours yet. Students won't be able to book you until you define your weekly blocks."
                                 />
                             ) : (
-                                slots.map((slot, i) => (
-                                    <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)' }}>
-                                        <select
-                                            className="form-input"
-                                            style={{ maxWidth: 140 }}
-                                            value={slot.day}
-                                            onChange={e => updateSlot(i, 'day', e.target.value)}
-                                        >
-                                            {DAYS.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
-                                        </select>
-                                        <input type="time" className="form-input" style={{ maxWidth: 120 }} value={slot.startTime} onChange={e => updateSlot(i, 'startTime', e.target.value)} />
-                                        <span style={{ color: 'var(--text-muted)' }}>to</span>
-                                        <input type="time" className="form-input" style={{ maxWidth: 120 }} value={slot.endTime} onChange={e => updateSlot(i, 'endTime', e.target.value)} />
-                                        <button onClick={() => removeSlot(i)} style={{ color: '#f87171', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
-                                    </div>
-                                ))
+                                slots.map((slot, i) => {
+                                    const start = to12Hour(slot.startTime);
+                                    const end = to12Hour(slot.endTime);
+                                    const invalid = !isSlotValid(slot);
+
+                                    return (
+                                        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                            <div style={{
+                                                display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
+                                                background: 'rgba(255,255,255,0.02)', padding: '14px 16px', borderRadius: 12,
+                                                border: `1px solid ${invalid ? '#f8717180' : 'var(--border)'}`,
+                                                transition: 'border-color 0.2s',
+                                            }}>
+                                                {/* Day selector */}
+                                                <select
+                                                    className="form-input"
+                                                    style={{ maxWidth: 130, fontSize: '0.85rem', background: '#1e293b', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.15)' }}
+                                                    value={slot.day}
+                                                    onChange={e => updateSlot(i, 'day', e.target.value)}
+                                                >
+                                                    {DAYS.map(d => <option key={d} value={d} style={optionStyle}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+                                                </select>
+
+                                                {/* Start time: hour, minute, AM/PM */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <select style={timeSelectStyle} value={start.hour}
+                                                        onChange={e => updateSlotTime(i, 'startTime', e.target.value, start.minute, start.period)}>
+                                                        {HOURS_12.map(h => <option key={h} value={h} style={optionStyle}>{h}</option>)}
+                                                    </select>
+                                                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>:</span>
+                                                    <select style={timeSelectStyle} value={start.minute}
+                                                        onChange={e => updateSlotTime(i, 'startTime', start.hour, e.target.value, start.period)}>
+                                                        {MINUTES.map(m => <option key={m} value={m} style={optionStyle}>{m}</option>)}
+                                                    </select>
+                                                    <select style={periodSelectStyle} value={start.period}
+                                                        onChange={e => updateSlotTime(i, 'startTime', start.hour, start.minute, e.target.value as 'AM' | 'PM')}>
+                                                        <option value="AM" style={optionStyle}>AM</option>
+                                                        <option value="PM" style={optionStyle}>PM</option>
+                                                    </select>
+                                                </div>
+
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 500 }}>to</span>
+
+                                                {/* End time: hour, minute, AM/PM */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <select style={{ ...timeSelectStyle, ...(invalid ? { borderColor: '#f87171' } : {}) }} value={end.hour}
+                                                        onChange={e => updateSlotTime(i, 'endTime', e.target.value, end.minute, end.period)}>
+                                                        {HOURS_12.map(h => <option key={h} value={h} style={optionStyle}>{h}</option>)}
+                                                    </select>
+                                                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>:</span>
+                                                    <select style={{ ...timeSelectStyle, ...(invalid ? { borderColor: '#f87171' } : {}) }} value={end.minute}
+                                                        onChange={e => updateSlotTime(i, 'endTime', end.hour, e.target.value, end.period)}>
+                                                        {MINUTES.map(m => <option key={m} value={m} style={optionStyle}>{m}</option>)}
+                                                    </select>
+                                                    <select style={{ ...periodSelectStyle, ...(invalid ? { borderColor: '#f87171' } : {}) }} value={end.period}
+                                                        onChange={e => updateSlotTime(i, 'endTime', end.hour, end.minute, e.target.value as 'AM' | 'PM')}>
+                                                        <option value="AM" style={optionStyle}>AM</option>
+                                                        <option value="PM" style={optionStyle}>PM</option>
+                                                    </select>
+                                                </div>
+
+                                                <button onClick={() => removeSlot(i)} style={{ color: '#f87171', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem', marginLeft: 'auto' }}>✕</button>
+                                            </div>
+                                            {invalid && (
+                                                <span style={{ color: '#f87171', fontSize: '0.75rem', paddingLeft: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    ⚠ End time must be later than {formatTimeDisplay(slot.startTime)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    );
+                                })
                             )}
                             <button onClick={addSlot} className="btn-secondary" style={{ alignSelf: 'center', borderStyle: 'dashed', marginTop: 12, width: '100%', maxWidth: 200 }}>+ Add Time Block</button>
                         </div>

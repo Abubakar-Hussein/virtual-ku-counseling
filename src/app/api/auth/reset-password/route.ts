@@ -1,9 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import User from '@/models/User';
 import { connectDB } from '@/lib/mongodb';
+import { createRateLimiter } from '@/lib/rateLimit';
 
-export async function POST(req: Request) {
+// 5 password-reset attempts per IP per 15 minutes
+const resetPasswordLimiter = createRateLimiter({ limit: 5, windowMs: 15 * 60 * 1000 });
+
+export async function POST(req: NextRequest) {
+    const limited = resetPasswordLimiter(req);
+    if (limited) return limited;
+
     try {
         const { token, password } = await req.json();
 
