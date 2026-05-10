@@ -24,6 +24,40 @@ export default function AdminUserManagement() {
     // Confirm modal for deletion
     const [userToDelete, setUserToDelete] = useState<{ userId: string; userName: string } | null>(null);
 
+    // Edit user modal
+    const [editUser, setEditUser] = useState<any>(null);
+    const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', studentId: '' });
+    const [saving, setSaving] = useState(false);
+
+    const openEditModal = (u: any) => {
+        setEditUser(u);
+        setEditForm({ name: u.name || '', email: u.email || '', phone: u.phone || '', studentId: u.studentId || '' });
+    };
+
+    const saveUserEdit = async () => {
+        if (!editUser) return;
+        setSaving(true);
+        try {
+            const res = await fetch('/api/admin/users', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: editUser._id, ...editForm }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setUsers(prev => prev.map(u => u._id === editUser._id ? { ...u, ...data } : u));
+                showToast(`${editForm.name} updated successfully`, 'success');
+                setEditUser(null);
+            } else {
+                showToast(data.error || 'Failed to update user', 'error');
+            }
+        } catch {
+            showToast('Network error while updating user', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     useEffect(() => {
         async function fetchUsers() {
             try {
@@ -285,6 +319,22 @@ export default function AdminUserManagement() {
                                                     <option value="admin">Admin</option>
                                                 </select>
                                                 <button
+                                                    onClick={() => openEditModal(u)}
+                                                    style={{
+                                                        padding: '6px 10px',
+                                                        borderRadius: 8,
+                                                        border: '1px solid rgba(96, 165, 250, 0.4)',
+                                                        background: 'rgba(96, 165, 250, 0.1)',
+                                                        color: '#60a5fa',
+                                                        fontSize: '0.8rem',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s',
+                                                    }}
+                                                    title="Edit User"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
                                                     onClick={() => setUserToDelete({ userId: u._id, userName: u.name })}
                                                     style={{
                                                         padding: '6px 10px',
@@ -336,6 +386,77 @@ export default function AdminUserManagement() {
                     onConfirm={() => deleteUser(userToDelete.userId)}
                     onCancel={() => setUserToDelete(null)}
                 />
+            )}
+
+            {/* Edit User Modal */}
+            {editUser && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+                     onClick={() => setEditUser(null)}>
+                    <div onClick={e => e.stopPropagation()} style={{ background: 'var(--card-bg, #1a1a2e)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, width: '90%', maxWidth: 460, boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}>
+                        <h3 style={{ margin: '0 0 4px', fontSize: '1.15rem', fontWeight: 700 }}>✏️ Edit User</h3>
+                        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+                            Update details for <strong>{editUser.name}</strong>
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            {/* Name */}
+                            <div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, display: 'block' }}>Full Name</label>
+                                <input
+                                    type="text"
+                                    value={editForm.name}
+                                    onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))}
+                                    className="form-input"
+                                    style={{ width: '100%', fontSize: '0.88rem' }}
+                                />
+                            </div>
+                            {/* Email */}
+                            <div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, display: 'block' }}>Email</label>
+                                <input
+                                    type="email"
+                                    value={editForm.email}
+                                    onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))}
+                                    className="form-input"
+                                    style={{ width: '100%', fontSize: '0.88rem' }}
+                                />
+                            </div>
+                            {/* Phone */}
+                            <div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, display: 'block' }}>Phone</label>
+                                <input
+                                    type="tel"
+                                    value={editForm.phone}
+                                    onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))}
+                                    placeholder="+2547XXXXXXXX"
+                                    className="form-input"
+                                    style={{ width: '100%', fontSize: '0.88rem' }}
+                                />
+                            </div>
+                            {/* Student ID */}
+                            <div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, display: 'block' }}>Student ID</label>
+                                <input
+                                    type="text"
+                                    value={editForm.studentId}
+                                    onChange={e => setEditForm(p => ({ ...p, studentId: e.target.value }))}
+                                    placeholder="e.g. SCT221-0000/2022"
+                                    className="form-input"
+                                    style={{ width: '100%', fontSize: '0.88rem' }}
+                                />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'flex-end' }}>
+                            <button onClick={() => setEditUser(null)} style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.82rem', cursor: 'pointer' }}>
+                                Cancel
+                            </button>
+                            <button onClick={saveUserEdit} disabled={saving || !editForm.name.trim() || !editForm.email.trim()} style={{ padding: '8px 22px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #9b7e49, #c9a84c)', color: '#fff', fontSize: '0.82rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+                                {saving ? '⏳ Saving...' : '💾 Save Changes'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

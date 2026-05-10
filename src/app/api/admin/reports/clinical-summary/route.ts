@@ -10,7 +10,8 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const startDate = searchParams.get('startDate');
-        const endDate = searchParams.get('endDate');
+        const endDate   = searchParams.get('endDate');
+        const progress  = searchParams.get('progress'); // Improved | Stable | Declined | Not Evaluated
 
         const session = await getServerSession(authOptions);
         if (!session || (session.user as any).role !== 'admin') {
@@ -29,6 +30,7 @@ export async function GET(req: Request) {
                 filter.createdAt.$lte = end;
             }
         }
+        if (progress && progress !== 'all') filter.progressIndicator = progress;
 
         const notes = await SessionNote.find(filter)
             .populate({ path: 'studentId', select: 'name email studentId', model: User })

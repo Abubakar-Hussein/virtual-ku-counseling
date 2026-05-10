@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import EmptyState from '@/components/EmptyState';
@@ -50,33 +50,78 @@ export default function SessionRecordsPage() {
     const [progressFilter, setProgressFilter] = useState('all');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-    const fetchRecords = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams();
-            if (search) params.set('search', search);
-            if (progressFilter !== 'all') params.set('progress', progressFilter);
-            if (dateRange.start) params.set('startDate', dateRange.start);
-            if (dateRange.end) params.set('endDate', dateRange.end);
-            const res = await fetch(`/api/counselors/records?${params}`);
-            const data = await res.json();
-            if (Array.isArray(data)) setRecords(data);
-        } catch {
-            showToast('Failed to load session records', 'error');
-        } finally {
-            setLoading(false);
-        }
-    }, [search, progressFilter, dateRange]);
+    // Signature modal state
+    const [sigRecord, setSigRecord] = useState<any>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const isDrawing = useRef(false);
 
-    useEffect(() => { fetchRecords(); }, [fetchRecords]);
+    const openSignModal = (record: any) => setSigRecord(record);
+    const closeSignModal = () => { setSigRecord(null); };
 
-    const toggle = (id: string) => setExpandedId(prev => prev === id ? null : id);
+    const clearCanvas = () => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        if (!ctx) return;
+        ctx.clearRect(0, 0, c.width, c.height);
+    };
 
-    const handlePrint = (record: any) => {
+    // Canvas drawing handlers
+    const startDraw = (x: number, y: number) => {
+        const ctx = canvasRef.current?.getContext('2d');
+        if (!ctx) return;
+        isDrawing.current = true;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    };
+    const draw = (x: number, y: number) => {
+        if (!isDrawing.current) return;
+        const ctx = canvasRef.current?.getContext('2d');
+        if (!ctx) return;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#111';
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    };
+    const stopDraw = () => { isDrawing.current = false; };
+
+    const getCanvasPos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        const rect = canvasRef.current!.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+    const getTouchPos = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        const rect = canvasRef.current!.getBoundingClientRect();
+        const t = e.touches[0];
+        return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+    };
+
+    const isCanvasBlank = () => {
+        const c = canvasRef.current;
+        if (!c) return true;
+        const ctx = c.getContext('2d');
+        if (!ctx) return true;
+        const px = ctx.getImageData(0, 0, c.width, c.height).data;
+        for (let i = 3; i < px.length; i += 4) { if (px[i] !== 0) return false; }
+        return true;
+    };
+
+    const printRecord = (record: any, signatureDataUrl?: string) => {
         const w = window.open('', '_blank');
         if (!w) return;
         const appt = record.appointment;
         const intake = record.intake;
+        const sigBlock = signatureDataUrl
+            ? `<h2>Counselor Verification</h2>
+               <div style="margin-top:8px;">
+                 <img src="${signatureDataUrl}" style="max-width:260px;height:auto;border-bottom:1px solid #333;" />
+                 <p style="margin:4px 0 0;font-size:0.85rem;"><strong>${record.counselorId?.name || 'Counselor'}</strong></p>
+                 <p style="font-size:0.78rem;color:#666;">Digitally signed — ${new Date().toLocaleString()}</p>
+               </div>`
+            : `<h2>Counselor Verification</h2>
+               <div style="margin-top:16px;border-bottom:1px solid #333;width:260px;height:1px;"></div>
+               <p style="font-size:0.85rem;margin-top:4px;"><strong>${record.counselorId?.name || 'Counselor'}</strong></p>
+               <p style="font-size:0.78rem;color:#666;">Signature line</p>`;
         w.document.write(`
             <html><head><title>Clinical Record — ${record.studentId?.name}</title>
             <style>
@@ -111,11 +156,48 @@ export default function SessionRecordsPage() {
             <h2>Progress Indicator</h2>
             <p><span class="badge">${record.progressIndicator}</span></p>
             ${appt?.rating ? `<h2>Student Feedback</h2><p>Rating: ${'★'.repeat(appt.rating)}${'☆'.repeat(5 - appt.rating)} (${appt.rating}/5)</p>${appt.feedback ? `<p>${appt.feedback}</p>` : ''}` : ''}
+            ${sigBlock}
             <br/><hr/><p style="font-size:0.75rem;color:#999">Generated by KU Wellness System — ${new Date().toLocaleString()}</p>
             </body></html>`);
         w.document.close();
         w.print();
     };
+
+    const handleSignAndPrint = () => {
+        if (!sigRecord) return;
+        const dataUrl = isCanvasBlank() ? undefined : canvasRef.current?.toDataURL('image/png');
+        printRecord(sigRecord, dataUrl);
+        closeSignModal();
+    };
+
+    const handleSkipSignature = () => {
+        if (!sigRecord) return;
+        printRecord(sigRecord);
+        closeSignModal();
+    };
+    const fetchRecords = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (progressFilter !== 'all') params.set('progress', progressFilter);
+            if (dateRange.start) params.set('startDate', dateRange.start);
+            if (dateRange.end) params.set('endDate', dateRange.end);
+            const res = await fetch(`/api/counselors/records?${params}`);
+            const data = await res.json();
+            if (Array.isArray(data)) setRecords(data);
+        } catch {
+            showToast('Failed to load session records', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }, [search, progressFilter, dateRange]);
+
+    useEffect(() => { fetchRecords(); }, [fetchRecords]);
+
+    const toggle = (id: string) => setExpandedId(prev => prev === id ? null : id);
+
+
 
     const statCounts = {
         total: records.length,
@@ -347,7 +429,7 @@ export default function SessionRecordsPage() {
 
                                             {/* Actions */}
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-                                                <button onClick={() => handlePrint(record)} style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                                <button onClick={() => openSignModal(record)} style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.2s' }}>
                                                     🖨 Print Record
                                                 </button>
                                                 <a href={`https://mail.google.com/mail/?view=cm&to=${record.studentId?.email}`} target="_blank" rel="noopener noreferrer"
@@ -364,6 +446,49 @@ export default function SessionRecordsPage() {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* ── Signature Modal ── */}
+                {sigRecord && (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+                         onClick={closeSignModal}>
+                        <div onClick={e => e.stopPropagation()} style={{ background: 'var(--card-bg, #1a1a2e)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, width: '90%', maxWidth: 480, boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}>
+                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 700 }}>✍️ Sign Session Record</h3>
+                            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                                Draw your signature below to verify this clinical record for <strong>{sigRecord.studentId?.name}</strong>.
+                            </p>
+
+                            {/* Canvas */}
+                            <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', background: '#fff', position: 'relative' }}>
+                                <canvas
+                                    ref={canvasRef}
+                                    width={420} height={140}
+                                    style={{ width: '100%', height: 140, cursor: 'crosshair', touchAction: 'none' }}
+                                    onMouseDown={e => { const p = getCanvasPos(e); startDraw(p.x, p.y); }}
+                                    onMouseMove={e => { const p = getCanvasPos(e); draw(p.x, p.y); }}
+                                    onMouseUp={stopDraw}
+                                    onMouseLeave={stopDraw}
+                                    onTouchStart={e => { e.preventDefault(); const p = getTouchPos(e); startDraw(p.x, p.y); }}
+                                    onTouchMove={e => { e.preventDefault(); const p = getTouchPos(e); draw(p.x, p.y); }}
+                                    onTouchEnd={stopDraw}
+                                />
+                                <span style={{ position: 'absolute', bottom: 8, left: 12, fontSize: '0.68rem', color: '#bbb', pointerEvents: 'none' }}>Sign here</span>
+                            </div>
+
+                            {/* Actions */}
+                            <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
+                                <button onClick={clearCanvas} style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer' }}>
+                                    Clear
+                                </button>
+                                <button onClick={handleSkipSignature} style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '0.8rem', cursor: 'pointer' }}>
+                                    Skip Signature
+                                </button>
+                                <button onClick={handleSignAndPrint} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #006633, #00994d)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', transition: 'opacity 0.2s' }}>
+                                    ✅ Sign & Print
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </main>

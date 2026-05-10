@@ -50,28 +50,47 @@ export async function PUT(req: NextRequest) {
         if (!session || (session.user as any).role !== 'admin') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
-        const { userId, role } = await req.json();
+        const body = await req.json();
+        const { userId } = body;
+        if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
+
         await connectDB();
         
         const oldUser = await User.findById(userId);
         if (!oldUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
         
-        const oldRole = oldUser.role;
-        const user = await User.findByIdAndUpdate(userId, { role }, { new: true }).select('-password');
-        
-        if (user && oldRole !== role) {
-            await logAction({
-                userId: (session.user as any).id,
-                userName: session.user?.name || 'Admin',
-                action: 'UPDATE_PROFILE',
-                resource: 'USER',
-                details: `Updated role for ${user.name} (${user.email}): ${oldRole} -> ${role}`,
-                ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1'
-            });
+        // Build update object from allowed fields
+        const allowedFields = ['name', 'email', 'phone', 'studentId', 'role'];
+        const updates: Record<string, any> = {};
+        const changes: string[] = [];
+        for (const field of allowedFields) {
+            if (body[field] !== undefined && body[field] !== (oldUser as any)[field]) {
+                updates[field] = body[field];
+                changes.push(`${field}: "${(oldUser as any)[field] || ''}" → "${body[field]}"`);
+            }
         }
+
+        if (Object.keys(updates).length === 0) {
+            return NextResponse.json(oldUser);
+        }
+
+        const user = await User.findByIdAndUpdate(userId, updates, { new: true, runValidators: true }).select('-password');
+        
+        await logAction({
+            userId: (session.user as any).id,
+            userName: session.user?.name || 'Admin',
+            action: 'UPDATE_PROFILE',
+            resource: 'USER',
+            details: `Updated ${oldUser.name} (${oldUser.email}): ${changes.join('; ')}`,
+            ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1'
+        });
         
         return NextResponse.json(user);
-    } catch (err) {
+    } catch (err: any) {
+        if (err?.name === 'ValidationError') {
+            const msg = Object.values(err.errors).map((e: any) => e.message).join(', ');
+            return NextResponse.json({ error: msg }, { status: 400 });
+        }
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
