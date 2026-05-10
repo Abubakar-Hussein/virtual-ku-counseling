@@ -124,7 +124,7 @@ export default function LandingPage() {
             </Link>
           ) : (
             <>
-              <Link href="#dashboard-access" style={{ color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 500, fontSize: '0.9rem' }}>
+              <Link href="/login?role=student" style={{ color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 500, fontSize: '0.9rem' }}>
                 Sign In
               </Link>
               <Link href="/register" className="btn-primary">

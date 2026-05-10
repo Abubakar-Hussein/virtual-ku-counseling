@@ -35,7 +35,7 @@ export default function Navbar() {
                     </>
                 ) : (
                     <>
-                        <Link href="/login" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sign In</Link>
+                        <Link href="/login?role=student" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sign In</Link>
                         <Link href="/register" className="btn-primary" style={{ padding: '8px 20px', fontSize: '0.85rem' }}>Join</Link>
                     </>
                 )}
