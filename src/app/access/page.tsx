@@ -133,7 +133,7 @@ export default function AccessDashboardPage() {
           <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
         </Link>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <Link href="/login" style={{
+          <Link href="/login?role=student" style={{
             color: 'var(--text-secondary)', textDecoration: 'none',
             fontWeight: 500, fontSize: '0.9rem',
             padding: '8px 18px', borderRadius: 8,
