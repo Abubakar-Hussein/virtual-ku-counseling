@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -105,11 +105,15 @@ export default function UserDemographicsPage() {
             }
             if (data && data.length > 0) {
                 const formatted = data.map((u: any) => {
-                    const entry: any = { ID: u._id, Name: `${u.firstName || ''} ${u.lastName || u.name || ''}`.trim(), Email: u.email };
-                    if (userRole === 'all') entry.Role = u.role;
-                    entry.StudentId = u.studentId || 'N/A';
-                    entry.JoinedDate = new Date(u.createdAt).toLocaleDateString();
-                    return entry;
+                    return {
+                        'Full Name': `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.name || '—',
+                        'Student ID': u.studentId || '—',
+                        'Email': u.email,
+                        'Phone': u.phone || '—',
+                        'Role': u.role.charAt(0).toUpperCase() + u.role.slice(1),
+                        'Status': (u.approvalStatus || 'approved').toUpperCase(),
+                        'Joined Date': new Date(u.createdAt).toLocaleDateString(),
+                    };
                 });
                 const roleLabel = userRole === 'all' ? 'All Roles' : userRole.charAt(0).toUpperCase() + userRole.slice(1) + 's';
                 openSigModal(formatted, `Users Demographic Report — ${roleLabel}`, `${dateRange.start} → ${dateRange.end}`);
@@ -119,9 +123,20 @@ export default function UserDemographicsPage() {
         finally { setPrinting(false); }
     };
 
-    const hiddenCols = ['_id', '__v', 'password', 'updatedAt'];
-    if (userRole !== 'all') hiddenCols.push('role');
-    const headers = previewData.length > 0 ? Object.keys(previewData[0]).filter(k => !hiddenCols.includes(k)) : [];
+    const formatUserForTable = (u: any) => {
+        return {
+            'Full Name': u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || '—',
+            'Student ID': u.studentId || '—',
+            'Email': u.email,
+            'Phone': u.phone || '—',
+            'Role': u.role.charAt(0).toUpperCase() + u.role.slice(1),
+            'Status': (u.approvalStatus || 'approved').toUpperCase(),
+            'Joined Date': new Date(u.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
+        };
+    };
+
+    const tableData = previewData.map(formatUserForTable);
+    const headers = tableData.length > 0 ? Object.keys(tableData[0]) : [];
 
     return (
         <div className="dashboard-layout">
@@ -195,16 +210,33 @@ export default function UserDemographicsPage() {
                 {previewData.length > 0 && (
                     <div className="glass" style={{ padding: 24, overflowX: 'auto' }}>
                         <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>Preview: Users Demographics ({previewData.length} records)</h2>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                             <thead>
                                 <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)', color: 'var(--text-muted)' }}>
-                                    {headers.map(h => <th key={h} style={{ padding: '12px 8px', textTransform: 'capitalize' }}>{h.replace(/[A-Z]/g, ' $&')}</th>)}
+                                    {headers.map(h => <th key={h} style={{ padding: '14px 10px', textTransform: 'uppercase', fontSize: '0.72rem', letterSpacing: '0.04em' }}>{h}</th>)}
                                 </tr>
                             </thead>
                             <tbody>
-                                {previewData.slice(0, 10).map((row, i) => (
-                                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                                        {headers.map(h => <td key={h} style={{ padding: '12px 8px' }}>{typeof row[h] === 'object' ? row[h]?.name || row[h]?.email || JSON.stringify(row[h]) : String(row[h])}</td>)}
+                                {tableData.slice(0, 10).map((row: any, i: number) => (
+                                    <tr key={i} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                        {headers.map(h => (
+                                            <td key={h} style={{ padding: '14px 10px' }}>
+                                                {h === 'Status' ? (
+                                                    <span style={{ 
+                                                        fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: 6,
+                                                        background: row[h] === 'APPROVED' ? 'rgba(74,222,128,0.1)' : 'rgba(250,204,21,0.1)',
+                                                        color: row[h] === 'APPROVED' ? '#4ade80' : '#facc15',
+                                                        border: row[h] === 'APPROVED' ? '1px solid rgba(74,222,128,0.2)' : '1px solid rgba(250,204,21,0.2)'
+                                                    }}>
+                                                        {row[h]}
+                                                    </span>
+                                                ) : h === 'Role' ? (
+                                                    <span style={{ color: row[h] === 'Admin' ? '#f87171' : row[h] === 'Counselor' ? '#4ade80' : '#60a5fa', fontWeight: 600 }}>
+                                                        {row[h]}
+                                                    </span>
+                                                ) : row[h]}
+                                            </td>
+                                        ))}
                                     </tr>
                                 ))}
                             </tbody>
