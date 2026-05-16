@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -83,7 +83,7 @@ export default function ContactSupportPage() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(0, 102, 51, 0.3)',
                     }}>🎓</div>
-                    <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
+                    <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>Virtual Counseling Booking and Scheduling System</span>
                 </Link>
                 <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                     <ThemeToggle />
@@ -261,7 +261,7 @@ export default function ContactSupportPage() {
                     <div className="glass" style={{
                         padding: 28, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16,
                     }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 4 }}>KU Wellness System</h3>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 4 }}>Virtual Counseling Booking and Scheduling System</h3>
                         <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                             <p style={{ margin: '0 0 4px' }}>Kenyatta University</p>
                             <p style={{ margin: '0 0 4px' }}>Main Campus, Nairobi</p>
@@ -320,7 +320,7 @@ export default function ContactSupportPage() {
             {/* Footer */}
             <footer style={{ padding: '40px 5vw', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                    © {new Date().getFullYear()} Kenyatta University — KU Wellness System
+                    © {new Date().getFullYear()} Kenyatta University — Virtual Counseling Booking and Scheduling System
                 </p>
             </footer>
 

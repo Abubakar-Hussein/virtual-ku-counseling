@@ -77,6 +77,16 @@ export default function ProfilePage() {
         setSaving(true);
         setMessage({ text: '', type: '' });
 
+        if (profile.name) {
+            const nameRegex = /^[A-Za-z\s\-\']+$/;
+            if (!nameRegex.test(profile.name.trim())) {
+                setMessage({ text: 'Name can only contain letters, spaces, hyphens, and apostrophes', type: 'error' });
+                showToast('Name can only contain letters, spaces, hyphens, and apostrophes', 'error');
+                setSaving(false);
+                return;
+            }
+        }
+
         if (profile.password && profile.password.length < 8) {
             setMessage({ text: 'Password must be at least 8 characters', type: 'error' });
             showToast('Password must be at least 8 characters', 'error');

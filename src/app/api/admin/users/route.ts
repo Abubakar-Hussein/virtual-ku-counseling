@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
+import AdminProfile from '@/models/AdminProfile';
 import { logAction } from '@/lib/audit';
 
 export async function GET(req: NextRequest) {
@@ -17,7 +18,9 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const startDate = searchParams.get('startDate');
         const endDate   = searchParams.get('endDate');
-        const role      = searchParams.get('role');   // 'student' | 'counselor' | 'admin' | '' (all)
+        const userRole = searchParams.get('role');   // 'student' | 'counselor' | 'admin' | '' (all)
+        const limitParam = searchParams.get('limit');
+        const isReport = !!(startDate || endDate); // Report pages always send date range
 
         // Build a dynamic query filter
         const filter: Record<string, any> = {};
@@ -33,11 +36,42 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        if (role && role !== 'all') {
-            filter.role = role;
+        if (userRole && userRole !== 'all') {
+            filter.role = userRole;
         }
 
-        const users = await User.find(filter).select('-password').sort({ createdAt: -1 }).lean();
+        // Always exclude profileImage (large base64 blobs) — the user table only shows
+        // 36px avatar circles with initials, and reports never need images either.
+        let query = User.find(filter).select('-password -profileImage').sort({ createdAt: -1 });
+        if (limitParam) {
+            const limit = parseInt(limitParam, 10);
+            if (!isNaN(limit) && limit > 0) query = query.limit(limit);
+        }
+        const dbUsers = await query.lean();
+
+        // The hardcoded admin has no User document in MongoDB.
+        // Inject a synthetic admin entry when the filter includes the admin role.
+        // Skip for report queries — reports don't need the admin row.
+        const includeAdmin = !isReport && (!userRole || userRole === 'all' || userRole === 'admin');
+        let users: any[] = [...dbUsers];
+
+        if (includeAdmin) {
+            const adminProfileDoc = await AdminProfile.findOne({ adminKey: 'default' })
+                .select('name phone')
+                .lean() as any;
+            const adminEntry = {
+                _id: 'admin-hardcoded-id',
+                name: adminProfileDoc?.name || 'System Administrator',
+                email: process.env.ADMIN_EMAIL || 'admin@ku.ac.ke',
+                phone: adminProfileDoc?.phone || '',
+                role: 'admin',
+                approvalStatus: 'approved',
+                createdAt: new Date('2024-01-01'),
+                isHardcoded: true,
+            };
+            users = [adminEntry, ...dbUsers];
+        }
+
         return NextResponse.json(users);
     } catch (err) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -65,6 +99,12 @@ export async function PUT(req: NextRequest) {
         const changes: string[] = [];
         for (const field of allowedFields) {
             if (body[field] !== undefined && body[field] !== (oldUser as any)[field]) {
+                if (field === 'name') {
+                    const nameRegex = /^[A-Za-z\s\-\']+$/;
+                    if (!nameRegex.test(body[field].trim())) {
+                        return NextResponse.json({ error: 'Name can only contain letters, spaces, hyphens, and apostrophes' }, { status: 400 });
+                    }
+                }
                 updates[field] = body[field];
                 changes.push(`${field}: "${(oldUser as any)[field] || ''}" → "${body[field]}"`);
             }

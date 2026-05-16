@@ -7,66 +7,125 @@ import { useTheme } from 'next-themes';
 export function ThemeToggle() {
   const { setTheme, theme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
 
   // Avoid hydration mismatch by only rendering after mount
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) return <div style={{ width: 40, height: 40 }} />;
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (!mounted) return <div style={{ width: 36, height: 36 }} />;
+
+  // Show the icon matching the current theme
+  const currentIcon =
+    theme === 'light' ? <Sun size={16} /> :
+    theme === 'dark' ? <Moon size={16} /> :
+    <Monitor size={16} />;
+
+  const options = [
+    { key: 'light', label: 'Light', icon: <Sun size={15} /> },
+    { key: 'dark', label: 'Dark', icon: <Moon size={15} /> },
+    { key: 'system', label: 'System', icon: <Monitor size={15} /> },
+  ];
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      background: 'rgba(0,0,0,0.05)', 
-      padding: '4px', 
-      borderRadius: '12px',
-      gap: '4px',
-      border: '1px solid var(--border)',
-      width: 'fit-content'
-    }}>
-      <ThemeButton 
-        active={theme === 'light'} 
-        onClick={() => setTheme('light')} 
-        icon={<Sun size={16} />} 
-        label="Light"
-      />
-      <ThemeButton 
-        active={theme === 'dark'} 
-        onClick={() => setTheme('dark')} 
-        icon={<Moon size={16} />} 
-        label="Dark"
-      />
-      <ThemeButton 
-        active={theme === 'system'} 
-        onClick={() => setTheme('system')} 
-        icon={<Monitor size={16} />} 
-        label="System"
-      />
+    <div ref={ref} style={{ position: 'relative', width: 'fit-content' }}>
+      {/* Single trigger button */}
+      <button
+        onClick={() => setOpen(prev => !prev)}
+        title="Change theme"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          border: '1px solid var(--border)',
+          background: 'var(--ku-green)',
+          color: '#fff',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          boxShadow: open ? '0 0 0 3px rgba(0,136,68,0.25)' : 'none',
+        }}
+      >
+        {currentIcon}
+      </button>
+
+      {/* Dropdown popup */}
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 8px)',
+          left: 0,
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          padding: 6,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          minWidth: 140,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+          zIndex: 100,
+          animation: 'fadeInDown 0.15s ease',
+        }}>
+          {options.map(opt => {
+            const active = theme === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => { setTheme(opt.key); setOpen(false); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: active ? 'rgba(0,136,68,0.15)' : 'transparent',
+                  color: active ? 'var(--ku-green-light)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                  fontWeight: active ? 600 : 400,
+                  transition: 'all 0.15s ease',
+                  width: '100%',
+                  textAlign: 'left',
+                }}
+                onMouseEnter={e => {
+                  if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)';
+                }}
+                onMouseLeave={e => {
+                  if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                }}
+              >
+                {opt.icon}
+                {opt.label}
+                {active && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
-  );
-}
-
-function ThemeButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      title={label}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '32px',
-        height: '32px',
-        borderRadius: '8px',
-        border: 'none',
-        background: active ? 'var(--ku-green)' : 'transparent',
-        color: active ? '#fff' : 'var(--text-secondary)',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-      }}
-    >
-      {icon}
-    </button>
   );
 }

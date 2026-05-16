@@ -20,7 +20,15 @@ const UserSchema = new Schema<IUser>(
     {
         firstName: { type: String, trim: true },
         lastName: { type: String, trim: true },
-        name: { type: String, required: true, trim: true },
+        name: { 
+            type: String, 
+            required: true, 
+            trim: true,
+            validate: {
+                validator: (v: string) => /^[A-Za-z\s\-\']+$/.test(v),
+                message: 'Name can only contain letters, spaces, hyphens, and apostrophes.'
+            }
+        },
         email: {
             type: String,
             required: true,
@@ -32,7 +40,7 @@ const UserSchema = new Schema<IUser>(
             },
         },
         password: { type: String, required: true, minlength: 8 },
-        role: { type: String, enum: ['student', 'counselor', 'admin'], default: 'student' },
+        role: { type: String, enum: ['student', 'counselor', 'admin'], default: 'student', index: true },
         approvalStatus: { type: String, enum: ['pending', 'approved'], default: 'approved' },
         studentId: { type: String },
         phone: {
@@ -43,7 +51,7 @@ const UserSchema = new Schema<IUser>(
             },
         },
         profileImage: { type: String },
-        resetPasswordToken: { type: String },
+        resetPasswordToken: { type: String, index: true, sparse: true },
         resetPasswordExpires: { type: Date },
     },
     { timestamps: true }

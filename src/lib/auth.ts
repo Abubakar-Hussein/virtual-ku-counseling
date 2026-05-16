@@ -104,17 +104,14 @@ export const authOptions: NextAuthOptions = {
     },
     events: {
         async signIn({ user }) {
-            try {
-                await logAction({
-                    userId: user.id,
-                    userName: user.name || 'Unknown',
-                    action: 'LOGIN',
-                    resource: 'AUTH',
-                    details: 'User logged in successfully',
-                });
-            } catch (err) {
-                console.error('[AUTH EVENT ERROR]:', err);
-            }
+            // Fire-and-forget — don't block the login redirect on audit log write
+            logAction({
+                userId: user.id,
+                userName: user.name || 'Unknown',
+                action: 'LOGIN',
+                resource: 'AUTH',
+                details: 'User logged in successfully',
+            }).catch((err) => console.error('[AUTH EVENT ERROR]:', err));
         }
     },
     session: { strategy: 'jwt' },

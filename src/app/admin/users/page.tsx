@@ -36,6 +36,13 @@ export default function AdminUserManagement() {
 
     const saveUserEdit = async () => {
         if (!editUser) return;
+        
+        const nameRegex = /^[A-Za-z\s\-\']+$/;
+        if (!nameRegex.test(editForm.name.trim())) {
+            showToast('Name can only contain letters, spaces, hyphens, and apostrophes', 'error');
+            return;
+        }
+
         setSaving(true);
         try {
             const res = await fetch('/api/admin/users', {
@@ -287,17 +294,21 @@ export default function AdminUserManagement() {
                                 </tr>
                             ) : (
                                 filtered.map((u) => (
-                                    <tr key={u._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                    <tr key={u._id} style={{ borderBottom: '1px solid var(--border)', background: u.isHardcoded ? 'rgba(248,113,113,0.03)' : 'transparent' }}>
                                         <td style={{ padding: '16px 12px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                 <Avatar 
                                                     name={u.name} 
-                                                    src={u.profileImage} 
                                                     size={36} 
                                                     fontSize="0.8rem" 
                                                 />
                                                 <div>
-                                                    <div style={{ fontWeight: 600 }}>{u.name}</div>
+                                                    <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        {u.name}
+                                                        {u.isHardcoded && (
+                                                            <span style={{ fontSize: '0.62rem', background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 6, padding: '1px 6px', fontWeight: 700, letterSpacing: '0.04em' }}>SYSTEM</span>
+                                                        )}
+                                                    </div>
                                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {u.studentId || 'N/A'}</div>
                                                 </div>
                                             </div>
@@ -307,50 +318,57 @@ export default function AdminUserManagement() {
                                             <span className={`badge ${u.role === 'admin' ? 'spec-career' : u.role === 'counselor' ? 'spec-academic' : ''}`}>{u.role}</span>
                                         </td>
                                         <td style={{ padding: '16px 12px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <select
-                                                    className="form-input"
-                                                    style={{ padding: '4px 8px', fontSize: '0.8rem', width: 140 }}
-                                                    value={u.role}
-                                                    onChange={(e) => setRoleChange({ userId: u._id, newRole: e.target.value, userName: u.name })}
-                                                >
-                                                    <option value="student">Student</option>
-                                                    <option value="counselor">Counselor</option>
-                                                    <option value="admin">Admin</option>
-                                                </select>
-                                                <button
-                                                    onClick={() => openEditModal(u)}
-                                                    style={{
-                                                        padding: '6px 10px',
-                                                        borderRadius: 8,
-                                                        border: '1px solid rgba(96, 165, 250, 0.4)',
-                                                        background: 'rgba(96, 165, 250, 0.1)',
-                                                        color: '#60a5fa',
-                                                        fontSize: '0.8rem',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s',
-                                                    }}
-                                                    title="Edit User"
-                                                >
-                                                    ✏️
-                                                </button>
-                                                <button
-                                                    onClick={() => setUserToDelete({ userId: u._id, userName: u.name })}
-                                                    style={{
-                                                        padding: '6px 10px',
-                                                        borderRadius: 8,
-                                                        border: '1px solid rgba(239, 68, 68, 0.4)',
-                                                        background: 'rgba(239, 68, 68, 0.1)',
-                                                        color: '#ef4444',
-                                                        fontSize: '0.8rem',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s',
-                                                    }}
-                                                    title="Delete User"
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
+                                            {u.isHardcoded ? (
+                                                // Hardcoded admin — no role change or deletion allowed
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                                    🔒 System account — edit via Profile page
+                                                </span>
+                                            ) : (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <select
+                                                        className="form-input"
+                                                        style={{ padding: '4px 8px', fontSize: '0.8rem', width: 140 }}
+                                                        value={u.role}
+                                                        onChange={(e) => setRoleChange({ userId: u._id, newRole: e.target.value, userName: u.name })}
+                                                    >
+                                                        <option value="student">Student</option>
+                                                        <option value="counselor">Counselor</option>
+                                                        <option value="admin">Admin</option>
+                                                    </select>
+                                                    <button
+                                                        onClick={() => openEditModal(u)}
+                                                        style={{
+                                                            padding: '6px 10px',
+                                                            borderRadius: 8,
+                                                            border: '1px solid rgba(96, 165, 250, 0.4)',
+                                                            background: 'rgba(96, 165, 250, 0.1)',
+                                                            color: '#60a5fa',
+                                                            fontSize: '0.8rem',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s',
+                                                        }}
+                                                        title="Edit User"
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setUserToDelete({ userId: u._id, userName: u.name })}
+                                                        style={{
+                                                            padding: '6px 10px',
+                                                            borderRadius: 8,
+                                                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                                                            background: 'rgba(239, 68, 68, 0.1)',
+                                                            color: '#ef4444',
+                                                            fontSize: '0.8rem',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s',
+                                                        }}
+                                                        title="Delete User"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))

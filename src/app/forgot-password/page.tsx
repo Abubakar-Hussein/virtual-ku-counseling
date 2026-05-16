@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'radial-gradient(ellipse at top right, rgba(0,102,51,0.2) 0%, transparent 50%), var(--bg-dark)',
+            background: 'radial-gradient(ellipse at top right, rgba(0,102,51,0.2) 0%, transparent 50%), var(--bg-main)',
             padding: 20,
         }}>
             <div style={{ width: '100%', maxWidth: 420 }}>

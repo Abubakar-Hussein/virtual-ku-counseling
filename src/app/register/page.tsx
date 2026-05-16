@@ -19,6 +19,17 @@ export default function RegisterPage() {
         e.preventDefault();
         setError('');
 
+        const nameRegex = /^[A-Za-z\s\-\']+$/;
+        if (!nameRegex.test(form.firstName.trim())) {
+            setError('First name can only contain letters, spaces, hyphens, and apostrophes');
+            return;
+        }
+
+        if (!nameRegex.test(form.lastName.trim())) {
+            setError('Last name can only contain letters, spaces, hyphens, and apostrophes');
+            return;
+        }
+
         if (form.password !== form.confirmPassword) {
             setError('Passwords do not match');
             return;
@@ -57,7 +68,7 @@ export default function RegisterPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'radial-gradient(ellipse at top right, rgba(0,102,51,0.2) 0%, transparent 50%), var(--bg-dark)',
+            background: 'radial-gradient(ellipse at top right, rgba(0,102,51,0.2) 0%, transparent 50%), var(--bg-main)',
             padding: 20,
         }}>
             <div style={{ width: '100%', maxWidth: 480 }}>

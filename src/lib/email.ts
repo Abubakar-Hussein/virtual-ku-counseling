@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+﻿import nodemailer from 'nodemailer';
 
 /* ------------------------------------------------------------------ */
 /*  Transport Strategy                                                 */
@@ -231,7 +231,7 @@ export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🎓 KU Wellness System
+                🎓 Virtual Counseling Booking and Scheduling System
               </h1>
               <p style="margin:6px 0 0;color:#bfdbfe;font-size:13px;">Kenyatta University</p>
             </td>
@@ -353,7 +353,7 @@ Please ensure the session is confirmed by your counselor before joining.
 
     await sendEmail({
         to: studentEmail,
-        subject: `✅ Session Booked – ${formattedDate} at ${timeSlot} | KU Wellness System`,
+        subject: `✅ Session Booked – ${formattedDate} at ${timeSlot} | Virtual Counseling Booking and Scheduling System`,
         html,
         text,
     });
@@ -378,7 +378,7 @@ export async function sendRegistrationEmail(params: RegistrationEmailParams) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Welcome to KU Wellness System</title>
+  <title>Welcome to Virtual Counseling Booking and Scheduling System</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:32px 0;">
@@ -388,7 +388,7 @@ export async function sendRegistrationEmail(params: RegistrationEmailParams) {
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🎓 Welcome to KU Wellness System
+                🎓 Welcome to Virtual Counseling Booking and Scheduling System
               </h1>
             </td>
           </tr>
@@ -430,7 +430,7 @@ Log in here: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login?role=$
 
     await sendEmail({
         to: email,
-        subject: `🎓 Welcome to KU Wellness System`,
+        subject: `🎓 Welcome to Virtual Counseling Booking and Scheduling System`,
         html,
         text,
     });
@@ -456,7 +456,7 @@ export async function sendResetPasswordEmail(params: ResetPasswordEmailParams) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reset Your Password - KU Wellness System</title>
+  <title>Reset Your Password - Virtual Counseling Booking and Scheduling System</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:32px 0;">
@@ -466,7 +466,7 @@ export async function sendResetPasswordEmail(params: ResetPasswordEmailParams) {
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🎓 KU Wellness System
+                🎓 Virtual Counseling Booking and Scheduling System
               </h1>
             </td>
           </tr>
@@ -511,7 +511,7 @@ If you did not request this, please ignore this email.
 
     await sendEmail({
         to: email,
-        subject: `🔒 Reset Your Password | KU Wellness System`,
+        subject: `🔒 Reset Your Password | Virtual Counseling Booking and Scheduling System`,
         html,
         text,
     });
@@ -558,7 +558,7 @@ export async function sendBookingRequestEmails(params: BookingRequestEmailParams
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🎓 KU Wellness System
+                🎓 Virtual Counseling Booking and Scheduling System
               </h1>
               <p style="margin:6px 0 0;color:#bfdbfe;font-size:13px;">Kenyatta University</p>
             </td>
@@ -649,7 +649,7 @@ export async function sendBookingRequestEmails(params: BookingRequestEmailParams
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🎓 KU Wellness System
+                🎓 Virtual Counseling Booking and Scheduling System
               </h1>
               <p style="margin:6px 0 0;color:#bfdbfe;font-size:13px;">Kenyatta University</p>
             </td>
@@ -726,13 +726,13 @@ export async function sendBookingRequestEmails(params: BookingRequestEmailParams
     const results = await Promise.allSettled([
         sendEmail({
             to: studentEmail,
-            subject: `📋 Booking Submitted – ${formattedDate} at ${timeSlot} | KU Wellness System`,
+            subject: `📋 Booking Submitted – ${formattedDate} at ${timeSlot} | Virtual Counseling Booking and Scheduling System`,
             html: studentHtml,
             text: `Hi ${studentName},\n\nYour counseling session request has been submitted.\n\nCounselor: ${counselorName}\nSpecialization: ${specialization}\nDate: ${formattedDate}\nTime: ${timeSlot}\nStatus: Pending\n\nYou will receive another email once your counselor confirms the appointment.`,
         }),
         sendEmail({
             to: counselorEmail,
-            subject: `📥 New Booking Request from ${studentName} – ${formattedDate} | KU Wellness System`,
+            subject: `📥 New Booking Request from ${studentName} – ${formattedDate} | Virtual Counseling Booking and Scheduling System`,
             html: counselorHtml,
             text: `Hi ${counselorName},\n\nYou have a new booking request.\n\nStudent: ${studentName}\nSpecialization: ${specialization}\nDate: ${formattedDate}\nTime: ${timeSlot}\nReason: ${reason}\n\nPlease log in to your dashboard to confirm or decline.`,
         }),
@@ -784,7 +784,7 @@ export async function sendCounselorConfirmationEmail(params: CounselorConfirmEma
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🎓 KU Wellness System
+                🎓 Virtual Counseling Booking and Scheduling System
               </h1>
               <p style="margin:6px 0 0;color:#bfdbfe;font-size:13px;">Kenyatta University</p>
             </td>
@@ -867,7 +867,7 @@ export async function sendCounselorConfirmationEmail(params: CounselorConfirmEma
 
     await sendEmail({
         to: counselorEmail,
-        subject: `✅ Session Confirmed – ${studentName} on ${formattedDate} | KU Wellness System`,
+        subject: `✅ Session Confirmed – ${studentName} on ${formattedDate} | Virtual Counseling Booking and Scheduling System`,
         html,
         text: `Hi ${counselorName},\n\nYou have confirmed a session with ${studentName}.\n\nDate: ${formattedDate}\nTime: ${timeSlot}\nSpecialization: ${specialization}\n${meetLink ? `Meet Link: ${meetLink}` : ''}\n\nBoth you and the student have been notified.`,
     });
@@ -904,7 +904,7 @@ export async function sendCounselorPendingApprovalEmail(params: CounselorPending
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🛡️ KU Wellness System — Admin Alert
+                🛡️ Virtual Counseling Booking and Scheduling System — Admin Alert
               </h1>
               <p style="margin:6px 0 0;color:#bfdbfe;font-size:13px;">Action Required</p>
             </td>
@@ -948,7 +948,7 @@ export async function sendCounselorPendingApprovalEmail(params: CounselorPending
                 </tr>
               </table>
               <p style="font-size:13px;color:#9ca3af;line-height:1.6;margin:0;">
-                Kenyatta University — KU Wellness System
+                Kenyatta University — Virtual Counseling Booking and Scheduling System
               </p>
             </td>
           </tr>
@@ -970,7 +970,7 @@ export async function sendCounselorPendingApprovalEmail(params: CounselorPending
 
     await sendEmail({
         to: adminEmail,
-        subject: `⏳ New Counselor Registration Pending Approval — ${counselorName} | KU Wellness System`,
+        subject: `⏳ New Counselor Registration Pending Approval — ${counselorName} | Virtual Counseling Booking and Scheduling System`,
         html,
         text: `A new counselor has registered and needs your approval.\n\nName: ${counselorName}\nEmail: ${counselorEmail}\n\nPlease log in to the admin panel to approve or reject: ${adminUrl}`,
     });
@@ -995,7 +995,7 @@ export async function sendCounselorApprovedEmail(params: CounselorApprovedParams
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Account Approved — KU Wellness System</title>
+  <title>Account Approved — Virtual Counseling Booking and Scheduling System</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:32px 0;">
@@ -1005,7 +1005,7 @@ export async function sendCounselorApprovedEmail(params: CounselorApprovedParams
           <tr>
             <td style="background:linear-gradient(135deg,#064e3b 0%,#16a34a 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🧑‍⚕️ KU Wellness System
+                🧑‍⚕️ Virtual Counseling Booking and Scheduling System
               </h1>
               <p style="margin:6px 0 0;color:#bbf7d0;font-size:13px;">Counselor Account Approved</p>
             </td>
@@ -1014,7 +1014,7 @@ export async function sendCounselorApprovedEmail(params: CounselorApprovedParams
             <td style="padding:36px 40px;">
               <p style="margin:0 0 8px;font-size:16px;color:#374151;">Hi <strong>${counselorName}</strong>,</p>
               <p style="margin:0 0 24px;font-size:15px;color:#6b7280;line-height:1.6;">
-                Great news! Your counselor account on <strong>KU Wellness System</strong> has been reviewed and <strong style="color:#16a34a;">approved</strong> by the system administrator.
+                Great news! Your counselor account on <strong>Virtual Counseling Booking and Scheduling System</strong> has been reviewed and <strong style="color:#16a34a;">approved</strong> by the system administrator.
               </p>
               <p style="margin:0 0 28px;font-size:15px;color:#6b7280;line-height:1.6;">
                 You can now log in and start accepting student counseling sessions.
@@ -1030,7 +1030,7 @@ export async function sendCounselorApprovedEmail(params: CounselorApprovedParams
                 </tr>
               </table>
               <p style="font-size:13px;color:#9ca3af;line-height:1.6;margin:0;">
-                Kenyatta University — KU Wellness System
+                Kenyatta University — Virtual Counseling Booking and Scheduling System
               </p>
             </td>
           </tr>
@@ -1052,8 +1052,8 @@ export async function sendCounselorApprovedEmail(params: CounselorApprovedParams
 
     await sendEmail({
         to: counselorEmail,
-        subject: `✅ Your Counselor Account Has Been Approved | KU Wellness System`,
+        subject: `✅ Your Counselor Account Has Been Approved | Virtual Counseling Booking and Scheduling System`,
         html,
-        text: `Hi ${counselorName},\n\nYour counselor account on KU Wellness System has been approved by the administrator.\n\nYou can now log in here: ${loginUrl}\n\nWelcome aboard!`,
+        text: `Hi ${counselorName},\n\nYour counselor account on Virtual Counseling Booking and Scheduling System has been approved by the administrator.\n\nYou can now log in here: ${loginUrl}\n\nWelcome aboard!`,
     });
 }

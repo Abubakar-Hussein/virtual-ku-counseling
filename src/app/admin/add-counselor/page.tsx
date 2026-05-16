@@ -14,6 +14,17 @@ export default function AddCounselor() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const nameRegex = /^[A-Za-z\s\-\']+$/;
+        if (!nameRegex.test(form.firstName.trim())) {
+            showToast('First name can only contain letters, spaces, hyphens, and apostrophes', 'error');
+            return;
+        }
+
+        if (!nameRegex.test(form.lastName.trim())) {
+            showToast('Last name can only contain letters, spaces, hyphens, and apostrophes', 'error');
+            return;
+        }
+
         if (!form.email.endsWith('@ku.ac.ke') && !form.email.endsWith('@gmail.com')) {
             showToast('Counselor email must end with @ku.ac.ke or @gmail.com', 'error');
             return;

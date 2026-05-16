@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail, diagnoseEmailConfig } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         const startTime = Date.now();
         await sendEmail({
             to: testEmail,
-            subject: 'Test Email from KU Wellness System App',
+            subject: 'Test Email from Virtual Counseling Booking and Scheduling System App',
             html: `
                 <div style="font-family:sans-serif;padding:24px;">
                     <h1 style="color:#1a3a5c;">✅ SMTP Configuration Test</h1>

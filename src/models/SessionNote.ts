@@ -23,5 +23,7 @@ const SessionNoteSchema: Schema = new Schema({
 // Indexes for fast retrieval by student or counselor
 SessionNoteSchema.index({ studentId: 1, createdAt: -1 });
 SessionNoteSchema.index({ counselorId: 1 });
+// Compound index for clinical progress report filtering
+SessionNoteSchema.index({ createdAt: -1, progressIndicator: 1 });
 
 export default mongoose.models.SessionNote || mongoose.model<ISessionNote>('SessionNote', SessionNoteSchema);

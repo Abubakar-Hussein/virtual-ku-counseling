@@ -22,6 +22,9 @@ const NotificationSchema = new Schema<INotification>(
     { timestamps: true }
 );
 
+// Index for unread badge count
 NotificationSchema.index({ userId: 1, read: 1 });
+// Compound index so the sort({ createdAt: -1 }) uses the index instead of in-memory sort
+NotificationSchema.index({ userId: 1, createdAt: -1 });
 
 export default models.Notification || model<INotification>('Notification', NotificationSchema);

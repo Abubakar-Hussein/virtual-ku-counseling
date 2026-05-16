@@ -20,13 +20,15 @@ const AuditLogSchema: Schema = new Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// Index for faster searching by admin
+// Indexes for faster searching by admin
 AuditLogSchema.index({ createdAt: -1 });
 AuditLogSchema.index({ userId: 1 });
 AuditLogSchema.index({ resource: 1 });
+// Compound indexes for report filtering (date range + action/resource)
+AuditLogSchema.index({ createdAt: -1, action: 1 });
+AuditLogSchema.index({ createdAt: -1, resource: 1 });
+// TTL index: automatically delete logs older than 90 days to prevent unbounded growth
+AuditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
 
-// Force schema update in development
-if (mongoose.models.AuditLog) {
-    delete mongoose.models.AuditLog;
-}
-export default mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);
+// Use safe pattern — never delete from mongoose.models in production
+export default mongoose.models.AuditLog || mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);

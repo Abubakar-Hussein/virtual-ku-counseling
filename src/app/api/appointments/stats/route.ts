@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import Appointment from '@/models/Appointment';
+import { autoCompletePastAppointments } from '@/lib/autoComplete';
 
 /**
  * GET /api/appointments/stats
@@ -17,6 +18,11 @@ export async function GET(req: NextRequest) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         await connectDB();
+
+        // Fire-and-forget: auto-complete any confirmed appointments whose date has passed.
+        // Runs before counting so stats always reflect reality.
+        autoCompletePastAppointments();
+
         const user = session.user as any;
 
         const isValidId = (id: string) => mongoose.Types.ObjectId.isValid(id);

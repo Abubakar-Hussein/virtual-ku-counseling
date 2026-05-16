@@ -12,6 +12,7 @@ import Intake from '@/models/Intake';
 import { sendBookingConfirmationEmail, sendBookingRequestEmails } from '@/lib/email';
 import { logAction } from '@/lib/audit';
 import { createRateLimiter } from '@/lib/rateLimit';
+import { autoCompletePastAppointments } from '@/lib/autoComplete';
 
 // 10 appointment booking attempts per IP per hour
 const appointmentLimiter = createRateLimiter({ limit: 10, windowMs: 60 * 60 * 1000 });
@@ -23,12 +24,21 @@ export async function GET(req: NextRequest) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         await connectDB();
+
         const user = session.user as any;
         
         const { searchParams } = new URL(req.url);
-        const startDate = searchParams.get('startDate');
-        const endDate   = searchParams.get('endDate');
-        const status    = searchParams.get('status'); // pending | confirmed | completed | cancelled | all
+        const startDate  = searchParams.get('startDate');
+        const endDate    = searchParams.get('endDate');
+        const status     = searchParams.get('status');
+        const limitParam = searchParams.get('limit'); // optional hard cap (e.g. ?limit=10)
+
+        // Fire-and-forget: silently resolve past confirmed appointments before listing.
+        // Skip for admin report queries (date-ranged) — autoComplete already runs on dashboard load.
+        const isReportQuery = user.role === 'admin' && (startDate || endDate);
+        if (!isReportQuery) {
+            autoCompletePastAppointments();
+        }
 
         // Safety check for valid ObjectId to prevent crash
         const isValidId = (id: string) => mongoose.Types.ObjectId.isValid(id);
@@ -47,7 +57,6 @@ export async function GET(req: NextRequest) {
         }
 
         if (status === 'active') {
-            // Dashboard shorthand: only pending + confirmed (skip completed/cancelled history)
             matchStage.status = { $in: ['pending', 'confirmed'] };
         } else if (status && status !== 'all') {
             matchStage.status = status;
@@ -61,28 +70,59 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized role mapping' }, { status: 403 });
         }
 
-        const appointments = await Appointment.aggregate([
+        // Result cap: explicit ?limit=N wins, then role defaults
+        const defaultLimit = user.role === 'admin' ? 500 : 100;
+        const resultLimit = limitParam
+            ? Math.min(Math.max(parseInt(limitParam, 10) || defaultLimit, 1), 500)
+            : defaultLimit;
+
+        // Skip the intake join for lightweight dashboard views.
+        // Neither active (pending/confirmed list) nor completed (rating panel)
+        // displays intake data — skipping saves one $lookup per query.
+        const skipIntake = status === 'active' || status === 'completed';
+
+        const pipeline: any[] = [
             { $match: matchStage },
-            { $lookup: { from: 'users', localField: 'studentId', foreignField: '_id', as: 'student' } },
-            { $unwind: '$student' },
-            { $lookup: { from: 'users', localField: 'counselorId', foreignField: '_id', as: 'counselor' } },
-            { $unwind: '$counselor' },
-            { $lookup: { from: 'intakes', localField: '_id', foreignField: 'appointmentId', as: 'intake' } },
-            { $unwind: { path: '$intake', preserveNullAndEmptyArrays: true } },
-            { $project: {
-                _id: 1, date: 1, timeSlot: 1, status: 1, specialization: 1, reason: 1, createdAt: 1,
-                studentId: { _id: '$student._id', name: '$student.name', email: '$student.email', profileImage: '$student.profileImage' },
-                counselorId: { _id: '$counselor._id', name: '$counselor.name', email: '$counselor.email', profileImage: '$counselor.profileImage' },
-                intake: 1
-            }},
-            { $sort: { date: -1 } }
-        ]);
+            { $sort: { date: -1 } },
+            { $limit: resultLimit },
+            // For report queries, exclude large profileImage from user lookups.
+            // Reports only need name + email; avatars are not displayed in PDF output.
+            ...(isReportQuery ? [
+                { $lookup: { from: 'users', let: { sid: '$studentId' }, pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$sid'] } } }, { $project: { name: 1, email: 1 } }], as: 'student' } },
+                { $unwind: '$student' },
+                { $lookup: { from: 'users', let: { cid: '$counselorId' }, pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$cid'] } } }, { $project: { name: 1, email: 1 } }], as: 'counselor' } },
+                { $unwind: '$counselor' },
+            ] : [
+                { $lookup: { from: 'users', localField: 'studentId', foreignField: '_id', as: 'student' } },
+                { $unwind: '$student' },
+                { $lookup: { from: 'users', localField: 'counselorId', foreignField: '_id', as: 'counselor' } },
+                { $unwind: '$counselor' },
+            ]),
+        ];
+
+        if (!skipIntake) {
+            pipeline.push(
+                { $lookup: { from: 'intakes', localField: '_id', foreignField: 'appointmentId', as: 'intake' } },
+                { $unwind: { path: '$intake', preserveNullAndEmptyArrays: true } }
+            );
+        }
+
+        pipeline.push({ $project: {
+            _id: 1, date: 1, timeSlot: 1, status: 1, specialization: 1, reason: 1, createdAt: 1,
+            rating: 1, feedback: 1,
+            studentId: { _id: '$student._id', name: '$student.name', email: '$student.email', ...(isReportQuery ? {} : { profileImage: '$student.profileImage' }) },
+            counselorId: { _id: '$counselor._id', name: '$counselor.name', email: '$counselor.email', ...(isReportQuery ? {} : { profileImage: '$counselor.profileImage' }) },
+            ...(skipIntake ? {} : { intake: 1 }),
+        }});
+
+        const appointments = await Appointment.aggregate(pipeline);
 
         return NextResponse.json(appointments);
     } catch (err) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
 
 export async function POST(req: NextRequest) {
     const limited = appointmentLimiter(req);

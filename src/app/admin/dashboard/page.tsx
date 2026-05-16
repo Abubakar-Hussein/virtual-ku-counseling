@@ -10,10 +10,15 @@ import Avatar from '@/components/Avatar';
 
 export default function AdminDashboard() {
     const { showToast } = useToast();
+
+    // Phase 1 — fast: summary counts + recent users
     const [users, setUsers] = useState<any[]>([]);
-    const [appointments, setAppointments] = useState<any[]>([]);
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+
+    // Phase 2 — slow: chart aggregations (loads after paint)
+    const [chartData, setChartData] = useState<any>(null);
+    const [chartLoading, setChartLoading] = useState(true);
 
     // Search for users table
     const [userSearch, setUserSearch] = useState('');
@@ -27,31 +32,43 @@ export default function AdminDashboard() {
             }
         }
 
-        async function fetchData() {
+        // ── Phase 1: fast summary + users ────────────────────────────────────
+        // Uses ?summary=1 which only runs cheap countDocuments() queries.
+        // The dashboard becomes interactive immediately after this resolves.
+        async function fetchFast() {
             try {
-                const [uRes, aRes, sRes] = await Promise.all([
-                    fetch('/api/admin/users', { cache: 'no-store' }),
-                    fetch('/api/appointments', { cache: 'no-store' }),
-                    fetch('/api/admin/stats', { cache: 'no-store' })
+                const [uRes, sRes] = await Promise.all([
+                    fetch('/api/admin/users?limit=8', { cache: 'no-store' }),
+                    fetch('/api/admin/stats?summary=1', { cache: 'no-store' }),
                 ]);
                 const uData = await uRes.json();
-                const aData = await aRes.json();
                 const sData = await sRes.json();
-                setUsers(uData);
-                setAppointments(aData);
+                setUsers(Array.isArray(uData) ? uData : []);
                 setStats(sData);
             } catch (err) {
                 console.error(err);
                 showToast('Failed to load dashboard data', 'error');
+            } finally {
+                setLoading(false);
             }
-            finally { setLoading(false); }
         }
-        fetchData();
-    }, []);
 
-    const totalStudents = users.filter(u => u.role === 'student').length;
-    const totalCounselors = users.filter(u => u.role === 'counselor').length;
-    const pendingApps = appointments.filter(a => a.status === 'pending').length;
+        // ── Phase 2: heavy chart aggregations ────────────────────────────────
+        // Runs after Phase 1 resolves so it never blocks the initial paint.
+        async function fetchCharts() {
+            try {
+                const res = await fetch('/api/admin/stats?charts=1', { cache: 'no-store' });
+                const data = await res.json();
+                setChartData(data);
+            } catch (err) {
+                console.error('[CHART LOAD]', err);
+            } finally {
+                setChartLoading(false);
+            }
+        }
+
+        fetchFast().then(() => fetchCharts());
+    }, []);
 
     // Filtered users for table
     const filteredUsers = users.filter(u =>
@@ -61,14 +78,14 @@ export default function AdminDashboard() {
         (u.role || '').toLowerCase().includes(userSearch.toLowerCase())
     );
 
-    // Appointment distribution for mini chart
-    const statusCounts = {
-        pending: appointments.filter(a => a.status === 'pending').length,
-        confirmed: appointments.filter(a => a.status === 'confirmed').length,
-        completed: appointments.filter(a => a.status === 'completed').length,
-        cancelled: appointments.filter(a => a.status === 'cancelled').length,
-    };
-    const total = appointments.length || 1;
+    // Appointment distribution — from chart data (phase 2)
+    const statusCounts = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
+    if (chartData?.statusDistribution) {
+        for (const s of chartData.statusDistribution) {
+            if (s._id in statusCounts) (statusCounts as any)[s._id] = s.count;
+        }
+    }
+    const totalAppointments = stats?.summary?.totalAppointments || 0;
 
     return (
         <div className="dashboard-layout">
@@ -82,31 +99,30 @@ export default function AdminDashboard() {
                     <NotificationBell />
                 </header>
 
+                {/* ── Stats Cards — visible as soon as Phase 1 resolves ── */}
                 {loading ? (
-                    <>
-                        <section className="stats-grid">
-                            <StatsCardSkeleton />
-                            <StatsCardSkeleton />
-                            <StatsCardSkeleton />
-                            <StatsCardSkeleton />
-                        </section>
-                    </>
+                    <section className="stats-grid">
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                    </section>
                 ) : (
                     <section className="stats-grid">
-                        <StatsCard label="Lead Time" value={`${stats?.summary?.avgLeadTime || 0}d`} icon="⏳" color="#facc15" />
-                        <StatsCard label="Clinical Reach" value={`${stats?.summary?.studentReach || 0}%`} icon="🎯" color="#3b82f6" />
-                        <StatsCard label="No-Show Rate" value={`${stats?.summary?.noShowRate || 0}%`} icon="🚫" color="#f87171" />
-                        <StatsCard label="Total Sessions" value={stats?.summary?.totalAppointments || 0} icon="📊" color="var(--ku-gold)" />
+                        <StatsCard label="Lead Time" value={`${stats?.summary?.avgLeadTime ?? '—'}d`} icon="⏳" color="#facc15" />
+                        <StatsCard label="Clinical Reach" value={`${stats?.summary?.studentReach ?? '—'}%`} icon="🎯" color="#3b82f6" />
+                        <StatsCard label="No-Show Rate" value={`${stats?.summary?.noShowRate ?? '—'}%`} icon="🚫" color="#f87171" />
+                        <StatsCard label="Total Sessions" value={totalAppointments} icon="📊" color="var(--ku-gold)" />
                     </section>
                 )}
 
                 <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 32 }}>
-                    {/* Recent Users Table */}
+
+                    {/* ── Recent Users Table ── */}
                     <section className="glass" style={{ padding: 24 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                             <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Recent User Signups</h2>
                         </div>
-                        {/* User search */}
                         <div style={{ position: 'relative', marginBottom: 16 }}>
                             <span style={{
                                 position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
@@ -138,16 +154,11 @@ export default function AdminDashboard() {
                                             <TableRowSkeleton columns={3} />
                                         </>
                                     ) : (
-                                        filteredUsers.slice(-8).reverse().map(u => (
+                                        filteredUsers.map(u => (
                                             <tr key={u._id} style={{ borderBottom: '1px solid var(--border)' }}>
                                                 <td style={{ padding: '12px 8px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                        <Avatar 
-                                                            name={u.name} 
-                                                            src={u.profileImage} 
-                                                            size={32} 
-                                                            fontSize="0.75rem" 
-                                                        />
+                                                        <Avatar name={u.name} src={u.profileImage} size={32} fontSize="0.75rem" />
                                                         <div>
                                                             <div style={{ fontWeight: 500 }}>{u.name}</div>
                                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
@@ -166,7 +177,7 @@ export default function AdminDashboard() {
                         </div>
                     </section>
 
-                    {/* System Health + Appointment Distribution */}
+                    {/* ── System Health + Appointment Distribution ── */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                         <section className="glass" style={{ padding: 24 }}>
                             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 20 }}>System Health</h2>
@@ -180,11 +191,7 @@ export default function AdminDashboard() {
                                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
                                         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{s.label}</span>
                                         <span style={{ fontWeight: 600, fontSize: '0.9rem', color: s.color, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span style={{
-                                                width: 8, height: 8, borderRadius: '50%',
-                                                background: s.color, display: 'inline-block',
-                                                boxShadow: `0 0 8px ${s.color}`,
-                                            }} />
+                                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, display: 'inline-block', boxShadow: `0 0 8px ${s.color}` }} />
                                             {s.val}
                                         </span>
                                     </div>
@@ -192,20 +199,22 @@ export default function AdminDashboard() {
                             </div>
                         </section>
 
-                        {/* Appointment Distribution */}
-                        {!loading && (
-                            <section className="glass" style={{ padding: 24 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-                                    <div>
-                                        <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Appointment Distribution</h2>
-                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Real-time session status breakdown</p>
-                                    </div>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                                        {appointments.length}
-                                    </div>
+                        {/* Appointment Distribution — shows skeleton until Phase 2 resolves */}
+                        <section className="glass" style={{ padding: 24 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                                <div>
+                                    <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Appointment Distribution</h2>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Real-time session status breakdown</p>
                                 </div>
-                                
-                                <MiniChart 
+                                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                    {totalAppointments}
+                                </div>
+                            </div>
+
+                            {chartLoading ? (
+                                <div style={{ height: 140, borderRadius: 10, background: 'rgba(255,255,255,0.04)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                            ) : (
+                                <MiniChart
                                     data={[
                                         { label: 'Pending', value: statusCounts.pending, color: '#facc15' },
                                         { label: 'Confirmed', value: statusCounts.confirmed, color: '#4ade80' },
@@ -214,8 +223,8 @@ export default function AdminDashboard() {
                                     ]}
                                     height={140}
                                 />
-                            </section>
-                        )}
+                            )}
+                        </section>
                     </div>
                 </div>
             </main>

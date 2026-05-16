@@ -24,6 +24,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         }
 
         const { slots, bio, specializations, maxDailyBookings } = await req.json();
+
+        // Server-side enforcement: no day can have more slots than maxDailyBookings
+        if (Array.isArray(slots) && maxDailyBookings) {
+            const slotsPerDay: Record<string, number> = {};
+            for (const slot of slots) {
+                if (slot.day) {
+                    slotsPerDay[slot.day] = (slotsPerDay[slot.day] || 0) + 1;
+                }
+            }
+            const overLimit = Object.entries(slotsPerDay).filter(([_, count]) => count > maxDailyBookings);
+            if (overLimit.length > 0) {
+                const dayNames = overLimit.map(([d]) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
+                return NextResponse.json(
+                    { error: `Too many time blocks on ${dayNames}. Maximum ${maxDailyBookings} per day.` },
+                    { status: 400 }
+                );
+            }
+        }
+
         await connectDB();
 
         const updated = await CounselorProfile.findOneAndUpdate(

@@ -117,10 +117,24 @@ export default function CounselorSchedulePage() {
 
     const hasInvalidSlots = slots.some(slot => !isSlotValid(slot));
 
+    // Count slots per day to enforce maxDailyBookings
+    const slotsPerDay: Record<string, number> = {};
+    for (const slot of slots) {
+        slotsPerDay[slot.day] = (slotsPerDay[slot.day] || 0) + 1;
+    }
+    const overLimitDays = Object.entries(slotsPerDay).filter(([_, count]) => count > maxBookings);
+    const hasOverLimit = overLimitDays.length > 0;
+
     const handleSave = async () => {
         // Validate all slots before saving
         if (hasInvalidSlots) {
             showToast('Please fix invalid time ranges before saving. End time must be after start time.', 'error');
+            return;
+        }
+
+        if (hasOverLimit) {
+            const dayNames = overLimitDays.map(([d]) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
+            showToast(`Too many time blocks on ${dayNames}. Max ${maxBookings} per day.`, 'error');
             return;
         }
 
@@ -134,7 +148,8 @@ export default function CounselorSchedulePage() {
             if (res.ok) {
                 showToast('Availability updated successfully!', 'success');
             } else {
-                showToast('Failed to update availability', 'error');
+                const errData = await res.json().catch(() => null);
+                showToast(errData?.error || 'Failed to update availability', 'error');
             }
         } catch (err) {
             console.error(err);
@@ -269,6 +284,38 @@ export default function CounselorSchedulePage() {
                                     );
                                 })
                             )}
+                            {hasOverLimit && (
+                                <div style={{
+                                    background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)',
+                                    borderRadius: 10, padding: '10px 14px', color: '#f87171', fontSize: '0.82rem',
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                }}>
+                                    ⚠️ {overLimitDays.map(([d, c]) => `${d.charAt(0).toUpperCase() + d.slice(1)} has ${c} blocks`).join(', ')} — max {maxBookings} per day.
+                                </div>
+                            )}
+
+                            {/* Per-day slot counts */}
+                            {slots.length > 0 && (
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                                    {DAYS.map(d => {
+                                        const count = slotsPerDay[d] || 0;
+                                        if (count === 0) return null;
+                                        const over = count > maxBookings;
+                                        return (
+                                            <span key={d} style={{
+                                                fontSize: '0.72rem', padding: '3px 10px', borderRadius: 6,
+                                                background: over ? 'rgba(248,113,113,0.15)' : 'rgba(74,222,128,0.1)',
+                                                color: over ? '#f87171' : '#4ade80',
+                                                border: `1px solid ${over ? 'rgba(248,113,113,0.3)' : 'rgba(74,222,128,0.2)'}`,
+                                                fontWeight: 600,
+                                            }}>
+                                                {d.charAt(0).toUpperCase() + d.slice(1, 3)}: {count}/{maxBookings}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
                             <button onClick={addSlot} className="btn-secondary" style={{ alignSelf: 'center', borderStyle: 'dashed', marginTop: 12, width: '100%', maxWidth: 200 }}>+ Add Time Block</button>
                         </div>
                     </section>

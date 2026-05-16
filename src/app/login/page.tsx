@@ -69,6 +69,13 @@ export default function LoginPage() {
 
     const cfg = roleConfig[role] || null;
 
+    const getCallbackUrl = () => {
+        if (role === 'admin') return '/admin/dashboard?loggedIn=true';
+        if (role === 'counselor') return '/counselor/dashboard?loggedIn=true';
+        if (role === 'student') return '/student/dashboard?loggedIn=true';
+        return '/dashboard?loggedIn=true';
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -77,7 +84,7 @@ export default function LoginPage() {
             email: form.email,
             password: form.password,
             expectedRole: role || undefined,
-            callbackUrl: '/dashboard?loggedIn=true',
+            callbackUrl: getCallbackUrl(),
         });
     };
 
@@ -106,8 +113,8 @@ export default function LoginPage() {
             <div style={{
                 position: 'fixed', inset: 0,
                 background: cfg
-                    ? `radial-gradient(ellipse at top left, ${cfg.bg.replace('0.08', '0.15')} 0%, transparent 55%), var(--bg-dark)`
-                    : 'radial-gradient(ellipse at top left, rgba(0,102,51,0.2) 0%, transparent 50%), var(--bg-dark)',
+                    ? `radial-gradient(ellipse at top left, ${cfg.bg.replace('0.08', '0.15')} 0%, transparent 55%), var(--bg-main)`
+                    : 'radial-gradient(ellipse at top left, rgba(0,102,51,0.2) 0%, transparent 50%), var(--bg-main)',
                 zIndex: 0,
             }} />
             {cfg && (

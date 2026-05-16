@@ -23,6 +23,7 @@ export default function StudentDashboard() {
 
     // Appointments list loads separately (heavy aggregation)
     const [appointments, setAppointments] = useState<any[]>([]);
+    const [completed, setCompleted] = useState<any[]>([]);
     const [apptLoading, setApptLoading] = useState(true);
 
     // Search & filter state
@@ -31,6 +32,7 @@ export default function StudentDashboard() {
 
     // Confirm modal state
     const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+    const [cancelling, setCancelling] = useState(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -63,11 +65,20 @@ export default function StudentDashboard() {
 
         async function fetchAppointments() {
             try {
-                // Only fetch active appointments for the dashboard view
-                const res = await fetch('/api/appointments?status=active');
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    setAppointments(data);
+                // Fetch active (pending/confirmed) and last 10 completed sessions in parallel.
+                // ?limit=10 caps at the DB level — MongoDB joins only 10 rows instead of up to 200.
+                const [activeRes, completedRes] = await Promise.all([
+                    fetch('/api/appointments?status=active'),
+                    fetch('/api/appointments?status=completed&limit=10'),
+                ]);
+                const activeData = await activeRes.json();
+                const completedData = await completedRes.json();
+                if (Array.isArray(activeData)) setAppointments(activeData);
+                // Only show last 5 completed for rating, oldest unrated first
+                if (Array.isArray(completedData)) {
+                    const unrated = completedData.filter((a: any) => !a.rating);
+                    const rated   = completedData.filter((a: any) =>  a.rating);
+                    setCompleted([...unrated, ...rated].slice(0, 5));
                 }
             } catch (err) {
                 console.error('[APPOINTMENTS]', err);
@@ -82,21 +93,25 @@ export default function StudentDashboard() {
     }, []);
 
     const handleCancel = async (id: string) => {
+        if (cancelling) return;
+        setCancelling(true);
         try {
             const res = await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setAppointments(prev => prev.map(a => a._id === id ? { ...a, status: 'cancelled' } : a));
-                // Decrement pending count if it was pending
                 setStats(prev => ({ ...prev, pending: Math.max(0, prev.pending - 1) }));
                 showToast('Appointment cancelled successfully', 'success');
+                setCancelTarget(null); // close modal only on success
             } else {
-                showToast('Failed to cancel appointment', 'error');
+                const body = await res.json().catch(() => ({}));
+                showToast(body?.error || 'Failed to cancel appointment', 'error');
             }
         } catch (err) {
-            console.error(err);
-            showToast('An error occurred while cancelling', 'error');
+            console.error('[CANCEL]', err);
+            showToast('Network error. Please try again.', 'error');
+        } finally {
+            setCancelling(false);
         }
-        setCancelTarget(null);
     };
 
     // Filtered appointments
@@ -187,6 +202,22 @@ export default function StudentDashboard() {
                                             />
                                         ))}
                                 </div>
+                            )}
+
+                            {/* Completed sessions — for rating */}
+                            {completed.length > 0 && (
+                                <>
+                                    <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '24px 0 12px', color: 'var(--text-secondary)' }}>Past Sessions</h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        {completed.map(appt => (
+                                            <AppointmentCard
+                                                key={appt._id}
+                                                appointment={appt}
+                                                viewerRole="student"
+                                            />
+                                        ))}
+                                    </div>
+                                </>
                             )}
                         </div>
 

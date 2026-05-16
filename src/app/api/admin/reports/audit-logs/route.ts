@@ -35,7 +35,11 @@ export async function GET(req: Request) {
         if (action && action !== 'all')   filter.action   = action;
         if (resource && resource !== 'all') filter.resource = resource;
 
-        const logs = await AuditLog.find(filter).sort({ createdAt: -1 }).limit(1000).lean();
+        const logs = await AuditLog.find(filter)
+            .select('userId userName action details resource ipAddress createdAt')
+            .sort({ createdAt: -1 })
+            .limit(1000)
+            .lean();
         return NextResponse.json(logs);
     } catch (error) {
         console.error('[AUDIT_LOGS_GET]', error);

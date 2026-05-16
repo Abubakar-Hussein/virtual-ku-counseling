@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -89,7 +89,7 @@ export default function AccessDashboardPage() {
   return (
     <main style={{
       minHeight: '100vh',
-      background: 'var(--bg-dark)',
+      background: 'var(--bg-main)',
       display: 'flex',
       flexDirection: 'column',
       overflowX: 'hidden',
@@ -98,19 +98,19 @@ export default function AccessDashboardPage() {
       <div style={{
         position: 'fixed', top: '-15%', left: '-10%',
         width: '50vw', height: '50vw',
-        background: 'radial-gradient(circle, rgba(0,102,51,0.12) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(0,102,51,0.08) 0%, transparent 70%)',
         filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0,
       }} />
       <div style={{
         position: 'fixed', bottom: '-15%', right: '-10%',
         width: '55vw', height: '55vw',
-        background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)',
         filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0,
       }} />
       <div style={{
         position: 'fixed', top: '40%', left: '40%',
         width: '30vw', height: '30vw',
-        background: 'radial-gradient(circle, rgba(255,204,0,0.05) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(255,204,0,0.04) 0%, transparent 70%)',
         filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0,
       }} />
 
@@ -119,7 +119,7 @@ export default function AccessDashboardPage() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 5vw', height: 72,
         borderBottom: '1px solid var(--border)',
-        background: 'rgba(10,15,13,0.8)',
+        background: 'var(--glass-bg)',
         backdropFilter: 'blur(20px)',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
@@ -130,7 +130,7 @@ export default function AccessDashboardPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.1rem', boxShadow: '0 4px 12px rgba(0,102,51,0.35)',
           }}>🎓</div>
-          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
+          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Virtual Counseling Booking and Scheduling System</span>
         </Link>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <Link href="/login?role=student" style={{
@@ -207,8 +207,8 @@ export default function AccessDashboardPage() {
               style={{
                 animationDelay: `${0.1 + i * 0.08}s`,
                 background: hovered === role.key
-                  ? 'rgba(17, 26, 20, 0.95)'
-                  : 'rgba(14, 20, 17, 0.85)',
+                  ? 'var(--bg-card-hover)'
+                  : 'var(--bg-card)',
                 border: `1px solid ${hovered === role.key ? role.hoverBorder : 'var(--border)'}`,
                 borderRadius: 20,
                 padding: '36px 32px 32px',
@@ -219,8 +219,8 @@ export default function AccessDashboardPage() {
                 transition: 'all 0.3s ease',
                 transform: hovered === role.key ? 'translateY(-6px)' : 'translateY(0)',
                 boxShadow: hovered === role.key
-                  ? `0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px ${role.hoverBorder}`
-                  : '0 8px 32px rgba(0,0,0,0.2)',
+                  ? `0 24px 60px rgba(0,0,0,0.15), 0 0 0 1px ${role.hoverBorder}`
+                  : '0 8px 32px rgba(0,0,0,0.08)',
                 cursor: 'default',
               }}
             >

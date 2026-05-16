@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Name, email, password and role are required' }, { status: 400 });
         }
 
+        const nameRegex = /^[A-Za-z\s\-\']+$/;
+        if (!nameRegex.test(name)) {
+            return NextResponse.json({ error: 'Name can only contain letters, spaces, hyphens, and apostrophes' }, { status: 400 });
+        }
+
         const isStudentEmail = /^[^\s@]+@students\.ku\.ac\.ke$/.test(email);
         const isStaffEmail = /^[^\s@]+@ku\.ac\.ke$/.test(email);
         const isGmail = /^[^\s@]+@gmail\.com$/.test(email);

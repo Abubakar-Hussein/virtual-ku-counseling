@@ -18,7 +18,8 @@ export default function CounselorDashboard() {
     const [stats, setStats] = useState({ today: 0, pending: 0, total: 0 });
     const [rating, setRating] = useState<{ avg: number; total: number } | null>(null);
     const [appointments, setAppointments] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [apptLoading, setApptLoading] = useState(true);
+    const [ratingLoading, setRatingLoading] = useState(true);
 
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -33,7 +34,8 @@ export default function CounselorDashboard() {
             }
         }
 
-        async function fetchData() {
+        // Fire both fetches in parallel — they are independent
+        async function fetchAppointments() {
             try {
                 const res = await fetch('/api/appointments');
                 const data = await res.json();
@@ -47,7 +49,16 @@ export default function CounselorDashboard() {
                     const pending = data.filter(a => a.status === 'pending').length;
                     setStats({ today, pending, total: data.length });
                 }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to load appointments', 'error');
+            } finally {
+                setApptLoading(false);
+            }
+        }
 
+        async function fetchProfile() {
+            try {
                 const profileRes = await fetch('/api/profile');
                 if (profileRes.ok) {
                     const profileData = await profileRes.json();
@@ -56,13 +67,14 @@ export default function CounselorDashboard() {
                     if (total > 0) setRating({ avg, total });
                 }
             } catch (err) {
-                console.error(err);
-                showToast('Failed to load appointments', 'error');
+                console.error('[PROFILE]', err);
             } finally {
-                setLoading(false);
+                setRatingLoading(false);
             }
         }
-        fetchData();
+
+        // Kick off both at the same time
+        Promise.all([fetchAppointments(), fetchProfile()]);
     }, []);
 
     const handleStatusChange = async (id: string, status: string) => {
@@ -135,18 +147,28 @@ export default function CounselorDashboard() {
                     <NotificationBell />
                 </header>
 
-                {loading ? (
-                    <DashboardSkeleton />
-                ) : (
-                    <>
-                        {/* Stats */}
-                        <section className="stats-grid">
+                {/* Stats render as soon as appointments data arrives */}
+                <section className="stats-grid">
+                    {apptLoading ? (
+                        <>
+                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
+                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
+                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
+                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
+                        </>
+                    ) : (
+                        <>
                             <StatsCard label="Confirmed for Today" value={stats.today} icon="📅" color="var(--ku-green-light)" />
                             <StatsCard label="Pending Requests" value={stats.pending} icon="🔔" color="#facc15" />
                             <StatsCard label="Total Lifetime Sessions" value={stats.total} icon="📈" color="#60a5fa" />
                             <div className="glass" style={{ padding: '20px 24px', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
                                 <div style={{ fontSize: '1.5rem' }}>⭐</div>
-                                {rating ? (
+                                {ratingLoading ? (
+                                    <>
+                                        <div className="skeleton" style={{ height: 32, width: 60, borderRadius: 6 }} />
+                                        <div className="skeleton" style={{ height: 14, width: 120, borderRadius: 4 }} />
+                                    </>
+                                ) : rating ? (
                                     <>
                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                                             <span style={{ fontSize: '2rem', fontWeight: 800, color: '#facc15', lineHeight: 1 }}>{rating.avg.toFixed(1)}</span>
@@ -167,64 +189,68 @@ export default function CounselorDashboard() {
                                     </>
                                 )}
                             </div>
-                        </section>
+                        </>
+                    )}
+                </section>
 
-                        {/* Main content */}
-                        <section className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32, marginTop: 32 }}>
-                            <div>
-                                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>Recent Activity</h2>
+                {/* Appointments list */}
+                {apptLoading ? (
+                    <DashboardSkeleton hideStats />
+                ) : (
+                    <section className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32, marginTop: 32 }}>
+                        <div>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>Recent Activity</h2>
 
-                                <SearchFilter
-                                    searchValue={search}
-                                    onSearchChange={setSearch}
-                                    statusFilter={statusFilter}
-                                    onStatusChange={setStatusFilter}
-                                    searchPlaceholder="Search by student, reason..."
+                            <SearchFilter
+                                searchValue={search}
+                                onSearchChange={setSearch}
+                                statusFilter={statusFilter}
+                                onStatusChange={setStatusFilter}
+                                searchPlaceholder="Search by student, reason..."
+                            />
+
+                            {filtered.length === 0 ? (
+                                <EmptyState
+                                    icon="📋"
+                                    title="No appointments found"
+                                    description={statusFilter !== 'all'
+                                        ? `We couldn't find any ${statusFilter} appointments matching your filters.`
+                                        : "You don't have any counseling records in the system yet. Once students book sessions, they will appear here."}
+                                    actionLabel={statusFilter === 'all' && search === '' ? "Update Schedule" : undefined}
+                                    actionHref="/counselor/schedule"
                                 />
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                    {filtered.slice(0, 10).map(appt => (
+                                        <AppointmentCard
+                                            key={appt._id}
+                                            appointment={appt}
+                                            viewerRole="counselor"
+                                            onStatusChange={(id, status) => setModalAction({ id, status })}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
-                                {filtered.length === 0 ? (
-                                    <EmptyState
-                                        icon="📋"
-                                        title="No appointments found"
-                                        description={statusFilter !== 'all'
-                                            ? `We couldn't find any ${statusFilter} appointments matching your filters.`
-                                            : "You don't have any counseling records in the system yet. Once students book sessions, they will appear here."}
-                                        actionLabel={statusFilter === 'all' && search === '' ? "Update Schedule" : undefined}
-                                        actionHref="/counselor/schedule"
-                                    />
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                        {filtered.slice(0, 10).map(appt => (
-                                            <AppointmentCard
-                                                key={appt._id}
-                                                appointment={appt}
-                                                viewerRole="counselor"
-                                                onStatusChange={(id, status) => setModalAction({ id, status })}
-                                            />
-                                        ))}
+                        <div>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>System Notices</h2>
+                            <div className="glass" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--ku-gold)' }}>⚠️ Exam Period Approaching</div>
+                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                        Expected surge in academic session requests. Please ensure your schedule is up to date.
                                     </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>System Notices</h2>
-                                <div className="glass" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
-                                    <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
-                                        <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--ku-gold)' }}>⚠️ Exam Period Approaching</div>
-                                        <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                                            Expected surge in academic session requests. Please ensure your schedule is up to date.
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--text-secondary)' }}>🔒 Private Notes</div>
-                                        <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                                            All session notes are encrypted and shielded from students. Only you can view your assigned patient history.
-                                        </div>
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--text-secondary)' }}>🔒 Private Notes</div>
+                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                        All session notes are encrypted and shielded from students. Only you can view your assigned patient history.
                                     </div>
                                 </div>
                             </div>
-                        </section>
-                    </>
+                        </div>
+                    </section>
                 )}
             </main>
 

@@ -33,9 +33,11 @@ export async function GET(req: Request) {
         if (progress && progress !== 'all') filter.progressIndicator = progress;
 
         const notes = await SessionNote.find(filter)
+            .select('appointmentId studentId counselorId notes actionItems progressIndicator createdAt')
             .populate({ path: 'studentId', select: 'name email studentId', model: User })
             .populate({ path: 'counselorId', select: 'name', model: User })
             .sort({ createdAt: -1 })
+            .limit(500)
             .lean();
 
         return NextResponse.json(notes);

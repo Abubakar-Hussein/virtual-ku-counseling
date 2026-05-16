@@ -32,6 +32,17 @@ export default function RatingModal({
         "Compassionate"
     ];
 
+    // Reset all state when modal opens so stale selections don't carry over
+    useEffect(() => {
+        if (open) {
+            setRating(0);
+            setHoverRating(0);
+            setFeedbackText('');
+            setSelectedTags([]);
+            setSubmitError('');
+        }
+    }, [open]);
+
     // Close on Escape
     useEffect(() => {
         if (!open) return;

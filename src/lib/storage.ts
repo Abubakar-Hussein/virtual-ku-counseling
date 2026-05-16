@@ -1,24 +1,21 @@
 /**
  * STORAGE ABSTRACTION LAYER
- * This module is designed to handle file uploads.
- * In a production environment, swap the 'uploadImage' implementation 
- * to use AWS S3, Cloudinary, or UploadThing.
+ * This module handles file uploads.
+ * In a production environment, swap 'uploadImage' to use AWS S3, Cloudinary, or UploadThing.
+ *
+ * IMPORTANT: Currently returns base64 strings directly (no real upload).
+ * Base64 images stored in MongoDB inflate document sizes by ~33%, making
+ * every User query slower. Migrate to a CDN URL-based approach when possible.
  */
 
 export async function uploadImage(base64: string): Promise<string> {
-    // Current Implementation: Returns the base64 string (Mocking Cloud Storage)
-    // Production Recommendation: 
-    // const res = await uploadThing.upload(base64);
-    // return res.url;
-    
-    // We simulate a network delay to reflect a real-world API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
     if (!base64.startsWith('data:image')) {
         throw new Error('Invalid image format');
     }
-
-    return base64; // Still returning base64 as placeholder
+    // TODO: Replace with real upload, e.g.:
+    // const res = await uploadThing.upload(base64);
+    // return res.url;
+    return base64;
 }
 
 export function deleteImage(url: string) {

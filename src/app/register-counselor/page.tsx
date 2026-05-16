@@ -17,6 +17,17 @@ export default function CounselorRegisterPage() {
         e.preventDefault();
         setError('');
 
+        const nameRegex = /^[A-Za-z\s\-\']+$/;
+        if (!nameRegex.test(form.firstName.trim())) {
+            setError('First name can only contain letters, spaces, hyphens, and apostrophes.');
+            return;
+        }
+
+        if (!nameRegex.test(form.lastName.trim())) {
+            setError('Last name can only contain letters, spaces, hyphens, and apostrophes.');
+            return;
+        }
+
         if (form.password !== form.confirmPassword) {
             setError('Passwords do not match.');
             return;
@@ -56,7 +67,7 @@ export default function CounselorRegisterPage() {
 
     if (submitted) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'var(--bg-dark)' }}>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'var(--bg-main)' }}>
                 <div style={{ maxWidth: 480, width: '100%', textAlign: 'center' }}>
                     <div style={{ fontSize: '4rem', marginBottom: 16 }}>⏳</div>
                     <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: 12 }}>Application Submitted!</h1>
@@ -80,7 +91,7 @@ export default function CounselorRegisterPage() {
     return (
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', padding: 20 }}>
             {/* Background */}
-            <div style={{ position: 'fixed', inset: 0, background: `radial-gradient(ellipse at top left, ${greenDim.replace('0.08', '0.15')} 0%, transparent 55%), var(--bg-dark)`, zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, background: `radial-gradient(ellipse at top left, ${greenDim.replace('0.08', '0.15')} 0%, transparent 55%), var(--bg-main)`, zIndex: 0 }} />
             <div style={{ position: 'fixed', bottom: '-10%', right: '-10%', width: '50vw', height: '50vw', background: `radial-gradient(circle, ${greenDim} 0%, transparent 70%)`, filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
             <div style={{ width: '100%', maxWidth: 480, position: 'relative', zIndex: 1 }}>

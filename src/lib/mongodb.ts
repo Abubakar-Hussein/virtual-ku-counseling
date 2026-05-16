@@ -19,8 +19,8 @@ export async function connectDB() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      maxPoolSize: 5,
-      minPoolSize: 1,
+      maxPoolSize: 10,   // increased from 5 — prevents queuing on concurrent dashboard loads
+      minPoolSize: 2,    // keep 2 warm connections so cold starts are faster
       socketTimeoutMS: 20000,
       connectTimeoutMS: 5000,
       serverSelectionTimeoutMS: 5000,
