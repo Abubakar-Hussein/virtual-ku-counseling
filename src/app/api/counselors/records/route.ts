@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
         // Fetch all matching session notes for this counselor
         const notes = await SessionNote.find(noteFilter)
-            .populate({ path: 'studentId', select: 'name email profileImage', model: User })
+            .populate({ path: 'studentId', select: 'name email', model: User })
             .sort({ createdAt: -1 })
             .lean();
 

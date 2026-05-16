@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
                 { approvalStatus: { $exists: false } }
             ]
         })
-            .select('name email profileImage')
+            .select('name email')
             .lean();
 
         const counselorIds = counselors.map(c => c._id);
@@ -43,7 +43,6 @@ export async function GET(req: NextRequest) {
             _id: c._id.toString(),
             name: c.name,
             email: c.email,
-            profileImage: (c as any).profileImage,
             meetLink: profileMap[c._id.toString()] || '',
         }));
 

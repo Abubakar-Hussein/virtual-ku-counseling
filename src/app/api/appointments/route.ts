@@ -87,17 +87,10 @@ export async function GET(req: NextRequest) {
             { $limit: resultLimit },
             // For report queries, exclude large profileImage from user lookups.
             // Reports only need name + email; avatars are not displayed in PDF output.
-            ...(isReportQuery ? [
-                { $lookup: { from: 'users', let: { sid: '$studentId' }, pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$sid'] } } }, { $project: { name: 1, email: 1 } }], as: 'student' } },
-                { $unwind: '$student' },
-                { $lookup: { from: 'users', let: { cid: '$counselorId' }, pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$cid'] } } }, { $project: { name: 1, email: 1 } }], as: 'counselor' } },
-                { $unwind: '$counselor' },
-            ] : [
-                { $lookup: { from: 'users', localField: 'studentId', foreignField: '_id', as: 'student' } },
-                { $unwind: '$student' },
-                { $lookup: { from: 'users', localField: 'counselorId', foreignField: '_id', as: 'counselor' } },
-                { $unwind: '$counselor' },
-            ]),
+            { $lookup: { from: 'users', let: { sid: '$studentId' }, pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$sid'] } } }, { $project: { name: 1, email: 1 } }], as: 'student' } },
+            { $unwind: '$student' },
+            { $lookup: { from: 'users', let: { cid: '$counselorId' }, pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$cid'] } } }, { $project: { name: 1, email: 1 } }], as: 'counselor' } },
+            { $unwind: '$counselor' },
         ];
 
         if (!skipIntake) {
@@ -110,8 +103,8 @@ export async function GET(req: NextRequest) {
         pipeline.push({ $project: {
             _id: 1, date: 1, timeSlot: 1, status: 1, specialization: 1, reason: 1, createdAt: 1,
             rating: 1, feedback: 1,
-            studentId: { _id: '$student._id', name: '$student.name', email: '$student.email', ...(isReportQuery ? {} : { profileImage: '$student.profileImage' }) },
-            counselorId: { _id: '$counselor._id', name: '$counselor.name', email: '$counselor.email', ...(isReportQuery ? {} : { profileImage: '$counselor.profileImage' }) },
+            studentId: { _id: '$student._id', name: '$student.name', email: '$student.email' },
+            counselorId: { _id: '$counselor._id', name: '$counselor.name', email: '$counselor.email' },
             ...(skipIntake ? {} : { intake: 1 }),
         }});
 

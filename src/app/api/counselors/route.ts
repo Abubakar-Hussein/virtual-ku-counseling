@@ -11,8 +11,7 @@ export async function GET(req: NextRequest) {
 
         const query: any = { role: 'counselor' };
         // Exclude password and the potentially huge base64 profileImage from the User doc.
-        // The profile image for counselors is served from CounselorProfile via the join below.
-        const counselors = await User.find(query).select('-password').lean();
+        const counselors = await User.find(query).select('-password -profileImage').lean();
 
         // Attach profile info
         const profiles = await CounselorProfile.find({
