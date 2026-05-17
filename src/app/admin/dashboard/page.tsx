@@ -109,8 +109,8 @@ export default function AdminDashboard() {
                     </section>
                 ) : (
                     <section className="stats-grid">
-                        <StatsCard label="Lead Time" value={`${stats?.summary?.avgLeadTime ?? '—'}d`} icon="⏳" color="#facc15" />
-                        <StatsCard label="Clinical Reach" value={`${stats?.summary?.studentReach ?? '—'}%`} icon="🎯" color="#3b82f6" />
+                        <StatsCard label="Total Students" value={stats?.summary?.totalStudents ?? '—'} icon="🎓" color="#3b82f6" />
+                        <StatsCard label="Total Counselors" value={stats?.summary?.totalCounselors ?? '—'} icon="👥" color="#10b981" />
                         <StatsCard label="No-Show Rate" value={`${stats?.summary?.noShowRate ?? '—'}%`} icon="🚫" color="#f87171" />
                         <StatsCard label="Total Sessions" value={totalAppointments} icon="📊" color="var(--ku-gold)" />
                     </section>

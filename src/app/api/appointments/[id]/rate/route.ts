@@ -43,57 +43,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         appointment.feedback = feedback || '';
         await appointment.save();
 
-        // ── Update counselor aggregate rating ────────────────────────────────
-        // Two-stage pipeline so that the new count is computed AFTER the average
-        // formula has already used the OLD count, avoiding a self-reference error.
-        //
-        // Stage 1: compute newCount and newAvg using OLD totalRatings value.
-        // Stage 2: write both fields back from the temp vars set in Stage 1.
-        //
-        // upsert:true guarantees the document is created if it doesn't exist yet.
-        await CounselorProfile.findOneAndUpdate(
-            { userId: appointment.counselorId },
-            [
-                // Stage 1 — compute new values using OLD totalRatings
-                {
-                    $set: {
-                        _newCount: { $add: [{ $ifNull: ['$totalRatings', 0] }, 1] },
-                        _newAvg: {
-                            $round: [
-                                {
-                                    $divide: [
-                                        {
-                                            $add: [
-                                                {
-                                                    $multiply: [
-                                                        { $ifNull: ['$averageRating', 0] },
-                                                        { $ifNull: ['$totalRatings', 0] },
-                                                    ],
-                                                },
-                                                rating,
-                                            ],
-                                        },
-                                        { $add: [{ $ifNull: ['$totalRatings', 0] }, 1] },
-                                    ],
-                                },
-                                1, // 1 decimal place
-                            ],
-                        },
-                    },
-                },
-                // Stage 2 — write computed values to real fields, remove temp vars
-                {
-                    $set: {
-                        totalRatings: '$_newCount',
-                        averageRating: '$_newAvg',
-                    },
-                },
-                {
-                    $unset: ['_newCount', '_newAvg'],
-                },
-            ],
-            { upsert: true, new: true }
-        );
+        let profile = await CounselorProfile.findOne({ userId: appointment.counselorId });
+        if (!profile) {
+            profile = new CounselorProfile({
+                userId: appointment.counselorId,
+                totalRatings: 0,
+                averageRating: 0,
+            });
+        }
+
+        const currentTotal = profile.totalRatings || 0;
+        const currentAvg = profile.averageRating || 0;
+
+        const newTotal = currentTotal + 1;
+        const newAvg = ((currentAvg * currentTotal) + rating) / newTotal;
+
+        profile.totalRatings = newTotal;
+        profile.averageRating = Math.round(newAvg * 10) / 10; // Round to 1 decimal place
+
+        await profile.save();
 
         return NextResponse.json({ message: 'Rating submitted successfully', rating: appointment.rating });
     } catch (error) {

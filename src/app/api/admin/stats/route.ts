@@ -43,16 +43,19 @@ export async function GET(req: Request) {
         // ── Mode: summary=1 ─────────────────────────────────────────────────
         // Only cheap countDocuments() — no aggregation joins, resolves fast.
         if (summaryOnly) {
-            const [totalStudents, totalCounselors, totalAppointments, cancelled] = await Promise.all([
+            const [totalStudents, totalCounselors, totalAppointments, cancelled, uniqueStudentsResult] = await Promise.all([
                 User.countDocuments({ role: 'student', ...dateFilter }),
                 User.countDocuments({ role: 'counselor' }),
                 Appointment.countDocuments(appointmentFilter),
                 Appointment.countDocuments({ ...appointmentFilter, status: 'cancelled' }),
+                Appointment.distinct('studentId', appointmentFilter),
             ]);
 
             const noShowRate = totalAppointments > 0
                 ? parseFloat(((cancelled / totalAppointments) * 100).toFixed(1))
                 : 0;
+
+            const uniqueStudentsCount = uniqueStudentsResult.length;
 
             return NextResponse.json({
                 summary: {
@@ -62,7 +65,7 @@ export async function GET(req: Request) {
                     avgLeadTime: 0,      // placeholder — filled by charts phase
                     noShowRate,
                     studentReach: totalStudents > 0
-                        ? parseFloat(((totalAppointments / totalStudents) * 100).toFixed(1))
+                        ? parseFloat(((uniqueStudentsCount / totalStudents) * 100).toFixed(1))
                         : 0,
                 },
             });
@@ -171,7 +174,7 @@ export async function GET(req: Request) {
         const [
             totalStudents, totalCounselors, totalAppointments,
             serviceMix, statusDistribution, trends, leadTimeResult,
-            counselorPerformance, hourlyDemand, progressDistribution,
+            counselorPerformance, hourlyDemand, progressDistribution, uniqueStudentsResult
         ] = await Promise.all([
             User.countDocuments({ role: 'student', ...dateFilter }),
             User.countDocuments({ role: 'counselor' }),
@@ -212,6 +215,7 @@ export async function GET(req: Request) {
                 { $match: dateFilter },
                 { $group: { _id: '$progressIndicator', count: { $sum: 1 } } },
             ]),
+            Appointment.distinct('studentId', appointmentFilter),
         ]);
 
         const avgLeadTime = leadTimeResult.length > 0 && leadTimeResult[0].avgLeadTime
@@ -219,13 +223,14 @@ export async function GET(req: Request) {
             : 0;
         const cancelled = statusDistribution.find((s: any) => s._id === 'cancelled')?.count || 0;
         const noShowRate = totalAppointments > 0 ? (cancelled / totalAppointments) * 100 : 0;
+        const uniqueStudentsCount = uniqueStudentsResult.length;
 
         return NextResponse.json({
             summary: {
                 totalStudents, totalCounselors, totalAppointments,
                 avgLeadTime: parseFloat(avgLeadTime.toFixed(1)),
                 noShowRate: parseFloat(noShowRate.toFixed(1)),
-                studentReach: totalStudents > 0 ? parseFloat(((totalAppointments / totalStudents) * 100).toFixed(1)) : 0,
+                studentReach: totalStudents > 0 ? parseFloat(((uniqueStudentsCount / totalStudents) * 100).toFixed(1)) : 0,
             },
             serviceMix: serviceMix.map((s: any) => ({
                 label: (s._id || 'General').replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),

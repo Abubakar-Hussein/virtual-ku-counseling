@@ -31,79 +31,77 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (body.notes !== undefined && isCounselor) appt.notes = body.notes;
         await appt.save();
 
+        // ── Fire side-effects in the background so the counselor gets an instant response ──
         if (body.status) {
-            // ── When counselor confirms: use counselor's dedicated meeting link ──
-            if (body.status === 'confirmed') {
-                // Look up the counselor's dedicated meeting link assigned by admin
-                const counselorIdStr = appt.counselorId.toString();
-                const profile = await CounselorProfile.findOne({ userId: appt.counselorId }).lean();
-                const meetLink = (profile as any)?.meetLink && (profile as any).meetLink.trim() !== '' 
-                    ? (profile as any).meetLink.trim() 
-                    : null;
+            const apptSnapshot = {
+                studentId:      appt.studentId,
+                counselorId:    appt.counselorId,
+                date:           appt.date,
+                timeSlot:       appt.timeSlot,
+                specialization: appt.specialization,
+                status:         body.status,
+            };
 
-                console.log('[APPOINTMENT CONFIRM] counselorId:', counselorIdStr, '| profile found:', !!profile, '| meetLink:', meetLink);
-
-                const linkLine = meetLink
-                    ? `\n🔗 Virtual Meeting Link: ${meetLink}`
-                    : '\n⚠️ The admin has not assigned a meeting link for this counselor yet. It will be provided later.';
-
-                // Notify student
-                await Notification.create({
-                    userId:  appt.studentId,
-                    message: `✅ Your appointment on ${appt.date.toDateString()} at ${appt.timeSlot} has been confirmed.${linkLine}`,
-                    type:    'confirmation',
-                });
-
-                // Notify counselor with same link
-                await Notification.create({
-                    userId:  appt.counselorId,
-                    message: `📅 Appointment with student confirmed for ${appt.date.toDateString()} at ${appt.timeSlot}.${linkLine}`,
-                    type:    'confirmation',
-                });
-
-                // Send confirmation email to student and counselor
+            (async () => {
                 try {
-                    const [studentUser, counselorUser] = await Promise.all([
-                        User.findById(appt.studentId).select('email name').lean(),
-                        User.findById(appt.counselorId).select('email name').lean(),
-                    ]);
+                    if (apptSnapshot.status === 'confirmed') {
+                        const profile = await CounselorProfile.findOne({ userId: apptSnapshot.counselorId }).lean();
+                        const meetLink = (profile as any)?.meetLink?.trim() || null;
+                        const linkLine = meetLink
+                            ? `\n🔗 Virtual Meeting Link: ${meetLink}`
+                            : '\n⚠️ The admin has not assigned a meeting link for this counselor yet. It will be provided later.';
 
-                    console.log('[APPOINTMENT CONFIRM] studentUser:', !!(studentUser), '| counselorUser:', !!(counselorUser), '| meetLink for email:', meetLink);
-
-                    if (studentUser && counselorUser) {
-                        await Promise.allSettled([
-                            sendBookingConfirmationEmail({
-                                studentName:    (studentUser as any).name,
-                                studentEmail:   (studentUser as any).email,
-                                counselorName:  (counselorUser as any).name,
-                                date:           appt.date,
-                                timeSlot:       appt.timeSlot,
-                                specialization: appt.specialization,
-                                meetLink,
+                        await Promise.all([
+                            Notification.create({
+                                userId:  apptSnapshot.studentId,
+                                message: `✅ Your appointment on ${apptSnapshot.date.toDateString()} at ${apptSnapshot.timeSlot} has been confirmed.${linkLine}`,
+                                type:    'confirmation',
                             }),
-                            sendCounselorConfirmationEmail({
-                                counselorName:  (counselorUser as any).name,
-                                counselorEmail: (counselorUser as any).email,
-                                studentName:    (studentUser as any).name,
-                                date:           appt.date,
-                                timeSlot:       appt.timeSlot,
-                                specialization: appt.specialization,
-                                meetLink,
-                            })
+                            Notification.create({
+                                userId:  apptSnapshot.counselorId,
+                                message: `📅 Appointment with student confirmed for ${apptSnapshot.date.toDateString()} at ${apptSnapshot.timeSlot}.${linkLine}`,
+                                type:    'confirmation',
+                            }),
                         ]);
-                    }
-                } catch (emailErr) {
-                    console.error('[APPOINTMENT STATUS] Email send failed:', emailErr);
-                }
 
-            } else {
-                // Notify student of other status changes
-                await Notification.create({
-                    userId:  appt.studentId,
-                    message: `Your appointment on ${appt.date.toDateString()} at ${appt.timeSlot} has been ${body.status}`,
-                    type:    body.status === 'confirmed' ? 'confirmation' : 'cancellation',
-                });
-            }
+                        const [studentUser, counselorUser] = await Promise.all([
+                            User.findById(apptSnapshot.studentId).select('email name').lean(),
+                            User.findById(apptSnapshot.counselorId).select('email name').lean(),
+                        ]);
+
+                        if (studentUser && counselorUser) {
+                            await Promise.allSettled([
+                                sendBookingConfirmationEmail({
+                                    studentName:    (studentUser as any).name,
+                                    studentEmail:   (studentUser as any).email,
+                                    counselorName:  (counselorUser as any).name,
+                                    date:           apptSnapshot.date,
+                                    timeSlot:       apptSnapshot.timeSlot,
+                                    specialization: apptSnapshot.specialization,
+                                    meetLink,
+                                }),
+                                sendCounselorConfirmationEmail({
+                                    counselorName:  (counselorUser as any).name,
+                                    counselorEmail: (counselorUser as any).email,
+                                    studentName:    (studentUser as any).name,
+                                    date:           apptSnapshot.date,
+                                    timeSlot:       apptSnapshot.timeSlot,
+                                    specialization: apptSnapshot.specialization,
+                                    meetLink,
+                                }),
+                            ]);
+                        }
+                    } else {
+                        await Notification.create({
+                            userId:  apptSnapshot.studentId,
+                            message: `Your appointment on ${apptSnapshot.date.toDateString()} at ${apptSnapshot.timeSlot} has been ${apptSnapshot.status}`,
+                            type:    apptSnapshot.status === 'confirmed' ? 'confirmation' : 'cancellation',
+                        });
+                    }
+                } catch (bgErr) {
+                    console.error('[APPOINTMENT STATUS] Background task failed:', bgErr);
+                }
+            })();
         }
 
         return NextResponse.json(appt);

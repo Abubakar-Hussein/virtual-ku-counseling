@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -106,7 +106,7 @@ export default function ClinicalProgressPage() {
             if (data && data.length > 0) {
                 const formatted = data.map((n: any) => {
                     const entry: any = {
-                        Date: new Date(n.createdAt).toLocaleDateString(),
+                        Date: (() => { try { return new Date(n.createdAt).toLocaleString('en-KE', { timeZone: 'Africa/Nairobi', dateStyle: 'medium', timeStyle: 'short' }) } catch { return new Date(n.createdAt).toLocaleDateString() } })(),
                         Student: n.studentId?.name || 'N/A', StudentID: n.studentId?.studentId || 'N/A',
                         Counselor: n.counselorId?.name || 'N/A',
                     };
@@ -203,7 +203,16 @@ export default function ClinicalProgressPage() {
                             </tr></thead>
                             <tbody>{previewData.slice(0, 10).map((row, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                                    {headers.map(h => <td key={h} style={{ padding: '12px 8px' }}>{typeof row[h] === 'object' ? row[h]?.name || row[h]?.email || JSON.stringify(row[h]) : String(row[h])}</td>)}
+                                    {headers.map(h => {
+                                        let val = row[h];
+                                        if (typeof val === 'object') val = val?.name || val?.email || JSON.stringify(val);
+                                        else if (h === 'createdAt' || h === 'date') {
+                                            try {
+                                                val = new Date(val).toLocaleString('en-KE', { timeZone: 'Africa/Nairobi', dateStyle: 'medium', timeStyle: h === 'createdAt' ? 'short' : undefined });
+                                            } catch {}
+                                        }
+                                        return <td key={h} style={{ padding: '12px 8px' }}>{String(val)}</td>;
+                                    })}
                                 </tr>
                             ))}</tbody>
                         </table>

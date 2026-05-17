@@ -105,15 +105,18 @@ export default function UserDemographicsPage() {
             }
             if (data && data.length > 0) {
                 const formatted = data.map((u: any) => {
-                    return {
+                    const row: any = {
                         'Full Name': `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.name || '—',
                         'Student ID': u.studentId || '—',
                         'Email': u.email,
                         'Phone': u.phone || '—',
-                        'Role': u.role.charAt(0).toUpperCase() + u.role.slice(1),
-                        'Status': (u.approvalStatus || 'approved').toUpperCase(),
-                        'Joined Date': new Date(u.createdAt).toLocaleDateString(),
                     };
+                    if (userRole === 'all') {
+                        row['Role'] = u.role.charAt(0).toUpperCase() + u.role.slice(1);
+                    }
+                    row['Status'] = (u.approvalStatus || 'approved').toUpperCase();
+                    row['Joined Date'] = new Date(u.createdAt).toLocaleDateString();
+                    return row;
                 });
                 const roleLabel = userRole === 'all' ? 'All Roles' : userRole.charAt(0).toUpperCase() + userRole.slice(1) + 's';
                 openSigModal(formatted, `Users Demographic Report — ${roleLabel}`, `${dateRange.start} → ${dateRange.end}`);
@@ -124,15 +127,18 @@ export default function UserDemographicsPage() {
     };
 
     const formatUserForTable = (u: any) => {
-        return {
+        const row: any = {
             'Full Name': u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || '—',
             'Student ID': u.studentId || '—',
             'Email': u.email,
             'Phone': u.phone || '—',
-            'Role': u.role.charAt(0).toUpperCase() + u.role.slice(1),
-            'Status': (u.approvalStatus || 'approved').toUpperCase(),
-            'Joined Date': new Date(u.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
         };
+        if (userRole === 'all') {
+            row['Role'] = u.role.charAt(0).toUpperCase() + u.role.slice(1);
+        }
+        row['Status'] = (u.approvalStatus || 'approved').toUpperCase();
+        row['Joined Date'] = new Date(u.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        return row;
     };
 
     const tableData = previewData.map(formatUserForTable);

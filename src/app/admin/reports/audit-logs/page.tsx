@@ -107,7 +107,9 @@ export default function AuditLogsPage() {
             }
             if (data && data.length > 0) {
                 const formatted = data.map((l: any) => {
-                    const entry: any = { Timestamp: new Date(l.createdAt).toLocaleString(), User: l.userName };
+                    let ts = new Date(l.createdAt).toLocaleString();
+                    try { ts = new Date(l.createdAt).toLocaleString('en-KE', { timeZone: 'Africa/Nairobi', dateStyle: 'medium', timeStyle: 'short' }); } catch {}
+                    const entry: any = { Timestamp: ts, User: l.userName };
                     if (auditAction === 'all') entry.Action = l.action;
                     if (auditResource === 'all') entry.Resource = l.resource;
                     entry.Details = l.details;
@@ -212,7 +214,16 @@ export default function AuditLogsPage() {
                             </tr></thead>
                             <tbody>{previewData.slice(0, 10).map((row, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                                    {headers.map(h => <td key={h} style={{ padding: '12px 8px' }}>{typeof row[h] === 'object' ? row[h]?.name || row[h]?.email || JSON.stringify(row[h]) : String(row[h])}</td>)}
+                                    {headers.map(h => {
+                                        let val = row[h];
+                                        if (typeof val === 'object') val = val?.name || val?.email || JSON.stringify(val);
+                                        else if (h === 'createdAt' || h === 'date') {
+                                            try {
+                                                val = new Date(val).toLocaleString('en-KE', { timeZone: 'Africa/Nairobi', dateStyle: 'medium', timeStyle: h === 'createdAt' ? 'short' : undefined });
+                                            } catch {}
+                                        }
+                                        return <td key={h} style={{ padding: '12px 8px' }}>{String(val)}</td>;
+                                    })}
                                 </tr>
                             ))}</tbody>
                         </table>

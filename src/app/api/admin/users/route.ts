@@ -51,8 +51,20 @@ export async function GET(req: NextRequest) {
 
         // The hardcoded admin has no User document in MongoDB.
         // Inject a synthetic admin entry when the filter includes the admin role.
-        // Skip for report queries — reports don't need the admin row.
-        const includeAdmin = !isReport && (!userRole || userRole === 'all' || userRole === 'admin');
+        let includeAdmin = false;
+        if (userRole === 'admin') {
+            includeAdmin = true; // explicitly asked for admins, show regardless of date
+        } else if (!userRole || userRole === 'all') {
+            includeAdmin = true;
+            const adminDate = new Date('2024-01-01');
+            if (startDate && new Date(startDate) > adminDate) includeAdmin = false;
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                if (end < adminDate) includeAdmin = false;
+            }
+        }
+
         let users: any[] = [...dbUsers];
 
         if (includeAdmin) {

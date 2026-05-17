@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -112,7 +112,11 @@ export default function AppointmentsHistoryPage() {
                     };
                     if (apptStatus === 'all') entry.Status = a.status;
                     entry.Specialization = a.specialization; entry.Reason = a.reason;
-                    entry.BookedOn = new Date(a.createdAt).toLocaleDateString();
+                    try {
+                        entry.BookedOn = new Date(a.createdAt).toLocaleString('en-KE', { timeZone: 'Africa/Nairobi', dateStyle: 'medium', timeStyle: 'short' });
+                    } catch {
+                        entry.BookedOn = new Date(a.createdAt).toLocaleDateString();
+                    }
                     return entry;
                 });
                 const statusLabel = apptStatus === 'all' ? 'All Statuses' : apptStatus.charAt(0).toUpperCase() + apptStatus.slice(1);
@@ -203,7 +207,16 @@ export default function AppointmentsHistoryPage() {
                             </tr></thead>
                             <tbody>{previewData.slice(0, 10).map((row, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                                    {headers.map(h => <td key={h} style={{ padding: '12px 8px' }}>{typeof row[h] === 'object' ? row[h]?.name || row[h]?.email || JSON.stringify(row[h]) : String(row[h])}</td>)}
+                                    {headers.map(h => {
+                                        let val = row[h];
+                                        if (typeof val === 'object') val = val?.name || val?.email || JSON.stringify(val);
+                                        else if (h === 'createdAt' || h === 'date') {
+                                            try {
+                                                val = new Date(val).toLocaleString('en-KE', { timeZone: 'Africa/Nairobi', dateStyle: 'medium', timeStyle: h === 'createdAt' ? 'short' : undefined });
+                                            } catch {}
+                                        }
+                                        return <td key={h} style={{ padding: '12px 8px' }}>{String(val)}</td>;
+                                    })}
                                 </tr>
                             ))}</tbody>
                         </table>
