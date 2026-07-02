@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { Star } from 'lucide-react';
 
 /**
  * Professional rating and feedback modal for completed counseling sessions.
@@ -133,13 +134,17 @@ export default function RatingModal({
                                 background: 'none',
                                 border: 'none',
                                 cursor: 'pointer',
-                                fontSize: '2.5rem',
-                                color: star <= (hoverRating || rating) ? '#facc15' : 'var(--border)',
-                                transition: 'color 0.2s, transform 0.1s',
-                                transform: star <= hoverRating ? 'scale(1.1)' : 'scale(1)',
+                                padding: 4,
+                                transition: 'all 0.2s ease',
+                                transform: star <= hoverRating ? 'scale(1.15)' : 'scale(1)',
                             }}
                         >
-                            ★
+                            <Star 
+                                size={32} 
+                                fill={star <= (hoverRating || rating) ? '#facc15' : 'none'} 
+                                stroke={star <= (hoverRating || rating) ? '#facc15' : 'var(--border)'} 
+                                style={{ transition: 'fill 0.2s, stroke 0.2s' }}
+                            />
                         </button>
                     ))}
                 </div>

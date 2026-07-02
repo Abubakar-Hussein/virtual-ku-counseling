@@ -151,9 +151,9 @@ export default function StudentDashboard() {
                         </>
                     ) : (
                         <>
-                            <StatsCard label="Confirmed Sessions" value={stats.upcoming} icon="📅" color="var(--ku-green-light)" />
-                            <StatsCard label="Pending Requests" value={stats.pending} icon="⏳" color="#facc15" />
-                            <StatsCard label="Past Sessions" value={stats.past} icon="✅" color="#60a5fa" />
+                            <StatsCard label="Confirmed Sessions" value={stats.upcoming} icon="" color="var(--ku-green-light)" />
+                            <StatsCard label="Pending Requests" value={stats.pending} icon="" color="#facc15" />
+                            <StatsCard label="Past Sessions" value={stats.past} icon="" color="#60a5fa" />
                         </>
                     )}
                 </section>
@@ -181,7 +181,7 @@ export default function StudentDashboard() {
 
                             {activeAppointments.length === 0 ? (
                                 <EmptyState
-                                    icon="🏝️"
+                                    icon=""
                                     title={statusFilter !== 'all' ? "No sessions found" : "All caught up!"}
                                     description={statusFilter !== 'all'
                                         ? `We couldn't find any ${statusFilter} appointments matching your filters.`

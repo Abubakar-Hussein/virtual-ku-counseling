@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
+import { Bell, Clock } from 'lucide-react';
 
 export default function NotificationBell() {
     const [notifications, setNotifications] = useState<any[]>([]);
@@ -35,29 +36,32 @@ export default function NotificationBell() {
                 id="notification-bell"
                 onClick={() => { setOpen(!open); if (!open) markRead(); }}
                 style={{
-                    background: open ? 'rgba(0, 102, 51, 0.1)' : 'rgba(255,255,255,0.03)',
+                    background: open ? 'var(--bg-card-hover)' : 'transparent',
                     border: '1px solid',
-                    borderColor: open ? 'var(--ku-green-light)' : 'var(--border)',
-                    borderRadius: 12,
-                    padding: '10px',
+                    borderColor: open ? 'var(--border-green)' : 'var(--border)',
+                    borderRadius: '50%',
+                    width: 44,
+                    height: 44,
                     cursor: 'pointer',
                     position: 'relative',
-                    fontSize: '1.2rem',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    color: open ? 'var(--ku-green-light)' : 'var(--text-primary)',
+                    color: open ? 'var(--ku-green)' : 'var(--text-secondary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    outline: 'none'
+                    outline: 'none',
+                    boxShadow: open ? '0 4px 12px rgba(0,0,0,0.05)' : 'none'
                 }}
                 onMouseEnter={e => {
-                    if (!open) e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                    if (!open) e.currentTarget.style.background = 'var(--bg-card-hover)';
                 }}
                 onMouseLeave={e => {
-                    if (!open) e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                    if (!open) e.currentTarget.style.background = 'transparent';
                 }}
             >
-                <span style={{ transform: open ? 'rotate(15deg)' : 'none', transition: 'transform 0.2s' }}>🔔</span>
+                <span style={{ transform: open ? 'rotate(15deg)' : 'none', transition: 'transform 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Bell size={18} strokeWidth={2} />
+                </span>
                 {unread > 0 && (
                     <span style={{
                         position: 'absolute', top: -4, right: -4,
@@ -107,7 +111,6 @@ export default function NotificationBell() {
                                 gap: 12,
                                 alignItems: 'center'
                             }}>
-                                <span style={{ fontSize: '2rem', opacity: 0.5 }}>🎑</span>
                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>All caught up!</div>
                             </div>
                         ) : (
@@ -131,7 +134,7 @@ export default function NotificationBell() {
                                         {n.message}
                                     </div>
                                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span>🕒</span> {new Date(n.createdAt).toLocaleDateString()}
+                                        <Clock size={10} strokeWidth={2.5} style={{ opacity: 0.6 }} /> {new Date(n.createdAt).toLocaleDateString()}
                                     </div>
                                 </div>
                             ))

@@ -6,6 +6,7 @@ import Appointment from '@/models/Appointment';
 import CounselorProfile from '@/models/CounselorProfile';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const start = Date.now();
     try {
         const session = await getServerSession(authOptions);
         if (!session || (session.user as any).role !== 'student') {
@@ -15,15 +16,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const { id } = await params;
         const user = session.user as any;
         const { rating, feedback } = await req.json();
+        console.log(`[RATE] Parsed request in ${Date.now() - start}ms`);
 
         if (!rating || rating < 1 || rating > 5) {
             return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 });
         }
 
+        const dbStart = Date.now();
         await connectDB();
+        console.log(`[RATE] DB connect took ${Date.now() - dbStart}ms`);
 
-        // Ensure the appointment belongs to the student and is completed
+        const findStart = Date.now();
         const appointment = await Appointment.findById(id);
+        console.log(`[RATE] findById took ${Date.now() - findStart}ms`);
         if (!appointment) return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
 
         if (appointment.studentId.toString() !== user.id) {
@@ -38,30 +43,32 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             return NextResponse.json({ error: 'You have already rated this appointment' }, { status: 400 });
         }
 
-        // Save rating + feedback to appointment
+        // Save rating to appointment + update counselor profile IN PARALLEL
         appointment.rating = rating;
         appointment.feedback = feedback || '';
-        await appointment.save();
+        const counselorId = appointment.counselorId;
 
-        let profile = await CounselorProfile.findOne({ userId: appointment.counselorId });
-        if (!profile) {
-            profile = new CounselorProfile({
-                userId: appointment.counselorId,
-                totalRatings: 0,
-                averageRating: 0,
-            });
-        }
+        const saveStart = Date.now();
+        await Promise.all([
+            // 1) Save the appointment
+            appointment.save(),
 
-        const currentTotal = profile.totalRatings || 0;
-        const currentAvg = profile.averageRating || 0;
-
-        const newTotal = currentTotal + 1;
-        const newAvg = ((currentAvg * currentTotal) + rating) / newTotal;
-
-        profile.totalRatings = newTotal;
-        profile.averageRating = Math.round(newAvg * 10) / 10; // Round to 1 decimal place
-
-        await profile.save();
+            // 2) Update counselor profile — atomic increment
+            CounselorProfile.findOneAndUpdate(
+                { userId: counselorId },
+                { $inc: { totalRatings: 1 } },
+                { upsert: true, new: true }
+            ).then(async (profile) => {
+                // Recalculate average from the incremented total
+                const total = profile.totalRatings || 1;
+                const oldAvg = profile.averageRating || 0;
+                const newAvg = ((oldAvg * (total - 1)) + rating) / total;
+                profile.averageRating = Math.round(newAvg * 10) / 10;
+                await profile.save();
+            }),
+        ]);
+        console.log(`[RATE] Parallel save took ${Date.now() - saveStart}ms`);
+        console.log(`[RATE] Total request took ${Date.now() - start}ms`);
 
         return NextResponse.json({ message: 'Rating submitted successfully', rating: appointment.rating });
     } catch (error) {
@@ -69,3 +76,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+

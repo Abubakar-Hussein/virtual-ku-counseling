@@ -5,6 +5,23 @@ import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import { useToast } from '@/components/Toast';
 import EmptyState from '@/components/EmptyState';
+import { Trash2 } from 'lucide-react';
+
+// Skeleton block for time slots while loading
+function SlotSkeleton() {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[1, 2, 3].map(i => (
+                <div key={i} style={{
+                    height: 56, borderRadius: 12, border: '1px solid var(--border)',
+                    background: 'var(--bg-card)',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                    opacity: 0.6,
+                }} />
+            ))}
+        </div>
+    );
+}
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const;
 const HOURS_12 = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
@@ -58,10 +75,12 @@ export default function CounselorSchedulePage() {
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        if (!session?.user) return;
+        // Don't wait for full session object — grab the ID as soon as it appears
+        const userId = (session?.user as any)?.id;
+        if (!userId) return;
         async function fetchProfile() {
             try {
-                const res = await fetch(`/api/counselors/${(session?.user as any)?.id}`);
+                const res = await fetch(`/api/counselors/${userId}`);
                 const data = await res.json();
                 if (data && data.profile) {
                     setProfile(data.profile);
@@ -74,7 +93,7 @@ export default function CounselorSchedulePage() {
             finally { setLoading(false); }
         }
         fetchProfile();
-    }, [session]);
+    }, [(session?.user as any)?.id]); // only re-run when ID changes, not every session object update
 
     const addSlot = () => {
         setSlots([...slots, { day: 'monday', startTime: '09:00', endTime: '10:00' }]);
@@ -186,7 +205,7 @@ export default function CounselorSchedulePage() {
         color: '#e2e8f0',
     };
 
-    if (loading) return <div style={{ background: 'var(--bg-dark)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Loading...</div>;
+    // Don't block the whole page — render layout immediately, show skeletons inside
 
     return (
         <div className="dashboard-layout">
@@ -205,9 +224,11 @@ export default function CounselorSchedulePage() {
                         <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 24 }}>Weekly Availability</h2>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            {slots.length === 0 ? (
+                            {loading ? (
+                                <SlotSkeleton />
+                            ) : slots.length === 0 ? (
                                 <EmptyState 
-                                    icon="⏰"
+                                    icon=""
                                     title="No availability set"
                                     description="You haven't added any working hours yet. Students won't be able to book you until you define your weekly blocks."
                                 />
@@ -273,11 +294,13 @@ export default function CounselorSchedulePage() {
                                                     </select>
                                                 </div>
 
-                                                <button onClick={() => removeSlot(i)} style={{ color: '#f87171', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem', marginLeft: 'auto' }}>✕</button>
+                                                <button onClick={() => removeSlot(i)} style={{ color: '#f87171', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4, marginLeft: 'auto' }} title="Remove block">
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
                                             {invalid && (
                                                 <span style={{ color: '#f87171', fontSize: '0.75rem', paddingLeft: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    ⚠ End time must be later than {formatTimeDisplay(slot.startTime)}
+                                                    End time must be later than {formatTimeDisplay(slot.startTime)}
                                                 </span>
                                             )}
                                         </div>
@@ -290,7 +313,7 @@ export default function CounselorSchedulePage() {
                                     borderRadius: 10, padding: '10px 14px', color: '#f87171', fontSize: '0.82rem',
                                     display: 'flex', alignItems: 'center', gap: 8,
                                 }}>
-                                    ⚠️ {overLimitDays.map(([d, c]) => `${d.charAt(0).toUpperCase() + d.slice(1)} has ${c} blocks`).join(', ')} — max {maxBookings} per day.
+                                    Warning: {overLimitDays.map(([d, c]) => `${d.charAt(0).toUpperCase() + d.slice(1)} has ${c} blocks`).join(', ')} — max {maxBookings} per day.
                                 </div>
                             )}
 

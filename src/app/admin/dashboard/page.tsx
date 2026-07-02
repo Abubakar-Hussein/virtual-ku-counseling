@@ -109,10 +109,10 @@ export default function AdminDashboard() {
                     </section>
                 ) : (
                     <section className="stats-grid">
-                        <StatsCard label="Total Students" value={stats?.summary?.totalStudents ?? '—'} icon="🎓" color="#3b82f6" />
-                        <StatsCard label="Total Counselors" value={stats?.summary?.totalCounselors ?? '—'} icon="👥" color="#10b981" />
-                        <StatsCard label="No-Show Rate" value={`${stats?.summary?.noShowRate ?? '—'}%`} icon="🚫" color="#f87171" />
-                        <StatsCard label="Total Sessions" value={totalAppointments} icon="📊" color="var(--ku-gold)" />
+                        <StatsCard label="Total Students" value={stats?.summary?.totalStudents ?? '—'} icon="" color="#3b82f6" />
+                        <StatsCard label="Total Counselors" value={stats?.summary?.totalCounselors ?? '—'} icon="" color="#10b981" />
+                        <StatsCard label="No-Show Rate" value={`${stats?.summary?.noShowRate ?? '—'}%`} icon="" color="#f87171" />
+                        <StatsCard label="Total Sessions" value={totalAppointments} icon="" color="var(--ku-gold)" />
                     </section>
                 )}
 
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
                             <span style={{
                                 position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
                                 color: 'var(--text-muted)', fontSize: '0.85rem', pointerEvents: 'none',
-                            }}>🔍</span>
+                            }}></span>
                             <input
                                 type="text"
                                 className="form-input"
@@ -177,55 +177,33 @@ export default function AdminDashboard() {
                         </div>
                     </section>
 
-                    {/* ── System Health + Appointment Distribution ── */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                        <section className="glass" style={{ padding: 24 }}>
-                            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 20 }}>System Health</h2>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                {[
-                                    { label: 'Database Status', val: 'Healthy', color: '#22c55e' },
-                                    { label: 'Cloud Storage', val: 'Connected', color: '#22c55e' },
-                                    { label: 'SMTP Services', val: 'Inactive (Dev)', color: '#facc15' },
-                                    { label: 'System Uptime', val: '99.9%', color: '#22c55e' }
-                                ].map((s, i) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
-                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{s.label}</span>
-                                        <span style={{ fontWeight: 600, fontSize: '0.9rem', color: s.color, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, display: 'inline-block', boxShadow: `0 0 8px ${s.color}` }} />
-                                            {s.val}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
 
-                        {/* Appointment Distribution — shows skeleton until Phase 2 resolves */}
-                        <section className="glass" style={{ padding: 24 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-                                <div>
-                                    <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Appointment Distribution</h2>
-                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Real-time session status breakdown</p>
-                                </div>
-                                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                                    {totalAppointments}
-                                </div>
+                    {/* Appointment Distribution — shows skeleton until Phase 2 resolves */}
+                    <section className="glass" style={{ padding: 24 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Appointment Distribution</h2>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Real-time session status breakdown</p>
                             </div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                {totalAppointments}
+                            </div>
+                        </div>
 
-                            {chartLoading ? (
-                                <div style={{ height: 140, borderRadius: 10, background: 'rgba(255,255,255,0.04)', animation: 'pulse 1.5s ease-in-out infinite' }} />
-                            ) : (
-                                <MiniChart
-                                    data={[
-                                        { label: 'Pending', value: statusCounts.pending, color: '#facc15' },
-                                        { label: 'Confirmed', value: statusCounts.confirmed, color: '#4ade80' },
-                                        { label: 'Completed', value: statusCounts.completed, color: '#a5b4fc' },
-                                        { label: 'Cancelled', value: statusCounts.cancelled, color: '#f87171' },
-                                    ]}
-                                    height={140}
-                                />
-                            )}
-                        </section>
-                    </div>
+                        {chartLoading ? (
+                            <div style={{ height: 140, borderRadius: 10, background: 'rgba(255,255,255,0.04)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                        ) : (
+                            <MiniChart
+                                data={[
+                                    { label: 'Pending', value: statusCounts.pending, color: '#facc15' },
+                                    { label: 'Confirmed', value: statusCounts.confirmed, color: '#4ade80' },
+                                    { label: 'Completed', value: statusCounts.completed, color: '#a5b4fc' },
+                                    { label: 'Cancelled', value: statusCounts.cancelled, color: '#f87171' },
+                                ]}
+                                height={140}
+                            />
+                        )}
+                    </section>
                 </div>
             </main>
         </div>

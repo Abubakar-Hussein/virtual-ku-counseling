@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Avatar from '@/components/Avatar';
 import { useToast } from '@/components/Toast';
+import { Star } from 'lucide-react';
 
 export default function SessionDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
@@ -112,7 +113,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                     {intake.isUrgent && (
                                         <div style={{ padding: 12, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontWeight: 600 }}>
-                                            ⚠️ CRISIS TRIAGE: Urgent care requested.
+                                            CRISIS TRIAGE: Urgent care requested.
                                         </div>
                                     )}
                                     <div style={{ display: 'flex', gap: 40 }}>
@@ -226,10 +227,12 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                 <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
                                     Student Feedback
                                 </h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                                    <span style={{ fontSize: '1.2rem', color: '#facc15' }}>
-                                        {'★'.repeat(appointment.rating)}{'☆'.repeat(5 - appointment.rating)}
-                                    </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                                    <div style={{ display: 'flex', gap: 3 }}>
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <Star key={star} size={15} fill={star <= appointment.rating ? '#facc15' : 'none'} stroke={star <= appointment.rating ? '#facc15' : 'rgba(255,255,255,0.2)'} />
+                                        ))}
+                                    </div>
                                     <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{appointment.rating} / 5</span>
                                 </div>
                                 {appointment.feedback && (

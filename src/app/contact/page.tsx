@@ -1,16 +1,16 @@
-﻿'use client';
+'use client';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const CONTACT_TYPES = [
-    { value: 'I am a registered student and need support', icon: '🎓' },
-    { value: 'I am a counselor and need technical help', icon: '🧑‍⚕️' },
-    { value: 'I have a question about the platform', icon: '❓' },
-    { value: 'I want to report a bug or issue', icon: '🐛' },
-    { value: 'I have a suggestion or feedback', icon: '💡' },
-    { value: 'I need help with my account', icon: '🔑' },
-    { value: 'Other inquiry', icon: '📝' },
+    { value: 'I am a registered student and need support', icon: '-' },
+    { value: 'I am a counselor and need technical help', icon: '-' },
+    { value: 'I have a question about the platform', icon: '-' },
+    { value: 'I want to report a bug or issue', icon: '-' },
+    { value: 'I have a suggestion or feedback', icon: '-' },
+    { value: 'I need help with my account', icon: '-' },
+    { value: 'Other inquiry', icon: '-' },
 ];
 
 export default function ContactSupportPage() {
@@ -77,13 +77,8 @@ export default function ContactSupportPage() {
                 padding: '0 5vw', zIndex: 10,
             }}>
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-                    <div style={{
-                        width: 40, height: 40, borderRadius: 12,
-                        background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(0, 102, 51, 0.3)',
-                    }}>🎓</div>
-                    <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>Virtual Counseling Booking and Scheduling System</span>
+                    <img src="/logo.jpg" alt="Logo" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain' }} />
+                    <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
                 </Link>
                 <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                     <ThemeToggle />
@@ -122,7 +117,7 @@ export default function ContactSupportPage() {
                             background: 'rgba(16,185,129,0.12)', border: '2px solid rgba(16,185,129,0.3)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '2.5rem',
-                        }}>✅</div>
+                        }}>Done</div>
                         <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>Message Sent!</h2>
                         <p style={{ color: 'var(--text-secondary)', maxWidth: 400, lineHeight: 1.6 }}>
                             Thank you for reaching out. We've sent a confirmation to your email.
@@ -236,7 +231,7 @@ export default function ContactSupportPage() {
                                 padding: '12px 16px', borderRadius: 10,
                                 background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
                                 color: '#f87171', fontSize: '0.85rem', fontWeight: 500,
-                            }}>⚠ {error}</div>
+                            }}>Error: {error}</div>
                         )}
 
                         {/* Submit */}
@@ -250,7 +245,7 @@ export default function ContactSupportPage() {
                                 cursor: submitting ? 'not-allowed' : 'pointer',
                             }}
                         >
-                            {submitting ? '⏳ Sending...' : '📨 Submit'}
+                            {submitting ? 'Sending...' : 'Submit'}
                         </button>
                     </form>
                 )}
@@ -261,7 +256,7 @@ export default function ContactSupportPage() {
                     <div className="glass" style={{
                         padding: 28, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16,
                     }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 4 }}>Virtual Counseling Booking and Scheduling System</h3>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 4 }}>KU Wellness System</h3>
                         <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                             <p style={{ margin: '0 0 4px' }}>Kenyatta University</p>
                             <p style={{ margin: '0 0 4px' }}>Main Campus, Nairobi</p>
@@ -283,7 +278,7 @@ export default function ContactSupportPage() {
                     <div className="glass" style={{
                         padding: 28, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 14,
                     }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>🕐 Support Hours</h3>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Support Hours</h3>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.8 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <span>Monday – Friday</span>
@@ -306,7 +301,7 @@ export default function ContactSupportPage() {
                         background: 'rgba(0,102,51,0.04)', border: '1px solid rgba(0,102,51,0.15)',
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: '1.2rem' }}>⚡</span>
+                            <span style={{ fontSize: '1.2rem' }}>*</span>
                             <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Quick Response</h3>
                         </div>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
@@ -320,7 +315,7 @@ export default function ContactSupportPage() {
             {/* Footer */}
             <footer style={{ padding: '40px 5vw', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                    © {new Date().getFullYear()} Kenyatta University — Virtual Counseling Booking and Scheduling System
+                    © {new Date().getFullYear()} Kenyatta University — KU Wellness System
                 </p>
             </footer>
 

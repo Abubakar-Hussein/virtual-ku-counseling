@@ -5,31 +5,33 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { ThemeToggle } from './ThemeToggle';
 import Avatar from './Avatar';
+import Logo from './Logo';
+import { Menu, X } from 'lucide-react';
 
 const STUDENT_LINKS = [
-    { href: '/student/dashboard', label: 'Dashboard', icon: '🏠' },
-    { href: '/student/counselors', label: 'Find Counselors', icon: '👤' },
-    { href: '/student/appointments', label: 'My Appointments', icon: '📅' },
-    { href: '/profile', label: 'My Profile', icon: '⚙️' },
+    { href: '/student/dashboard', label: 'Dashboard', icon: '' },
+    { href: '/student/counselors', label: 'Find Counselors', icon: '' },
+    { href: '/student/appointments', label: 'My Appointments', icon: '' },
+    { href: '/profile', label: 'My Profile', icon: '' },
 ];
 
 const COUNSELOR_LINKS = [
-    { href: '/counselor/dashboard', label: 'Dashboard', icon: '🏠' },
-    { href: '/counselor/appointments', label: 'Appointments', icon: '📅' },
-    { href: '/counselor/records', label: 'Session Records', icon: '📁' },
-    { href: '/counselor/schedule', label: 'My Schedule', icon: '🗓️' },
-    { href: '/profile', label: 'My Profile', icon: '⚙️' },
+    { href: '/counselor/dashboard', label: 'Dashboard', icon: '' },
+    { href: '/counselor/appointments', label: 'Appointments', icon: '' },
+    { href: '/counselor/records', label: 'Session Records', icon: '' },
+    { href: '/counselor/schedule', label: 'My Schedule', icon: '' },
+    { href: '/profile', label: 'My Profile', icon: '' },
 ];
 
 const ADMIN_LINKS = [
-    { href: '/admin/dashboard',    label: 'Dashboard',       icon: '🏠' },
-    { href: '/admin/users',        label: 'Users',           icon: '👥' },
-    { href: '/admin/add-counselor',label: 'Add Counselor',   icon: '➕' },
-    { href: '/admin/appointments', label: 'Appointments',    icon: '📅' },
-    { href: '/admin/links',        label: 'Meeting Links',   icon: '🔗' },
-    { href: '/admin/reports',      label: 'Reports',         icon: '📊' },
-    { href: '/admin/insights',     label: 'Insights',        icon: '🧠' },
-    { href: '/profile',            label: 'My Profile',      icon: '⚙️' },
+    { href: '/admin/dashboard',    label: 'Dashboard',       icon: '' },
+    { href: '/admin/users',        label: 'Users',           icon: '' },
+    { href: '/admin/add-counselor',label: 'Add Counselor',   icon: '' },
+    { href: '/admin/appointments', label: 'Appointments',    icon: '' },
+    { href: '/admin/links',        label: 'Meeting Links',   icon: '' },
+    { href: '/admin/reports',      label: 'Reports',         icon: '' },
+    { href: '/admin/insights',     label: 'Insights',        icon: '' },
+    { href: '/profile',            label: 'My Profile',      icon: '' },
 ];
 
 export default function Sidebar() {
@@ -65,7 +67,7 @@ export default function Sidebar() {
     return (
         <>
             <button className="mobile-menu-btn" onClick={() => setIsMobileOpen(!isMobileOpen)}>
-                {isMobileOpen ? '✕' : '☰'}
+                {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
             <div className={`mobile-menu-overlay ${isMobileOpen ? 'open' : ''}`} onClick={() => setIsMobileOpen(false)} />
@@ -74,14 +76,7 @@ export default function Sidebar() {
             {/* Logo */}
             <div style={{ padding: '0 24px 28px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                        width: 36, height: 36, borderRadius: 10,
-                        background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 18,
-                    }}>
-                        🌱
-                    </div>
+                    <Logo size={36} />
                     <div>
                         <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Wellness System</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{role}</div>
@@ -103,8 +98,8 @@ export default function Sidebar() {
                             marginBottom: 4,
                             textDecoration: 'none',
                             color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                            background: active ? 'rgba(0, 136, 68, 0.15)' : 'transparent',
-                            border: active ? '1px solid rgba(0, 136, 68, 0.3)' : '1px solid transparent',
+                            background: active ? 'rgba(50, 83, 67, 0.15)' : 'transparent',
+                            border: active ? '1px solid rgba(50, 83, 67, 0.3)' : '1px solid transparent',
                             fontWeight: active ? 600 : 400,
                             fontSize: '0.9rem',
                             transition: 'all 0.2s',
@@ -149,7 +144,7 @@ export default function Sidebar() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
                     }}
                 >
-                    <span>🚪</span> Sign out
+                    Sign out
                 </button>
             </div>
         </aside>

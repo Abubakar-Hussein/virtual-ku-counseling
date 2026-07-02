@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail, diagnoseEmailConfig } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
@@ -21,10 +21,10 @@ export async function GET(req: NextRequest) {
         const startTime = Date.now();
         await sendEmail({
             to: testEmail,
-            subject: 'Test Email from Virtual Counseling Booking and Scheduling System App',
+            subject: 'Test Email from KU Wellness System App',
             html: `
                 <div style="font-family:sans-serif;padding:24px;">
-                    <h1 style="color:#1a3a5c;">✅ SMTP Configuration Test</h1>
+                    <h1 style="color:#1a3a5c;">SMTP Configuration Test</h1>
                     <p>If you are reading this, your email configuration is working correctly!</p>
                     <p style="color:#6b7280;font-size:13px;">Sent at: ${new Date().toISOString()}</p>
                 </div>

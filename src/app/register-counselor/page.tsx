@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 export default function CounselorRegisterPage() {
     const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', phone: '' });
     const [loading, setLoading] = useState(false);
@@ -69,7 +69,7 @@ export default function CounselorRegisterPage() {
         return (
             <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'var(--bg-main)' }}>
                 <div style={{ maxWidth: 480, width: '100%', textAlign: 'center' }}>
-                    <div style={{ fontSize: '4rem', marginBottom: 16 }}>⏳</div>
+                    <div style={{ fontSize: '4rem', marginBottom: 16 }}>Pending</div>
                     <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: 12 }}>Application Submitted!</h1>
                     <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 28 }}>
                         Your counselor registration has been received and is <strong style={{ color: '#facc15' }}>pending admin review</strong>.
@@ -77,7 +77,7 @@ export default function CounselorRegisterPage() {
                     </p>
                     <div className="glass" style={{ padding: '16px 24px', borderRadius: 12, marginBottom: 24, border: `1px solid ${greenBorder}`, background: greenDim }}>
                         <p style={{ margin: 0, fontSize: '0.85rem', color: green, lineHeight: 1.6 }}>
-                            🔒 For security, counselor accounts must be verified by a system administrator before access is granted.
+                            For security, counselor accounts must be verified by a system administrator before access is granted.
                         </p>
                     </div>
                     <Link href="/login?role=counselor" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none' }}>
@@ -98,9 +98,7 @@ export default function CounselorRegisterPage() {
                 {/* Back link */}
                 <div style={{ marginBottom: 20 }}>
                     <Link href="/login?role=counselor" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>
-                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                        </svg>
+                        <ArrowLeft size={16} strokeWidth={2.5} />
                         Back to Counselor Login
                     </Link>
                 </div>
@@ -108,7 +106,7 @@ export default function CounselorRegisterPage() {
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
                     <div style={{ width: 68, height: 68, borderRadius: 20, background: greenDim, border: `1.5px solid ${greenBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', margin: '0 auto 18px', boxShadow: `0 8px 32px rgba(34,197,94,0.3)` }}>
-                        🧑‍⚕️
+                        C
                     </div>
                     <span style={{ display: 'inline-block', background: greenDim, color: green, border: `1px solid ${greenBorder}`, borderRadius: 20, padding: '4px 14px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>
                         Counselor Registration
@@ -124,7 +122,7 @@ export default function CounselorRegisterPage() {
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                         {error && (
                             <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: '#f87171', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span>⚠️</span> {error}
+                                <span>!</span> {error}
                             </div>
                         )}
 
@@ -155,7 +153,7 @@ export default function CounselorRegisterPage() {
                             <div style={{ position: 'relative' }}>
                                 <input id="reg-password" type={showPassword ? 'text' : 'password'} className="form-input" placeholder="Min. 8 characters" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required style={{ paddingRight: 44 }} />
                                 <button type="button" onClick={() => setShowPassword(v => !v)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', padding: 0 }}>
-                                    {showPassword ? '🙈' : '👁️'}
+                                    {showPassword ? 'Hide' : 'Show'}
                                 </button>
                             </div>
                         </div>
@@ -167,7 +165,7 @@ export default function CounselorRegisterPage() {
 
                         {/* Info box */}
                         <div style={{ background: greenDim, border: `1px solid ${greenBorder}`, borderRadius: 10, padding: '12px 16px', fontSize: '0.8rem', color: green, lineHeight: 1.5 }}>
-                            ⏳ After submitting, an administrator will review your application. You will receive an email confirmation once approved.
+                            After submitting, an administrator will review your application. You will receive an email confirmation once approved.
                         </div>
 
                         <button
@@ -182,7 +180,7 @@ export default function CounselorRegisterPage() {
                                     Submitting…
                                 </>
                             ) : (
-                                <>Submit Application <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg></>
+                                <>Submit Application <ArrowRight size={18} strokeWidth={2.5} /></>
                             )}
                         </button>
                     </form>

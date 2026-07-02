@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef } from 'react';
+import { Calendar, ArrowLeft, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
@@ -49,30 +50,36 @@ export default function AppointmentsHistoryPage() {
         const generatedAt = new Date().toLocaleString();
         const headers = data.length > 0 ? Object.keys(data[0]) : [];
         const tableRows = data.map(row => `<tr>${headers.map(h => `<td>${typeof row[h] === 'object' ? (row[h]?.name || row[h]?.email || JSON.stringify(row[h])) : String(row[h] ?? '—')}</td>`).join('')}</tr>`).join('');
-        w.document.write(`<html><head><title>${title} — Virtual Counseling Booking and Scheduling System</title>
+        w.document.write(`<html><head><title>${title} — KU Wellness System</title>
             <style>
                 body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 1100px; margin: 32px auto; color: #111; line-height: 1.5; padding: 0 24px; }
-                .header { border-bottom: 3px solid #9b7e49; padding-bottom: 12px; margin-bottom: 20px; }
-                .header h1 { font-size: 1.5rem; color: #9b7e49; margin: 0 0 4px; letter-spacing: 0.04em; }
+                .header { border-bottom: 3px solid #325343; padding-bottom: 12px; margin-bottom: 20px; }
+                .header h1 { font-size: 1.5rem; color: #325343; margin: 0 0 4px; letter-spacing: 0.04em; }
                 .header h2 { font-size: 1.1rem; color: #333; margin: 0 0 8px; font-weight: 600; }
                 .meta { display: flex; gap: 24px; font-size: 0.82rem; color: #666; }
-                .confidential { color: #9b7e49; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+                .confidential { color: #325343; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
                 table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.8rem; }
-                th { background: #9b7e49; color: #fff; padding: 8px 10px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+                th { background: #325343 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #fff !important; padding: 10px 12px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 2px solid #1e3a2a; }
                 td { padding: 7px 10px; border-bottom: 1px solid #e5e5e5; vertical-align: top; max-width: 220px; overflow-wrap: break-word; }
-                tr:nth-child(even) { background: #fafaf8; }
+                tr:nth-child(even) { background: #f6f9f7; }
                 .count { font-size: 0.82rem; color: #555; margin-top: 12px; }
                 .verify-footer { margin-top: 16px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 0.68rem; color: #999; display: flex; justify-content: space-between; align-items: center; }
                 @media print { body { margin: 16px; } }
             </style></head><body>
             <div class="header">
-                <p class="confidential">🔒 Confidential — Administrative Report</p>
-                <h1>Virtual Counseling Booking and Scheduling System</h1><h2>${title}</h2>
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+                    <img src="${window.location.origin}/logo.jpg" alt="Logo" style="width: 56px; height: 56px; object-fit: contain; border-radius: 8px;" />
+                    <div>
+                        <p class="confidential" style="margin: 0 0 4px 0;">Confidential — Administrative Report</p>
+                        <h1 style="margin: 0;">KU Wellness System</h1>
+                    </div>
+                </div>
+                <h2>${title}</h2>
                 <div class="meta"><span><strong>Report Range:</strong> ${rangeLabel}</span><span><strong>Generated:</strong> ${generatedAt}</span><span><strong>Records:</strong> ${data.length}</span><span><strong>Verify ID:</strong> ${verifyId}</span></div>
             </div>
             ${data.length > 0 ? `<table><thead><tr>${headers.map(h => `<th>${h.replace(/([A-Z])/g, ' $1').trim()}</th>`).join('')}</tr></thead><tbody>${tableRows}</tbody></table><p class="count">${data.length} record${data.length !== 1 ? 's' : ''} total</p>` : '<p style="color:#888;margin-top:32px;">No data available for the selected period.</p>'}
-            ${signatureDataUrl ? `<div style="margin-top:28px;"><h3 style="font-size:0.9rem;color:#9b7e49;margin-bottom:4px;">Administrator Verification</h3><img src="${signatureDataUrl}" style="max-width:240px;height:auto;border-bottom:1px solid #333;" /><p style="font-size:0.8rem;margin:4px 0 0;">Digitally signed — ${generatedAt}</p></div>` : ''}
-            <div class="verify-footer"><span>Generated by Virtual Counseling Booking and Scheduling System — Administrative Reports</span><span>Verify ID: ${verifyId}</span><span>${generatedAt}</span></div>
+            ${signatureDataUrl ? `<div style="margin-top:28px;"><h3 style="font-size:0.9rem;color:#325343;margin-bottom:4px;">Administrator Verification</h3><img src="${signatureDataUrl}" style="max-width:240px;height:auto;border-bottom:1px solid #333;" /><p style="font-size:0.8rem;margin:4px 0 0;">Digitally signed — ${generatedAt}</p></div>` : ''}
+            <div class="verify-footer"><span>Generated by KU Wellness System — Administrative Reports</span><span>Verify ID: ${verifyId}</span><span>${generatedAt}</span></div>
             </body></html>`);
         w.document.close(); w.print();
     };
@@ -143,17 +150,20 @@ export default function AppointmentsHistoryPage() {
         <div className="dashboard-layout">
             <Sidebar />
             <main className="dashboard-content page-transition">
+                {/* Breadcrumb */}
                 <div style={{ marginBottom: 24 }}>
-                    <Link href="/admin/reports" style={{ color: 'var(--ku-gold)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>← Back to Reports</Link>
+                    <Link href="/admin/reports" style={{ color: 'var(--ku-green)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <ArrowLeft size={14} strokeWidth={2.5} /> Back to Reports
+                    </Link>
                 </div>
 
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                        <div style={{ fontSize: '2rem', width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 14, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>📅</div>
-                        <div>
-                            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>Appointments History</h1>
-                            <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>Filter, preview, and print appointment reports.</p>
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 }}>
+                    <div>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(50,83,67,0.07)', border: '1px solid rgba(50,83,67,0.15)', borderRadius: 20, padding: '4px 12px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--ku-green)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12 }}>
+                            <FileText size={12} strokeWidth={2.5} /> Admin Reports
                         </div>
+                        <h1 style={{ fontSize: '1.9rem', fontWeight: 800, marginBottom: 6, letterSpacing: '-0.02em' }}>Appointments History</h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Filter, preview, and print appointment reports.</p>
                     </div>
                     <NotificationBell />
                 </header>
@@ -186,14 +196,14 @@ export default function AppointmentsHistoryPage() {
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                        <button className="btn-primary" onClick={fetchPreview} disabled={previewLoading} style={{ fontSize: '0.85rem', background: 'linear-gradient(135deg, var(--ku-gold), #d97706)' }}>
-                            {previewLoading ? '⏳ Loading...' : '👁 Preview Data'}
+                        <button className="btn-primary" onClick={fetchPreview} disabled={previewLoading} style={{ fontSize: '0.85rem' }}>
+                            {previewLoading ? 'Loading...' : 'Preview Data'}
                         </button>
                         <button onClick={printReport} disabled={printing} style={{
-                            padding: '10px 20px', borderRadius: 12, border: '1px solid var(--ku-gold)', background: 'transparent',
-                            color: 'var(--ku-gold)', fontWeight: 600, fontSize: '0.85rem', cursor: printing ? 'not-allowed' : 'pointer',
+                            padding: '10px 20px', borderRadius: 12, border: '1px solid var(--ku-green)', background: 'transparent',
+                            color: 'var(--ku-green)', fontWeight: 600, fontSize: '0.85rem', cursor: printing ? 'not-allowed' : 'pointer',
                             opacity: printing ? 0.6 : 1, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6,
-                        }}>{printing ? '⏳ Preparing...' : '🖨 Print Report'}</button>
+                        }}>{printing ? 'Preparing...' : 'Print Report'}</button>
                     </div>
                 </div>
 
@@ -228,7 +238,7 @@ export default function AppointmentsHistoryPage() {
                 {sigOpen && pendingPrint && (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} onClick={closeSigModal}>
                         <div onClick={e => e.stopPropagation()} style={{ background: 'var(--card-bg, #1a1a2e)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, width: '90%', maxWidth: 480, boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}>
-                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 700 }}>✍️ Sign Report</h3>
+                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 700 }}>Sign Report</h3>
                             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>Draw your signature below to verify <strong>{pendingPrint.title}</strong>.</p>
                             <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', background: '#fff', position: 'relative' }}>
                                 <canvas ref={sigCanvasRef} width={420} height={140} style={{ width: '100%', height: 140, cursor: 'crosshair', touchAction: 'none' }}
@@ -241,7 +251,7 @@ export default function AppointmentsHistoryPage() {
                             <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
                                 <button onClick={clearSig} style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer' }}>Clear</button>
                                 <button onClick={handleSkipSignature} style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '0.8rem', cursor: 'pointer' }}>Skip Signature</button>
-                                <button onClick={handleSignAndPrint} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #9b7e49, #c9a84c)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>✅ Sign & Print</button>
+                                <button onClick={handleSignAndPrint} style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: 'var(--ku-green)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>Sign &amp; Print</button>
                             </div>
                         </div>
                     </div>
@@ -250,3 +260,4 @@ export default function AppointmentsHistoryPage() {
         </div>
     );
 }
+

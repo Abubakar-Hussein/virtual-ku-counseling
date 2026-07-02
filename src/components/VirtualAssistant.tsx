@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { MessageCircle, X, Send, Check, ArrowRight } from 'lucide-react';
 
 type Step =
     | 'initial'
@@ -37,7 +38,7 @@ export default function VirtualAssistant() {
     const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
-        { id: '1', text: "Hello! I'm your Virtual Counseling Booking and Scheduling System Assistant. How can I help you today?", sender: 'assistant' }
+        { id: '1', text: "Hello! I'm your KU Wellness System Assistant. How can I help you today?", sender: 'assistant' }
     ]);
     const [step, setStep] = useState<Step>('initial');
     const [loading, setLoading] = useState(false);
@@ -162,21 +163,21 @@ export default function VirtualAssistant() {
 
     const handleFlagsNext = () => {
         const parts = [];
-        if (isUrgent) parts.push('⚠️ Urgent / Crisis Triage');
+        if (isUrgent) parts.push('[URGENT] Urgent / Crisis Triage');
         if (previousTherapy) parts.push('Has attended counseling before');
         addMessage(parts.length > 0 ? parts.join(' · ') : 'No flags', 'user');
         setStep('confirm');
         delayedAssistant(
             `Here's a summary of your booking:\n\n` +
-            `📅 Date: ${new Date(selectedDate).toDateString()}\n` +
-            `🕐 Time: ${selectedSlot}\n` +
-            `👤 Counselor: ${selectedCounselor?.name}\n` +
-            `📋 Focus: ${spec}\n` +
-            `💬 Reason: ${reasonInput.trim()}\n` +
-            `😊 Mood: ${mood}/10\n` +
-            (concerns.length > 0 ? `🏷️ Concerns: ${concerns.join(', ')}\n` : '') +
-            (isUrgent ? `⚠️ Flagged as urgent\n` : '') +
-            (previousTherapy ? `✅ Previous therapy noted\n` : '') +
+            `Date: ${new Date(selectedDate).toDateString()}\n` +
+            `Time: ${selectedSlot}\n` +
+            `Counselor: ${selectedCounselor?.name}\n` +
+            `Focus: ${spec}\n` +
+            `Reason: ${reasonInput.trim()}\n` +
+            `Mood: ${mood}/10\n` +
+            (concerns.length > 0 ? `Concerns: ${concerns.join(', ')}\n` : '') +
+            (isUrgent ? `Flagged as urgent\n` : '') +
+            (previousTherapy ? `Previous therapy noted\n` : '') +
             `\nShall I confirm this booking?`
         );
     };
@@ -202,7 +203,7 @@ export default function VirtualAssistant() {
             if (res.ok) {
                 setStep('success');
                 addMessage(
-                    "✅ Booking confirmed! You'll receive a notification and an email with the details shortly. Is there anything else I can help with?",
+                    "Booking confirmed! You'll receive a notification and an email with the details shortly. Is there anything else I can help with?",
                     'assistant'
                 );
             } else {
@@ -231,7 +232,7 @@ export default function VirtualAssistant() {
         setMood(5);
         setIsUrgent(false);
         setPreviousTherapy(false);
-        setMessages([{ id: '1', text: "Hello! I'm your Virtual Counseling Booking and Scheduling System Assistant. How can I help you today?", sender: 'assistant' }]);
+        setMessages([{ id: '1', text: "Hello! I'm your KU Wellness System Assistant. How can I help you today?", sender: 'assistant' }]);
     };
 
     const handleTextSubmit = async (e: React.FormEvent) => {
@@ -292,7 +293,7 @@ export default function VirtualAssistant() {
                 onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05) rotate(5deg)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0)'}
             >
-                {isOpen ? '✕' : '💬'}
+                {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
             </button>
 
             {isOpen && (
@@ -309,12 +310,7 @@ export default function VirtualAssistant() {
                         background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
                         color: '#fff', display: 'flex', alignItems: 'center', gap: 14,
                     }}>
-                        <div style={{
-                            width: 44, height: 44, borderRadius: '50%',
-                            background: 'rgba(255,255,255,0.2)', display: 'flex',
-                            alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1.2rem', border: '2px solid rgba(255,255,255,0.4)', flexShrink: 0
-                        }}>🧠</div>
+                        <img src="/logo.jpg" alt="Logo" style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'contain' }} />
                         <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>KU Virtual Assistant</div>
                             <div style={{ fontSize: '0.78rem', opacity: 0.9, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -327,7 +323,7 @@ export default function VirtualAssistant() {
                                 background: 'rgba(255,255,255,0.15)', border: 'none',
                                 borderRadius: 8, padding: '4px 10px', color: '#fff',
                                 fontSize: '0.72rem', cursor: 'pointer'
-                            }}>↩ Restart</button>
+                            }}>Restart</button>
                         )}
                     </div>
 
@@ -367,7 +363,7 @@ export default function VirtualAssistant() {
                         {/* INITIAL */}
                         {step === 'initial' && (
                             <button onClick={handleInitialSupport} className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                                📅 Schedule a Session
+                                Schedule a Session
                             </button>
                         )}
 
@@ -441,9 +437,9 @@ export default function VirtualAssistant() {
                                     onClick={handleReasonNext}
                                     disabled={!reasonInput.trim()}
                                     className="btn-primary"
-                                    style={{ justifyContent: 'center', opacity: reasonInput.trim() ? 1 : 0.5 }}
+                                    style={{ justifyContent: 'center', opacity: reasonInput.trim() ? 1 : 0.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                                 >
-                                    Next →
+                                    Next <ArrowRight size={14} />
                                 </button>
                             </div>
                         )}
@@ -480,8 +476,8 @@ export default function VirtualAssistant() {
                                         </button>
                                     ))}
                                 </div>
-                                <button onClick={handleConcernsNext} className="btn-primary" style={{ justifyContent: 'center' }}>
-                                    Next →
+                                <button onClick={handleConcernsNext} className="btn-primary" style={{ justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    Next <ArrowRight size={14} />
                                 </button>
                             </div>
                         )}
@@ -491,14 +487,14 @@ export default function VirtualAssistant() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: '0.85rem', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: isUrgent ? 'rgba(239,68,68,0.08)' : 'transparent' }}>
                                     <input type="checkbox" checked={isUrgent} onChange={e => setIsUrgent(e.target.checked)} />
-                                    <span>⚠️ I need to see someone urgently (Crisis Triage)</span>
+                                    <span>I need to see someone urgently (Crisis Triage)</span>
                                 </label>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: '0.85rem', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: previousTherapy ? 'rgba(0,102,51,0.08)' : 'transparent' }}>
                                     <input type="checkbox" checked={previousTherapy} onChange={e => setPreviousTherapy(e.target.checked)} />
-                                    <span>✅ I have attended counseling before</span>
+                                    <span>I have attended counseling before</span>
                                 </label>
-                                <button onClick={handleFlagsNext} className="btn-primary" style={{ justifyContent: 'center' }}>
-                                    Review & Confirm →
+                                <button onClick={handleFlagsNext} className="btn-primary" style={{ justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    Review & Confirm <ArrowRight size={14} />
                                 </button>
                             </div>
                         )}
@@ -506,8 +502,8 @@ export default function VirtualAssistant() {
                         {/* CONFIRM */}
                         {step === 'confirm' && !loading && (
                             <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={handleConfirm} className="btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
-                                    ✓ Confirm Booking
+                                <button onClick={handleConfirm} className="btn-primary" style={{ flex: 1, justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    <Check size={16} strokeWidth={3} /> Confirm Booking
                                 </button>
                                 <button onClick={handleReset} className="btn-secondary">
                                     Cancel
@@ -554,7 +550,7 @@ export default function VirtualAssistant() {
                                 }}
                                     onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                                     onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                                >➤</button>
+                                ><Send size={16} /></button>
                             </form>
                         </div>
                     )}

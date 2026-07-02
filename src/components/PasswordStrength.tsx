@@ -1,4 +1,5 @@
 'use client';
+import { Check } from 'lucide-react';
 
 /**
  * Visual password strength meter.
@@ -87,7 +88,7 @@ export default function PasswordStrength({ password }: { password: string }) {
                             border: `1px solid ${check.pass ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.08)'}`,
                             transition: 'all 0.2s',
                         }}>
-                            {check.pass ? '✓' : ''}
+                            {check.pass ? <Check size={10} strokeWidth={3} /> : ''}
                         </span>
                         {check.label}
                     </div>

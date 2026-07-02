@@ -126,7 +126,7 @@ export default function CounselorAppointmentsPage() {
                             cursor: 'pointer', transition: 'all 0.2s', fontWeight: dateFilter === todayStr ? 600 : 400,
                         }}
                     >
-                        📅 Today
+                        Today
                     </button>
                     <button
                         onClick={() => {
@@ -143,7 +143,7 @@ export default function CounselorAppointmentsPage() {
                             cursor: 'pointer', transition: 'all 0.2s',
                         }}
                     >
-                        📅 Tomorrow
+                        Tomorrow
                     </button>
                     {isFiltered && (
                         <button
@@ -191,7 +191,7 @@ export default function CounselorAppointmentsPage() {
                     </div>
                 ) : filtered.length === 0 ? (
                     <EmptyState 
-                        icon="🧑‍🏫"
+                        icon=""
                         title="No appointments found"
                         description={
                             dateFilter

@@ -25,15 +25,17 @@ export default function StatsCard({ label, value, icon, color = 'var(--ku-green)
                 (e.currentTarget as HTMLElement).style.transform = '';
                 (e.currentTarget as HTMLElement).style.boxShadow = '';
             }}>
-            <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: `${color}22`,
-                border: `1px solid ${color}44`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.3rem',
-            }}>
-                {icon}
-            </div>
+            {icon && (
+                <div style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: `${color}22`,
+                    border: `1px solid ${color}44`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.3rem',
+                }}>
+                    {icon}
+                </div>
+            )}
             <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 {value}
             </div>

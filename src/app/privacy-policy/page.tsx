@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -14,13 +14,8 @@ export default function PrivacyPolicyPage() {
         background: 'var(--bg-main)'
       }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 12,
-            background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(0, 102, 51, 0.3)',
-          }}>🎓</div>
-          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>Virtual Counseling Booking and Scheduling System</span>
+          <img src="/logo.jpg" alt="Logo" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain' }} />
+          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
         </Link>
         <ThemeToggle />
       </nav>

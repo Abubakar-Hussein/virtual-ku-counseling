@@ -1,0 +1,70 @@
+========================================================================
+             VIRTUAL KU COUNSELING - SYSTEM PROJECT ABSTRACT
+========================================================================
+
+The Virtual KU Counseling Booking and Scheduling System is an automated,
+responsive, and secure Web Application designed to manage and optimize
+mental health, career, and academic counseling services for university
+students. 
+
+By integrating modern artificial intelligence with role-specific portal
+management and secure transaction logging, the system ensures both
+students and counselors can operate efficiently and confidentially.
+
+------------------------------------------------------------------------
+CORE CAPABILITIES
+------------------------------------------------------------------------
+
+1. INTELLIGENT AI ASSISTANT
+   - Powered by Google Gemini (gemini-flash-latest) API.
+   - Provides 24/7 empathetic student support regarding academic stress,
+     career questions, and mental health resources.
+   - Automatically detects booking intent to trigger the scheduling
+     portal (via the [ACTION:BOOK_SESSION] hook).
+   - Protected by client-IP rate-limiting (30 reqs/min) to prevent abuse.
+
+2. MULTI-ROLE USER DASHBOARDS
+   - STUDENT PORTAL: Allows filling out digital pre-session intake forms,
+     requesting sessions (Peer, General, Academic, Career, Psychological),
+     accessing Google Meet session links, and providing feedback/ratings.
+   - COUNSELOR PORTAL: Allows managing appointments, reading student
+     intake histories, filing secure session notes, and modifying focus areas.
+     Requires admin approval state check to sign in.
+   - ADMIN PORTAL: Allows full oversight of users, reviewing system logs, and 
+     performing platform-wide monitoring.
+
+3. SECURITY & ACCESS CONTROL
+   - Secure authentication via NextAuth.js credentials provider using JWT.
+   - Credentials matching prevents dashboard/portal mismatch.
+   - Hashed passwords using bcrypt (10 rounds).
+   - Hardcoded Admin Bypass allows direct access under server downtime.
+   - Administrative auditing through dedicated database logging.
+
+4. AUTOMATED COMMUNICATIONS & REPORTS
+   - Connects to Nodemailer (Gmail SMTP server) or Resend API to dispatch 
+     responsive HTML notifications for bookings, updates, and reminders.
+   - Supports exporting session details and notes directly to PDF formats 
+     using jspdf and jspdf-autotable.
+
+------------------------------------------------------------------------
+SYSTEM ARCHITECTURE & VISUAL DESIGN
+------------------------------------------------------------------------
+
+* FRONTEND:      React 19 & Next.js App Router
+* STYLING:       Tailwind CSS v4 & Lucide React Icons
+* THEMING:       Kenyatta University Branding (Green & Gold), dark/light mode,
+                 and glassmorphism visuals.
+* BACKEND:       Next.js API Server Routes
+* DATABASE:      MongoDB via Mongoose ODM
+* INTEGRATIONS:  Google AI Studio API, SMTP Email Service, JSPDF
+
+------------------------------------------------------------------------
+DATABASE SCHEMA SUMMARY
+------------------------------------------------------------------------
+* User           - Stores identity credentials, roles, and approval status.
+* Counselor      - Holds rating metrics, specializations, and schedules.
+* Appointment    - Tracks counselor, student, timeslot, type, and status.
+* Intake         - Captures pre-session medical/counseling background info.
+* SessionNote    - Stores secure transcripts and therapist review logs.
+* AuditLog       - Documents actions executed by users for auditing.
+========================================================================

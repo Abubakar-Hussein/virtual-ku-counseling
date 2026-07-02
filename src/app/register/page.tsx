@@ -73,18 +73,12 @@ export default function RegisterPage() {
         }}>
             <div style={{ width: '100%', maxWidth: 480 }}>
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                    <div style={{
-                        width: 64, height: 64, borderRadius: 18,
-                        background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.8rem', margin: '0 auto 16px',
-                        boxShadow: '0 8px 32px rgba(0,102,51,0.4)',
-                    }}>🌱</div>
+                    <img src="/logo.jpg" alt="Logo" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'contain', display: 'block', margin: '0 auto 16px' }} />
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 6 }}>
                         <span className="gradient-text">Create Account</span>
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                        Join Wellness System with your university or personal email
+                        Join KU Wellness System with your university or personal email
                     </p>
                 </div>
 

@@ -45,13 +45,7 @@ export default function ForgotPasswordPage() {
         }}>
             <div style={{ width: '100%', maxWidth: 420 }}>
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                    <div style={{
-                        width: 64, height: 64, borderRadius: 18,
-                        background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.8rem', margin: '0 auto 16px',
-                        boxShadow: '0 8px 32px rgba(0,102,51,0.4)',
-                    }}>🔒</div>
+                    <img src="/logo.jpg" alt="Logo" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'contain' }} />
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 6 }}>
                         <span className="gradient-text">Forgot Password</span>
                     </h1>
@@ -87,7 +81,7 @@ export default function ForgotPasswordPage() {
                         </form>
                     ) : (
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: 16 }}>📧</div>
+                            <div style={{ fontSize: '3rem', marginBottom: 16 }}>Email sent</div>
                             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 12 }}>Check your email</h3>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: 24 }}>
                                 If an account exists for <strong>{email}</strong>, we've sent instructions to reset your password.

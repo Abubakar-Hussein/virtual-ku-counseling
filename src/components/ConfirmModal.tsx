@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { AlertTriangle, HelpCircle, Check } from 'lucide-react';
 
 /**
  * Glassmorphism confirmation modal to replace browser confirm() dialogs.
@@ -83,10 +84,15 @@ export default function ConfirmModal({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.4rem',
                     margin: '0 auto 20px',
                 }}>
-                    {variant === 'danger' ? '⚠️' : variant === 'warning' ? '❓' : '✓'}
+                    {variant === 'danger' ? (
+                        <AlertTriangle size={20} strokeWidth={2.5} style={{ color: colors.color }} />
+                    ) : variant === 'warning' ? (
+                        <HelpCircle size={20} strokeWidth={2.5} style={{ color: colors.color }} />
+                    ) : (
+                        <Check size={20} strokeWidth={2.5} style={{ color: colors.color }} />
+                    )}
                 </div>
 
                 {/* Title */}

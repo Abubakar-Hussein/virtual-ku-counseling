@@ -79,7 +79,7 @@ export async function PUT(req: Request) {
         if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await req.json();
-        const { name, phone, password, bio, specializations, profileImage } = body;
+        const { name, phone, studentId, password, bio, specializations, profileImage } = body;
         const sessionId = (session.user as any).id;
 
         await connectDB();
@@ -151,6 +151,10 @@ export async function PUT(req: Request) {
         if (phone !== undefined && phone !== user.phone) {
             changes.push(`phone: ${user.phone || 'N/A'} → ${phone}`);
             user.phone = phone;
+        }
+        if (studentId !== undefined && studentId !== user.studentId) {
+            changes.push(`studentId: ${user.studentId || 'N/A'} → ${studentId}`);
+            user.studentId = studentId;
         }
         if (profileImage !== undefined && profileImage !== user.profileImage) {
             changes.push('profile image updated');

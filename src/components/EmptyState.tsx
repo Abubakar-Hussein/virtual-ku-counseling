@@ -24,14 +24,16 @@ export default function EmptyState({ icon, title, description, actionLabel, acti
             border: '1px solid var(--border)',
             marginTop: 20,
         }}>
-            <div style={{
-                fontSize: '4rem',
-                marginBottom: 24,
-                filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.1))',
-                animation: 'float 3s ease-in-out infinite'
-            }}>
-                {icon}
-            </div>
+            {icon && (
+                <div style={{
+                    fontSize: '4rem',
+                    marginBottom: 24,
+                    filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.1))',
+                    animation: 'float 3s ease-in-out infinite'
+                }}>
+                    {icon}
+                </div>
+            )}
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>
                 {title}
             </h3>

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
+import { Save, Lock } from 'lucide-react';
 
 export default function CounselorNotesPage({ params }: { params: Promise<{ appointmentId: string }> }) {
     const router = useRouter();
@@ -90,16 +91,16 @@ export default function CounselorNotesPage({ params }: { params: Promise<{ appoi
                     </div>
 
                     <div style={{ display: 'flex', gap: 16, marginTop: 24 }}>
-                        <button onClick={handleSave} className="btn-primary" disabled={saving} style={{ flex: 1, justifyContent: 'center' }}>
-                            {saving ? 'Saving...' : '💾 Save Secure Notes'}
+                        <button onClick={handleSave} className="btn-primary" disabled={saving} style={{ flex: 1, justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            {saving ? 'Saving...' : <><Save size={16} /> Save Secure Notes</>}
                         </button>
                         <button onClick={() => router.back()} className="btn-secondary">
                             Back to Dashboard
                         </button>
                     </div>
                     {message && <p style={{ color: 'var(--ku-green-light)', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600, marginTop: 16 }}>{message}</p>}
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: 16 }}>
-                        🔒 These notes are encrypted and only accessible to you. They are not visible to the student.
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        <Lock size={12} /> These notes are encrypted and only accessible to you. They are not visible to the student.
                     </p>
                 </div>
             </main>

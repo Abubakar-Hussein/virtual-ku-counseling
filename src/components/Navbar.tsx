@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 
@@ -13,13 +13,8 @@ export default function Navbar() {
             position: 'sticky', top: 0, zIndex: 100,
         }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                <div style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1rem',
-                }}>🎓</div>
-                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Virtual Counseling Booking and Scheduling System</span>
+                <img src="/logo.jpg" alt="Logo" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain' }} />
+                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>KU Wellness System</span>
             </Link>
 
             <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>

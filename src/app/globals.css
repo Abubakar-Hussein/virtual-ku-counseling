@@ -2,7 +2,6 @@
 
 @theme {
   --font-sans: var(--font-public-sans);
-  --font-serif: var(--font-newsreader);
   
   --color-primary: #004b24;
   --color-primary-container: #006633;
@@ -11,37 +10,37 @@
 }
 
 :root {
-  --ku-green: #006633;
-  --ku-green-dark: #004b24;
-  --ku-green-light: #8ce1a1;
+  --ku-green: #325343;
+  --ku-green-dark: #2A4738;
+  --ku-green-light: #A4D496;
   --ku-gold: #FFCC00;
   --ku-gold-dark: #745b00;
 
-  /* Light Theme - Academic Wellness System */
-  --bg-main: #f8f9ff;
-  --bg-card: #ffffff;
-  --bg-card-hover: #eef4ff;
-  --border: #bfc9bd;
-  --border-green: #6f7a6f;
-  --text-primary: #121c28;
-  --text-secondary: #3f4940;
-  --text-muted: #515a57;
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --shadow-green: 0 4px 20px rgba(0, 0, 0, 0.04);
+  /* Light Theme - BetterHelp Style */
+  --bg-main: #F7F5F0;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F2F9EF;
+  --border: #E5E0D8;
+  --border-green: #A4D496;
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
+  --glass-bg: #FFFFFF;
+  --shadow-green: 0 4px 20px rgba(50, 83, 67, 0.08);
 }
 
 .dark {
-  /* Dark Theme */
-  --bg-main: #121c28;
-  --bg-card: #27313e;
-  --bg-card-hover: #3f4940;
-  --border: #515a57;
-  --border-green: #84d999;
-  --text-primary: #f8f9ff;
-  --text-secondary: #c7d1cc;
-  --text-muted: #bfc9bd;
-  --glass-bg: rgba(39, 49, 62, 0.7);
-  --shadow-green: 0 0 40px rgba(0, 102, 51, 0.15);
+  /* Dark Earth Theme */
+  --bg-main: #232D27;
+  --bg-card: #2D3A32;
+  --bg-card-hover: #37473C;
+  --border: #405246;
+  --border-green: #5A7563;
+  --text-primary: #F3F4F6;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9CA3AF;
+  --glass-bg: #2D3A32;
+  --shadow-green: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,14 +56,12 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-newsreader), serif;
+  font-family: var(--font-public-sans), 'Inter', sans-serif;
 }
 
 /* Glass Card & Level 1 Elevation */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: 16px; /* lg: 1rem for large containers */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
@@ -92,7 +89,7 @@ h1, h2, h3, h4, h5, h6 {
   border: none;
   min-height: 48px; /* Minimum height for accessibility */
   padding: 0 28px;
-  border-radius: 8px; /* 0.5rem base radius */
+  border-radius: 9999px; /* Pill shape */
   font-family: var(--font-public-sans);
   font-weight: 600;
   font-size: 1rem;
@@ -123,7 +120,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--ku-green);
   min-height: 48px;
   padding: 0 28px;
-  border-radius: 8px;
+  border-radius: 9999px;
   font-family: var(--font-public-sans);
   font-weight: 600;
   font-size: 1rem;
@@ -145,7 +142,7 @@ h1, h2, h3, h4, h5, h6 {
   border: none;
   min-height: 48px;
   padding: 0 28px;
-  border-radius: 8px;
+  border-radius: 9999px;
   font-family: var(--font-public-sans);
   font-weight: 700;
   font-size: 1rem;
@@ -381,6 +378,8 @@ select.form-input {
   font-size: 1.5rem;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  align-items: center;
+  justify-content: center;
 }
 
 .mobile-menu-overlay {
@@ -420,7 +419,7 @@ select.form-input {
   }
 
   .mobile-menu-btn {
-    display: block;
+    display: flex;
   }
 
   .mobile-menu-overlay.open {

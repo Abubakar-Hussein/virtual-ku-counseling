@@ -34,14 +34,9 @@ export function Skeleton({
 /** Skeleton that mimics a StatsCard layout */
 export function StatsCardSkeleton() {
     return (
-        <div className="glass" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <Skeleton width={48} height={48} borderRadius={14} />
-                <div style={{ flex: 1 }}>
-                    <Skeleton width="60%" height={14} style={{ marginBottom: 8 }} />
-                    <Skeleton width="40%" height={28} />
-                </div>
-            </div>
+        <div className="glass" style={{ padding: 24, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Skeleton width="40%" height={32} />
+            <Skeleton width="60%" height={16} />
         </div>
     );
 }

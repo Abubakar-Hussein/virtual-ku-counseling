@@ -111,6 +111,7 @@ export default function ProfilePage() {
                 body: JSON.stringify({
                     name: profile.name,
                     phone: profile.phone,
+                    studentId: profile.role === 'student' ? profile.studentId : undefined,
                     password: profile.password || undefined,
                     bio: profile.role === 'counselor' ? profile.bio : undefined,
                     profileImage: profile.profileImage || undefined,
@@ -223,13 +224,13 @@ export default function ProfilePage() {
                                     <input type="tel" className="form-input" value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} placeholder="+254700000000" maxLength={13} title="Format: +2547 followed by 8 digits" />
                                 </div>
                                 <div className="form-group" style={{ opacity: 0.6 }}>
-                                    <label>Email Address 🔒</label>
+                                    <label>Email Address</label>
                                     <input type="email" className="form-input" value={profile.email} readOnly title="Email cannot be changed" />
                                 </div>
                                 {profile.role === 'student' && (
-                                    <div className="form-group" style={{ opacity: 0.6 }}>
-                                        <label>Student ID 🔒</label>
-                                        <input type="text" className="form-input" value={profile.studentId} readOnly />
+                                    <div className="form-group">
+                                        <label>Student ID</label>
+                                        <input type="text" className="form-input" value={profile.studentId} onChange={e => setProfile({ ...profile, studentId: e.target.value })} />
                                     </div>
                                 )}
                             </div>

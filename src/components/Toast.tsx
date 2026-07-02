@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { Check, X, AlertTriangle, Info } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -18,11 +19,11 @@ const ToastContext = createContext<ToastContextValue>({ showToast: () => {} });
 
 export const useToast = () => useContext(ToastContext);
 
-const TOAST_ICONS: Record<ToastType, string> = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ',
+const TOAST_ICONS: Record<ToastType, React.ReactNode> = {
+    success: <Check size={16} strokeWidth={3} />,
+    error: <X size={16} strokeWidth={3} />,
+    warning: <AlertTriangle size={16} strokeWidth={2.5} />,
+    info: <Info size={16} strokeWidth={2.5} />,
 };
 
 const TOAST_COLORS: Record<ToastType, { bg: string; border: string; color: string; iconBg: string }> = {

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor, Check } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 export function ThemeToggle() {
@@ -113,7 +113,7 @@ export function ThemeToggle() {
               >
                 {opt.icon}
                 {opt.label}
-                {active && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✓</span>}
+                {active && <Check size={14} style={{ marginLeft: 'auto' }} />}
               </button>
             );
           })}

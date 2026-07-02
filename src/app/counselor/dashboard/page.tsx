@@ -11,6 +11,7 @@ import SearchFilter from '@/components/SearchFilter';
 import { useToast } from '@/components/Toast';
 import Avatar from '@/components/Avatar';
 import EmptyState from '@/components/EmptyState';
+import { Star } from 'lucide-react';
 
 export default function CounselorDashboard() {
     const { data: session } = useSession();
@@ -158,11 +159,11 @@ export default function CounselorDashboard() {
                         </>
                     ) : (
                         <>
-                            <StatsCard label="Confirmed for Today" value={stats.today} icon="📅" color="var(--ku-green-light)" />
-                            <StatsCard label="Pending Requests" value={stats.pending} icon="🔔" color="#facc15" />
-                            <StatsCard label="Total Lifetime Sessions" value={stats.total} icon="📈" color="#60a5fa" />
+                            <StatsCard label="Confirmed for Today" value={stats.today} icon="" color="var(--ku-green-light)" />
+                            <StatsCard label="Pending Requests" value={stats.pending} icon="" color="#facc15" />
+                            <StatsCard label="Total Lifetime Sessions" value={stats.total} icon="" color="#60a5fa" />
                             <div className="glass" style={{ padding: '20px 24px', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                <div style={{ fontSize: '1.5rem' }}>⭐</div>
+                                <div style={{ display: 'flex', alignItems: 'center', color: '#facc15' }}><Star size={20} fill="#facc15" stroke="#facc15" /></div>
                                 {ratingLoading ? (
                                     <>
                                         <div className="skeleton" style={{ height: 32, width: 60, borderRadius: 6 }} />
@@ -174,9 +175,9 @@ export default function CounselorDashboard() {
                                             <span style={{ fontSize: '2rem', fontWeight: 800, color: '#facc15', lineHeight: 1 }}>{rating.avg.toFixed(1)}</span>
                                             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>/ 5</span>
                                         </div>
-                                        <div style={{ display: 'flex', gap: 2 }}>
+                                        <div style={{ display: 'flex', gap: 3 }}>
                                             {[1, 2, 3, 4, 5].map(s => (
-                                                <span key={s} style={{ fontSize: '0.9rem', color: s <= Math.round(rating.avg) ? '#facc15' : 'rgba(255,255,255,0.2)' }}>★</span>
+                                                <Star key={s} size={15} fill={s <= Math.round(rating.avg) ? '#facc15' : 'none'} stroke={s <= Math.round(rating.avg) ? '#facc15' : 'rgba(255,255,255,0.2)'} />
                                             ))}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Average Rating ({rating.total} review{rating.total !== 1 ? 's' : ''})</div>
@@ -211,7 +212,7 @@ export default function CounselorDashboard() {
 
                             {filtered.length === 0 ? (
                                 <EmptyState
-                                    icon="📋"
+                                    icon=""
                                     title="No appointments found"
                                     description={statusFilter !== 'all'
                                         ? `We couldn't find any ${statusFilter} appointments matching your filters.`
@@ -237,13 +238,13 @@ export default function CounselorDashboard() {
                             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>System Notices</h2>
                             <div className="glass" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
                                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
-                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--ku-gold)' }}>⚠️ Exam Period Approaching</div>
+                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--ku-gold)' }}>Exam Period Approaching</div>
                                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
                                         Expected surge in academic session requests. Please ensure your schedule is up to date.
                                     </div>
                                 </div>
                                 <div>
-                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--text-secondary)' }}>🔒 Private Notes</div>
+                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--text-secondary)' }}>Private Notes</div>
                                     <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
                                         All session notes are encrypted and shielded from students. Only you can view your assigned patient history.
                                     </div>

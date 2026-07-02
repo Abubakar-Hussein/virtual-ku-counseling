@@ -8,6 +8,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import SearchFilter from '@/components/SearchFilter';
 import { useToast } from '@/components/Toast';
 import EmptyState from '@/components/EmptyState';
+import { CalendarDays } from 'lucide-react';
 
 export default function StudentAppointmentsPage() {
     const { showToast } = useToast();
@@ -65,10 +66,23 @@ export default function StudentAppointmentsPage() {
         <div className="dashboard-layout">
             <Sidebar />
             <main className="dashboard-content page-transition">
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 }}>
                     <div>
-                        <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>My Appointments</h1>
-                        <p style={{ color: 'var(--text-secondary)' }}>View your complete booking history and manage upcoming sessions.</p>
+                        <div style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            background: 'rgba(50,83,67,0.07)', border: '1px solid rgba(50,83,67,0.15)',
+                            borderRadius: 20, padding: '4px 12px',
+                            fontSize: '0.72rem', fontWeight: 700, color: 'var(--ku-green)',
+                            letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12,
+                        }}>
+                            <CalendarDays size={12} strokeWidth={2.5} /> My Sessions
+                        </div>
+                        <h1 style={{ fontSize: '1.9rem', fontWeight: 800, marginBottom: 6, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                            My Appointments
+                        </h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                            View your booking history and manage upcoming sessions.
+                        </p>
                     </div>
                     <NotificationBell />
                 </header>
@@ -89,7 +103,7 @@ export default function StudentAppointmentsPage() {
                     </div>
                 ) : filtered.length === 0 ? (
                     <EmptyState 
-                        icon="📅"
+                        icon=""
                         title="No appointments found"
                         description={statusFilter !== 'all' 
                             ? `We couldn't find any ${statusFilter} appointments matching your criteria.` 

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/email';
 
 const SUPPORT_EMAIL = 'abumubarak430@gmail.com';
@@ -32,9 +32,9 @@ export async function POST(req: Request) {
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                📩 New Support Request
+                New Support Request
               </h1>
-              <p style="margin:6px 0 0;color:#bfdbfe;font-size:13px;">Virtual Counseling Booking and Scheduling System</p>
+              <p style="margin:6px 0 0;color:#bfdbfe;font-size:13px;">KU Wellness System</p>
             </td>
           </tr>
           <tr>
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
           <tr>
             <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#9ca3af;">
-                © ${new Date().getFullYear()} Kenyatta University — Virtual Counseling Booking and Scheduling System
+                © ${new Date().getFullYear()} Kenyatta University — KU Wellness System
               </p>
             </td>
           </tr>
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
         try {
             await sendEmail({
                 to: SUPPORT_EMAIL,
-                subject: `📩 Support Request: ${contactType} — from ${name} | Virtual Counseling Booking and Scheduling System`,
+                subject: `Support Request: ${contactType} — from ${name} | KU Wellness System`,
                 html: supportHtml,
                 text: `New support request from ${name} (${email}).\n\nCategory: ${contactType}\n\nMessage:\n${message}`,
             });
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
           <tr>
             <td style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.5px;">
-                🎓 Virtual Counseling Booking and Scheduling System
+                KU Wellness System
               </h1>
               <p style="margin:6px 0 0;color:#bfdbfe;font-size:13px;">Kenyatta University</p>
             </td>
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
 
             await sendEmail({
                 to: email,
-                subject: `✅ We received your message | Virtual Counseling Booking and Scheduling System`,
+                subject: `We received your message | KU Wellness System`,
                 html: autoReplyHtml,
                 text: `Hi ${name},\n\nThank you for reaching out. We received your support request and will respond within 24-48 hours.\n\nCategory: ${contactType}\nMessage: ${message}\n\nIf your issue is urgent, contact us at ${SUPPORT_EMAIL}.`,
             });

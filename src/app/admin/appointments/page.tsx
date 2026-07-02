@@ -100,7 +100,7 @@ export default function AdminAppointmentsPage() {
                     </div>
                 ) : filtered.length === 0 ? (
                     <EmptyState 
-                        icon="📋"
+                        icon=""
                         title="No appointments found"
                         description={statusFilter !== 'all' 
                             ? `There are no system-wide appointments with the status '${statusFilter}' currently.` 

@@ -2,49 +2,33 @@
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { ArrowLeft, ArrowRight, Eye, EyeOff, GraduationCap, UserCheck, Shield, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/Toast';
 
 const roleConfig: Record<string, {
     label: string;
-    color: string;
-    bg: string;
-    border: string;
-    shadow: string;
-    icon: string;
     placeholder: string;
+    icon: React.ReactNode;
 }> = {
     student: {
         label: 'Student',
-        color: '#60a5fa',
-        bg: 'rgba(96,165,250,0.08)',
-        border: 'rgba(96,165,250,0.25)',
-        shadow: 'rgba(59,130,246,0.3)',
-        icon: '🎓',
         placeholder: '12673.2022@students.ku.ac.ke',
+        icon: <GraduationCap size={28} strokeWidth={1.5} style={{ color: 'var(--ku-green)' }} />,
     },
     counselor: {
         label: 'Counselor',
-        color: '#4ade80',
-        bg: 'rgba(74,222,128,0.08)',
-        border: 'rgba(74,222,128,0.25)',
-        shadow: 'rgba(34,197,94,0.3)',
-        icon: '🧑‍⚕️',
         placeholder: 'counselor@ku.ac.ke',
+        icon: <UserCheck size={28} strokeWidth={1.5} style={{ color: 'var(--ku-green)' }} />,
     },
     admin: {
         label: 'Administrator',
-        color: '#f87171',
-        bg: 'rgba(248,113,113,0.08)',
-        border: 'rgba(248,113,113,0.25)',
-        shadow: 'rgba(239,68,68,0.3)',
-        icon: '🛡️',
         placeholder: 'admin@ku.ac.ke',
+        icon: <Shield size={28} strokeWidth={1.5} style={{ color: 'var(--ku-green)' }} />,
     },
 };
 
 export default function LoginPage() {
     const [role, setRole] = useState<string>('');
-    const [urlError, setUrlError] = useState('');
     const [form, setForm] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -52,18 +36,16 @@ export default function LoginPage() {
     const { showToast } = useToast();
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const r = params.get('role') || '';
-            setRole(r);
-            const e = params.get('error');
-            if (e === 'CredentialsSignin') {
-                setError('Invalid email or password. Please try again.');
-                showToast('Invalid email or password', 'error');
-            }
-            if (params.get('registered') === 'true') {
-                showToast('Account created! Please sign in.', 'success');
-            }
+        const params = new URLSearchParams(window.location.search);
+        const r = params.get('role') || '';
+        setRole(r);
+        const e = params.get('error');
+        if (e === 'CredentialsSignin') {
+            setError('Invalid email or password. Please try again.');
+            showToast('Invalid email or password', 'error');
+        }
+        if (params.get('registered') === 'true') {
+            showToast('Account created! Please sign in.', 'success');
         }
     }, []);
 
@@ -88,129 +70,148 @@ export default function LoginPage() {
         });
     };
 
-    const btnStyle = cfg
-        ? {
-              background: role === 'student'
-                ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
-                : role === 'counselor'
-                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-                : 'linear-gradient(135deg, #ef4444, #b91c1c)',
-              boxShadow: `0 6px 20px ${cfg.shadow}`,
-          }
-        : { background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))' };
-
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden',
-            padding: 20,
-        }}>
-            {/* Background */}
-            <div style={{
-                position: 'fixed', inset: 0,
-                background: cfg
-                    ? `radial-gradient(ellipse at top left, ${cfg.bg.replace('0.08', '0.15')} 0%, transparent 55%), var(--bg-main)`
-                    : 'radial-gradient(ellipse at top left, rgba(0,102,51,0.2) 0%, transparent 50%), var(--bg-main)',
-                zIndex: 0,
-            }} />
-            {cfg && (
+        <main style={{ minHeight: '100vh', display: 'flex', overflow: 'hidden' }}>
+            {/* ─── Left Panel: Background image */}
+            <div className="login-left-panel" style={{
+                flex: '1.1',
+                position: 'relative',
+                display: 'none',
+            }}>
                 <div style={{
-                    position: 'fixed', bottom: '-10%', right: '-10%',
-                    width: '50vw', height: '50vw',
-                    background: `radial-gradient(circle, ${cfg.bg} 0%, transparent 70%)`,
-                    filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0,
+                    position: 'absolute', inset: 0,
+                    backgroundImage: 'url(/wellness-bg.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                 }} />
-            )}
-
-            <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
-                {/* Back to access */}
-                <div style={{ marginBottom: 20 }}>
-                    <Link href="/access" style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        color: 'var(--text-muted)', textDecoration: 'none',
-                        fontSize: '0.85rem', fontWeight: 500,
-                        transition: 'color 0.2s',
-                    }}
-                        onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
-                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
-                    >
-                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                        </svg>
-                        Back to Dashboard Access
-                    </Link>
-                </div>
-
-                {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                    <div style={{
-                        width: 68, height: 68, borderRadius: 20,
-                        background: cfg
-                            ? cfg.bg
-                            : 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
-                        border: cfg ? `1.5px solid ${cfg.border}` : 'none',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '2rem', margin: '0 auto 18px',
-                        boxShadow: cfg
-                            ? `0 8px 32px ${cfg.shadow}`
-                            : '0 8px 32px rgba(0,102,51,0.4)',
+                {/* Overlay */}
+                <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(160deg, rgba(30,60,45,0.7) 0%, rgba(10,25,20,0.55) 100%)',
+                }} />
+                <div style={{
+                    position: 'absolute', inset: 0,
+                    display: 'flex', flexDirection: 'column',
+                    justifyContent: 'flex-end',
+                    padding: '10%',
+                }}>
+                    <img src="/logo.jpg" alt="KU Logo" style={{ width: 52, height: 52, borderRadius: 14, marginBottom: 32, objectFit: 'contain' }} />
+                    <h2 style={{
+                        fontSize: 'clamp(1.8rem, 3vw, 2.6rem)',
+                        fontWeight: 800, color: '#fff',
+                        lineHeight: 1.15, marginBottom: 16,
+                        letterSpacing: '-0.02em',
                     }}>
-                        {cfg ? cfg.icon : '🎓'}
+                        Welcome back to your safe space.
+                    </h2>
+                    <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, maxWidth: 380 }}>
+                        Mental wellness starts here. Log in to continue your journey with the KU Wellness System.
+                    </p>
+                    <div style={{
+                        marginTop: 48,
+                        display: 'flex', gap: 12, flexWrap: 'wrap',
+                    }}>
+                        {['Confidential', 'Secure', 'Student-Focused'].map(tag => (
+                            <span key={tag} style={{
+                                background: 'rgba(255,255,255,0.12)',
+                                backdropFilter: 'blur(8px)',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                color: '#fff',
+                                padding: '6px 14px',
+                                borderRadius: 20,
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                            }}>{tag}</span>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* ─── Right Panel: Form */}
+            <div style={{
+                flex: '1',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'var(--bg-main)',
+                padding: 'clamp(24px, 6vw, 80px)',
+                minHeight: '100vh',
+            }}>
+                <div style={{ width: '100%', maxWidth: 400 }}>
+
+                    {/* Back link */}
+                    <div style={{ marginBottom: 36 }}>
+                        <Link href="/access" style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            color: 'var(--text-muted)', textDecoration: 'none',
+                            fontSize: '0.85rem', fontWeight: 500,
+                            transition: 'color 0.2s',
+                        }}
+                            onMouseEnter={e => (e.currentTarget.style.color = 'var(--ku-green)')}
+                            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+                        >
+                            <ArrowLeft size={15} strokeWidth={2.5} />
+                            Back to options
+                        </Link>
                     </div>
 
+                    {/* Role badge */}
                     {cfg && (
-                        <span style={{
-                            display: 'inline-block',
-                            background: cfg.bg,
-                            color: cfg.color,
-                            border: `1px solid ${cfg.border}`,
-                            borderRadius: 20, padding: '4px 14px',
-                            fontSize: '0.75rem', fontWeight: 700,
-                            letterSpacing: '0.08em', textTransform: 'uppercase',
-                            marginBottom: 14,
+                        <div style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 8,
+                            background: 'rgba(50,83,67,0.07)',
+                            border: '1px solid rgba(50,83,67,0.15)',
+                            borderRadius: 10,
+                            padding: '8px 14px',
+                            marginBottom: 24,
                         }}>
-                            {cfg.label} Login
-                        </span>
+                            {cfg.icon}
+                            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--ku-green)' }}>
+                                {cfg.label} Login
+                            </span>
+                        </div>
                     )}
 
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: 8 }}>
-                        {cfg ? (
-                            <span style={{ color: cfg.color }}>{cfg.label} Portal</span>
-                        ) : (
-                            <span className="gradient-text">Wellness System</span>
-                        )}
+                    {/* Heading */}
+                    <h1 style={{
+                        fontSize: '2rem', fontWeight: 800,
+                        color: 'var(--text-primary)',
+                        marginBottom: 8, letterSpacing: '-0.02em',
+                    }}>
+                        {cfg ? `Sign in as ${cfg.label}` : 'Welcome back'}
                     </h1>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5 }}>
+                    <p style={{
+                        color: 'var(--text-secondary)', fontSize: '0.95rem',
+                        marginBottom: 36, lineHeight: 1.5,
+                    }}>
                         {cfg
-                            ? `Sign in to access your ${cfg.label.toLowerCase()} dashboard`
+                            ? `Enter your credentials to access your ${cfg.label.toLowerCase()} dashboard`
                             : 'Sign in with your Kenyatta University credentials'}
                     </p>
-                </div>
 
-                {/* Card */}
-                <div className="glass" style={{
-                    padding: 32,
-                    border: cfg ? `1px solid ${cfg.border}` : '1px solid var(--border)',
-                    borderRadius: 20,
-                }}>
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                        {error && (
-                            <div style={{
-                                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                                borderRadius: 10, padding: '12px 16px',
-                                color: '#f87171', fontSize: '0.875rem',
-                                display: 'flex', alignItems: 'center', gap: 8,
+                    {/* Error */}
+                    {error && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            background: 'rgba(239,68,68,0.08)',
+                            border: '1px solid rgba(239,68,68,0.25)',
+                            borderRadius: 10, padding: '12px 16px',
+                            color: '#e05252', fontSize: '0.875rem',
+                            marginBottom: 20,
+                        }}>
+                            <AlertCircle size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                        {/* Email */}
+                        <div>
+                            <label htmlFor="login-email" style={{
+                                display: 'block', fontSize: '0.85rem',
+                                fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8,
                             }}>
-                                <span>⚠️</span> {error}
-                            </div>
-                        )}
-
-                        <div className="form-group">
-                            <label htmlFor="login-email">
                                 {role === 'admin' ? 'Admin Email' : role === 'counselor' ? 'Counselor Email' : 'University Email'}
                             </label>
                             <input
@@ -221,12 +222,24 @@ export default function LoginPage() {
                                 value={form.email}
                                 onChange={e => setForm({ ...form, email: e.target.value })}
                                 required
-                                style={cfg ? { borderColor: 'transparent' } : {}}
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="login-password">Password</label>
+                        {/* Password */}
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                <label htmlFor="login-password" style={{
+                                    fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)',
+                                }}>
+                                    Password
+                                </label>
+                                <Link href="/forgot-password" style={{
+                                    fontSize: '0.8rem', color: 'var(--ku-green)',
+                                    textDecoration: 'none', fontWeight: 500,
+                                }}>
+                                    Forgot password?
+                                </Link>
+                            </div>
                             <div style={{ position: 'relative' }}>
                                 <input
                                     id="login-password"
@@ -236,7 +249,7 @@ export default function LoginPage() {
                                     value={form.password}
                                     onChange={e => setForm({ ...form, password: e.target.value })}
                                     required
-                                    style={{ paddingRight: 44 }}
+                                    style={{ paddingRight: 48 }}
                                 />
                                 <button
                                     type="button"
@@ -246,44 +259,41 @@ export default function LoginPage() {
                                         transform: 'translateY(-50%)',
                                         background: 'none', border: 'none',
                                         color: 'var(--text-muted)', cursor: 'pointer',
-                                        fontSize: '1rem', padding: 0,
+                                        padding: 0, display: 'flex', alignItems: 'center',
                                     }}
                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
-                                    {showPassword ? '🙈' : '👁️'}
+                                    {showPassword
+                                        ? <EyeOff size={18} strokeWidth={1.8} />
+                                        : <Eye size={18} strokeWidth={1.8} />}
                                 </button>
-                            </div>
-                            <div style={{ textAlign: 'right', marginTop: 4 }}>
-                                <Link href="/forgot-password" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
-                                    Forgot password?
-                                </Link>
                             </div>
                         </div>
 
+                        {/* Submit */}
                         <button
                             id="login-submit"
                             type="submit"
                             disabled={loading}
                             style={{
-                                width: '100%',
+                                width: '100%', marginTop: 8,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                background: 'var(--ku-green)',
                                 color: '#fff', border: 'none',
-                                padding: '14px 28px', borderRadius: 12,
-                                fontWeight: 700, fontSize: '0.95rem',
+                                padding: '15px 28px', borderRadius: 12,
+                                fontWeight: 700, fontSize: '1rem',
                                 cursor: loading ? 'not-allowed' : 'pointer',
                                 opacity: loading ? 0.7 : 1,
-                                transition: 'all 0.25s ease',
-                                letterSpacing: '0.01em',
-                                ...btnStyle,
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 4px 16px rgba(50,83,67,0.2)',
                             }}
                         >
                             {loading ? (
                                 <>
                                     <span style={{
-                                        width: 16, height: 16,
-                                        border: '2px solid rgba(255,255,255,0.4)',
-                                        borderTopColor: '#fff',
-                                        borderRadius: '50%',
+                                        width: 18, height: 18,
+                                        border: '2px solid rgba(255,255,255,0.35)',
+                                        borderTopColor: '#fff', borderRadius: '50%',
                                         display: 'inline-block',
                                         animation: 'spin 0.7s linear infinite',
                                     }} />
@@ -292,40 +302,42 @@ export default function LoginPage() {
                             ) : (
                                 <>
                                     {cfg ? `Sign in as ${cfg.label}` : 'Sign In'}
-                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                                    </svg>
+                                    <ArrowRight size={18} strokeWidth={2.5} />
                                 </>
                             )}
                         </button>
                     </form>
 
+                    {/* Footer links */}
                     {role !== 'admin' && role !== 'counselor' && (
-                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: 20 }}>
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: 28 }}>
                             Don&apos;t have an account?{' '}
-                            <Link href="/register" style={{ color: 'var(--ku-green-light)', fontWeight: 600, textDecoration: 'none' }}>
-                                Register
+                            <Link href="/register" style={{ color: 'var(--ku-green)', fontWeight: 600, textDecoration: 'none' }}>
+                                Create one now
                             </Link>
                         </p>
                     )}
                     {role === 'counselor' && (
-                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: 20 }}>
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: 28 }}>
                             New counselor?{' '}
-                            <Link href="/register-counselor" style={{ color: '#4ade80', fontWeight: 600, textDecoration: 'none' }}>
+                            <Link href="/register-counselor" style={{ color: 'var(--ku-green)', fontWeight: 600, textDecoration: 'none' }}>
                                 Apply to join →
                             </Link>
                         </p>
                     )}
-                </div>
 
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 20 }}>
-                    © {new Date().getFullYear()} Kenyatta University — Student Counseling Services
-                </p>
+                    <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 48 }}>
+                        © {new Date().getFullYear()} Kenyatta University — KU Wellness System
+                    </p>
+                </div>
             </div>
 
             <style>{`
+                @media (min-width: 860px) {
+                    .login-left-panel { display: block !important; }
+                }
                 @keyframes spin { to { transform: rotate(360deg); } }
             `}</style>
-        </div>
+        </main>
     );
 }

@@ -48,18 +48,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
                         const profile = await CounselorProfile.findOne({ userId: apptSnapshot.counselorId }).lean();
                         const meetLink = (profile as any)?.meetLink?.trim() || null;
                         const linkLine = meetLink
-                            ? `\n🔗 Virtual Meeting Link: ${meetLink}`
-                            : '\n⚠️ The admin has not assigned a meeting link for this counselor yet. It will be provided later.';
+                            ? `\nVirtual Meeting Link: ${meetLink}`
+                            : '\nThe admin has not assigned a meeting link for this counselor yet. It will be provided later.';
 
                         await Promise.all([
                             Notification.create({
                                 userId:  apptSnapshot.studentId,
-                                message: `✅ Your appointment on ${apptSnapshot.date.toDateString()} at ${apptSnapshot.timeSlot} has been confirmed.${linkLine}`,
+                                message: `Your appointment on ${apptSnapshot.date.toDateString()} at ${apptSnapshot.timeSlot} has been confirmed.${linkLine}`,
                                 type:    'confirmation',
                             }),
                             Notification.create({
                                 userId:  apptSnapshot.counselorId,
-                                message: `📅 Appointment with student confirmed for ${apptSnapshot.date.toDateString()} at ${apptSnapshot.timeSlot}.${linkLine}`,
+                                message: `Appointment with student confirmed for ${apptSnapshot.date.toDateString()} at ${apptSnapshot.timeSlot}.${linkLine}`,
                                 type:    'confirmation',
                             }),
                         ]);
