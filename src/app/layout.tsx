@@ -14,25 +14,25 @@ const publicSans = Public_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: 'KU Wellness System | Kenyatta University Counseling',
-    template: '%s | KU Wellness System'
+    default: 'KU Wellness | Kenyatta University Counseling',
+    template: '%s | KU Wellness'
   },
   description: 'The official digital wellness platform for Kenyatta University. Access professional academic, career, and mental health support services.',
-  keywords: ['Kenyatta University', 'KU', 'Counseling', 'Mental Health', 'Student Wellness', 'Kenya', 'KU Wellness System'],
-  authors: [{ name: 'KU Wellness System Team' }],
+  keywords: ['Kenyatta University', 'KU', 'Counseling', 'Mental Health', 'Student Wellness', 'Kenya', 'KU Wellness'],
+  authors: [{ name: 'KU Wellness Team' }],
   openGraph: {
     type: 'website',
     locale: 'en_KE',
     url: 'https://wellness.ku.ac.ke',
-    siteName: 'KU Wellness System',
-    title: 'KU Wellness System — Student Support Platform',
+    siteName: 'KU Wellness',
+    title: 'KU Wellness — Student Support Platform',
     description: 'Book sessions, manage appointments, and access mental health resources at Kenyatta University.',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'KU Wellness System',
+        alt: 'KU Wellness',
       },
     ],
   },

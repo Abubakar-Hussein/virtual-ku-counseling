@@ -1,65 +1,186 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Logo from '@/components/Logo';
-import { ArrowRight, BookOpen, Heart, Briefcase, Calendar, Bell, Lock } from 'lucide-react';
+import { ArrowRight, BookOpen, Heart, Briefcase, Calendar, Bell, Lock, Menu, X } from 'lucide-react';
 
 
 
 export default function LandingPage() {
   const { data: session } = useSession();
-  const [scrolled, setScrolled] = useState<boolean>(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const [inGreenZone, setInGreenZone] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      if (heroRef.current) {
+        // When the hero's bottom edge passes below the navbar (80px), we're still in green
+        const heroBottom = heroRef.current.getBoundingClientRect().bottom;
+        setInGreenZone(heroBottom > 70);
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // initial check
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Dynamically update browser tab/address bar color
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.content = inGreenZone ? '#325343' : '#ffffff';
+  }, [inGreenZone]);
+
+  // Close mobile menu on scroll
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      const close = () => setMobileMenuOpen(false);
+      window.addEventListener('scroll', close, { passive: true });
+      return () => window.removeEventListener('scroll', close);
+    }
+  }, [mobileMenuOpen]);
 
   return (
     <main style={{ minHeight: '100vh', background: 'var(--bg-main)', overflowX: 'hidden', color: 'var(--text-primary)' }}>
 
+      {/* Mobile menu responsive styles */}
+      <style>{`
+        .landing-nav-links { display: flex; gap: 24px; align-items: center; }
+        .landing-hamburger { display: none; }
+        .landing-mobile-menu { display: none; }
+        @media (max-width: 768px) {
+          .landing-nav-links { display: none !important; }
+          .landing-hamburger { display: flex !important; }
+          .landing-mobile-menu.open {
+            display: flex !important;
+          }
+        }
+      `}</style>
 
-      {/* Navbar */}
+      {/* Navbar — green in hero zone, white when scrolled past */}
       <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 80,
+        position: 'fixed', top: 0, left: 0, right: 0, height: 70,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 5vw',
-        background: 'var(--bg-card)',
-        borderBottom: '1px solid var(--border)',
+        background: inGreenZone ? 'var(--ku-green)' : '#ffffff',
+        borderBottom: inGreenZone ? 'none' : '1px solid #e5e7eb',
         zIndex: 50,
+        transition: 'background 0.35s ease, border-bottom 0.35s ease, box-shadow 0.35s ease',
+        boxShadow: inGreenZone ? 'none' : '0 2px 16px rgba(0,0,0,0.06)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Logo size={40} />
-          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Logo size={36} style={{ background: inGreenZone ? 'rgba(255,255,255,0.15)' : 'var(--ku-green)', transition: 'background 0.35s ease' }} />
+          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: inGreenZone ? '#ffffff' : '#1a1a1a', transition: 'color 0.35s ease' }}>KU Wellness</span>
         </div>
-        <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-          <Link href="/privacy-policy" style={{ color: 'var(--text-primary)', textDecoration: 'none', fontSize: '1rem', fontWeight: 700 }}>Privacy Policy</Link>
-          <Link href="/contact" style={{ color: 'var(--text-primary)', textDecoration: 'none', fontSize: '1rem', fontWeight: 700 }}>Contact Support</Link>
+
+        {/* Desktop nav links */}
+        <div className="landing-nav-links">
+          <Link href="/privacy-policy" style={{ color: inGreenZone ? 'rgba(255,255,255,0.9)' : '#374151', textDecoration: 'none', fontSize: '0.95rem', fontWeight: 600, transition: 'color 0.35s ease' }}>Privacy Policy</Link>
+          <Link href="/contact" style={{ color: inGreenZone ? 'rgba(255,255,255,0.9)' : '#374151', textDecoration: 'none', fontSize: '0.95rem', fontWeight: 600, transition: 'color 0.35s ease' }}>Contact</Link>
           <ThemeToggle />
           {session ? (
-            <Link href={`/${(session.user as any).role}/dashboard`} className="btn-primary">
+            <Link href={`/${(session.user as any).role}/dashboard`} style={{
+              padding: '10px 22px', borderRadius: 10, fontWeight: 700, fontSize: '0.9rem',
+              textDecoration: 'none', transition: 'all 0.35s ease',
+              background: inGreenZone ? '#ffffff' : 'var(--ku-green)',
+              color: inGreenZone ? 'var(--ku-green)' : '#ffffff',
+            }}>
               Go to Dashboard
             </Link>
           ) : (
             <>
-              <Link href="/access" style={{ color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 700, fontSize: '1rem' }}>
+              <Link href="/access" style={{ color: inGreenZone ? 'rgba(255,255,255,0.9)' : '#374151', textDecoration: 'none', fontWeight: 700, fontSize: '0.95rem', transition: 'color 0.35s ease' }}>
                 Sign In
               </Link>
-              <Link href="/register" className="btn-primary">
+              <Link href="/register" style={{
+                padding: '10px 22px', borderRadius: 10, fontWeight: 700, fontSize: '0.9rem',
+                textDecoration: 'none', transition: 'all 0.35s ease',
+                background: inGreenZone ? '#ffffff' : 'var(--ku-green)',
+                color: inGreenZone ? 'var(--ku-green)' : '#ffffff',
+              }}>
                 Get Started
               </Link>
             </>
           )}
         </div>
+
+        {/* Mobile hamburger button */}
+        <div className="landing-hamburger" style={{ display: 'none', alignItems: 'center', gap: 12 }}>
+          <ThemeToggle />
+          <button
+            onClick={() => setMobileMenuOpen(prev => !prev)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+              color: inGreenZone ? '#ffffff' : '#1a1a1a', transition: 'color 0.35s ease',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={26} strokeWidth={2.5} /> : <Menu size={26} strokeWidth={2.5} />}
+          </button>
+        </div>
       </nav>
 
+      {/* Mobile dropdown menu */}
+      <div
+        className={`landing-mobile-menu ${mobileMenuOpen ? 'open' : ''}`}
+        style={{
+          display: 'none',
+          position: 'fixed', top: 70, left: 0, right: 0,
+          flexDirection: 'column', gap: 0,
+          background: inGreenZone ? 'var(--ku-green)' : '#ffffff',
+          borderBottom: inGreenZone ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          zIndex: 49,
+          padding: '8px 5vw 16px',
+          transition: 'background 0.35s ease',
+        }}
+      >
+        <Link href="/privacy-policy" onClick={() => setMobileMenuOpen(false)} style={{ color: inGreenZone ? 'rgba(255,255,255,0.9)' : '#374151', textDecoration: 'none', fontSize: '1rem', fontWeight: 600, padding: '14px 0', borderBottom: inGreenZone ? '1px solid rgba(255,255,255,0.08)' : '1px solid #f3f4f6' }}>Privacy Policy</Link>
+        <Link href="/contact" onClick={() => setMobileMenuOpen(false)} style={{ color: inGreenZone ? 'rgba(255,255,255,0.9)' : '#374151', textDecoration: 'none', fontSize: '1rem', fontWeight: 600, padding: '14px 0', borderBottom: inGreenZone ? '1px solid rgba(255,255,255,0.08)' : '1px solid #f3f4f6' }}>Contact Support</Link>
+        {session ? (
+          <Link href={`/${(session.user as any).role}/dashboard`} onClick={() => setMobileMenuOpen(false)} style={{
+            display: 'block', textAlign: 'center', marginTop: 12,
+            padding: '12px 0', borderRadius: 10, fontWeight: 700, fontSize: '0.95rem',
+            textDecoration: 'none',
+            background: inGreenZone ? '#ffffff' : 'var(--ku-green)',
+            color: inGreenZone ? 'var(--ku-green)' : '#ffffff',
+          }}>
+            Go to Dashboard
+          </Link>
+        ) : (
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+            <Link href="/access" onClick={() => setMobileMenuOpen(false)} style={{
+              flex: 1, display: 'block', textAlign: 'center',
+              padding: '12px 0', borderRadius: 10, fontWeight: 700, fontSize: '0.95rem',
+              textDecoration: 'none',
+              border: inGreenZone ? '1px solid rgba(255,255,255,0.3)' : '1px solid #d1d5db',
+              color: inGreenZone ? '#ffffff' : '#374151',
+            }}>
+              Sign In
+            </Link>
+            <Link href="/register" onClick={() => setMobileMenuOpen(false)} style={{
+              flex: 1, display: 'block', textAlign: 'center',
+              padding: '12px 0', borderRadius: 10, fontWeight: 700, fontSize: '0.95rem',
+              textDecoration: 'none',
+              background: inGreenZone ? '#ffffff' : 'var(--ku-green)',
+              color: inGreenZone ? 'var(--ku-green)' : '#ffffff',
+            }}>
+              Get Started
+            </Link>
+          </div>
+        )}
+      </div>
+
       {/* Hero Section */}
-      <section style={{
+      <section ref={heroRef} style={{
         padding: '160px 5vw 140px',
         display: 'flex',
         flexDirection: 'column',
@@ -164,7 +285,7 @@ export default function LandingPage() {
               lineHeight: 1.15,
             }}>
               Why choose the<br />
-              <span style={{ color: 'var(--ku-green)' }}>KU Wellness System?</span>
+              <span style={{ color: 'var(--ku-green)' }}>KU Wellness?</span>
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: 520, lineHeight: 1.7 }}>
               Designed to ensure every Kenyatta University student has access to the support they need to succeed academically and personally.
@@ -307,7 +428,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer style={{ padding: '60px 5vw', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
         <Logo size={48} style={{ margin: '0 auto 24px' }} />
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>© {new Date().getFullYear()} Kenyatta University — KU Wellness System Hub</p>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>© {new Date().getFullYear()} Kenyatta University — KU Wellness Hub</p>
         <div style={{ display: 'flex', gap: 32, justifyContent: 'center', color: 'var(--text-muted)' }}>
           <Link href="/privacy-policy" style={{ color: 'var(--text-primary)', textDecoration: 'none', transition: 'color 0.2s', fontSize: '1rem', fontWeight: 700 }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--ku-green)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-primary)'}>Privacy Policy</Link>
           <Link href="/contact" style={{ color: 'var(--text-primary)', textDecoration: 'none', transition: 'color 0.2s', fontSize: '1rem', fontWeight: 700 }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--ku-green)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-primary)'}>Contact Support</Link>

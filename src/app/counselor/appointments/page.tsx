@@ -8,6 +8,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import SearchFilter from '@/components/SearchFilter';
 import { useToast } from '@/components/Toast';
 import EmptyState from '@/components/EmptyState';
+import { Calendar } from 'lucide-react';
 
 export default function CounselorAppointmentsPage() {
     const { showToast } = useToast();
@@ -105,10 +106,23 @@ export default function CounselorAppointmentsPage() {
         <div className="dashboard-layout">
             <Sidebar />
             <main className="dashboard-content page-transition">
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 }}>
                     <div>
-                        <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Appointments</h1>
-                        <p style={{ color: 'var(--text-secondary)' }}>All student appointments assigned to you</p>
+                        <div style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            background: 'rgba(50,83,67,0.07)', border: '1px solid rgba(50,83,67,0.15)',
+                            borderRadius: 20, padding: '4px 12px',
+                            fontSize: '0.72rem', fontWeight: 700, color: 'var(--ku-green)',
+                            letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 12,
+                        }}>
+                            <Calendar size={12} strokeWidth={2.5} /> Counselor Portal
+                        </div>
+                        <h1 style={{ fontSize: '1.9rem', fontWeight: 800, marginBottom: 6, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                            Appointments
+                        </h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                            All student appointments assigned to you.
+                        </p>
                     </div>
                     <NotificationBell />
                 </header>
@@ -120,10 +134,10 @@ export default function CounselorAppointmentsPage() {
                         onClick={() => setDateFilter(dateFilter === todayStr ? '' : todayStr)}
                         style={{
                             padding: '5px 14px', borderRadius: 20, fontSize: '0.78rem',
-                            border: `1px solid ${dateFilter === todayStr ? 'var(--ku-green-light)' : 'rgba(255,255,255,0.12)'}`,
-                            background: dateFilter === todayStr ? 'rgba(0,102,51,0.15)' : 'transparent',
-                            color: dateFilter === todayStr ? 'var(--ku-green-light)' : 'var(--text-secondary)',
-                            cursor: 'pointer', transition: 'all 0.2s', fontWeight: dateFilter === todayStr ? 600 : 400,
+                            border: `1px solid ${dateFilter === todayStr ? 'rgba(50,83,67,0.3)' : 'var(--border)'}`,
+                            background: dateFilter === todayStr ? 'rgba(50,83,67,0.08)' : 'var(--bg-card)',
+                            color: dateFilter === todayStr ? 'var(--ku-green)' : 'var(--text-secondary)',
+                            cursor: 'pointer', transition: 'all 0.2s', fontWeight: dateFilter === todayStr ? 700 : 500,
                         }}
                     >
                         Today
@@ -137,10 +151,10 @@ export default function CounselorAppointmentsPage() {
                         }}
                         style={{
                             padding: '5px 14px', borderRadius: 20, fontSize: '0.78rem',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            background: 'transparent',
+                            border: '1px solid var(--border)',
+                            background: 'var(--bg-card)',
                             color: 'var(--text-secondary)',
-                            cursor: 'pointer', transition: 'all 0.2s',
+                            cursor: 'pointer', transition: 'all 0.2s', fontWeight: 500,
                         }}
                     >
                         Tomorrow
@@ -152,12 +166,12 @@ export default function CounselorAppointmentsPage() {
                                 padding: '5px 14px', borderRadius: 20, fontSize: '0.78rem',
                                 border: '1px solid rgba(239,68,68,0.3)',
                                 background: 'rgba(239,68,68,0.08)',
-                                color: '#f87171',
+                                color: '#dc2626',
                                 cursor: 'pointer', transition: 'all 0.2s',
-                                display: 'flex', alignItems: 'center', gap: 5,
+                                display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600,
                             }}
                         >
-                            <span style={{ background: '#f87171', color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: '0.65rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{activeFilterCount}</span>
+                            <span style={{ background: '#dc2626', color: '#fff', borderRadius: '50%', width: 18, height: 18, fontSize: '0.65rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{activeFilterCount}</span>
                             Clear Filters
                         </button>
                     )}
@@ -175,10 +189,10 @@ export default function CounselorAppointmentsPage() {
 
                 {/* Result count */}
                 {!loading && (
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 14 }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
                         {isFiltered
-                            ? <span>Showing <strong style={{ color: 'var(--text-secondary)' }}>{filtered.length}</strong> result{filtered.length !== 1 ? 's' : ''} for current filters</span>
-                            : <span><strong style={{ color: 'var(--text-secondary)' }}>{appointments.length}</strong> total appointment{appointments.length !== 1 ? 's' : ''}</span>
+                            ? <span>Showing <strong style={{ color: 'var(--text-primary)' }}>{filtered.length}</strong> result{filtered.length !== 1 ? 's' : ''} for current filters</span>
+                            : <span><strong style={{ color: 'var(--text-primary)' }}>{appointments.length}</strong> total appointment{appointments.length !== 1 ? 's' : ''}</span>
                         }
                     </div>
                 )}

@@ -38,7 +38,7 @@ export default function VirtualAssistant() {
     const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
-        { id: '1', text: "Hello! I'm your KU Wellness System Assistant. How can I help you today?", sender: 'assistant' }
+        { id: '1', text: "Hello! I'm your KU Wellness Assistant. How can I help you today?", sender: 'assistant' }
     ]);
     const [step, setStep] = useState<Step>('initial');
     const [loading, setLoading] = useState(false);
@@ -232,7 +232,7 @@ export default function VirtualAssistant() {
         setMood(5);
         setIsUrgent(false);
         setPreviousTherapy(false);
-        setMessages([{ id: '1', text: "Hello! I'm your KU Wellness System Assistant. How can I help you today?", sender: 'assistant' }]);
+        setMessages([{ id: '1', text: "Hello! I'm your KU Wellness Assistant. How can I help you today?", sender: 'assistant' }]);
     };
 
     const handleTextSubmit = async (e: React.FormEvent) => {

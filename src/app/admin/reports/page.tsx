@@ -151,7 +151,7 @@ export default function ReportsPage() {
                     color: 'var(--text-secondary)', fontSize: '0.85rem',
                 }}>
                     <Shield size={16} strokeWidth={1.8} style={{ color: 'var(--ku-green)', flexShrink: 0 }} />
-                    All reports are exported as CSV files and are subject to the KU Wellness System data protection and privacy policy.
+                    All reports are exported as CSV files and are subject to the KU Wellness data protection and privacy policy.
                 </div>
             </main>
         </div>

@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
       }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
           <img src="/logo.jpg" alt="Logo" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain' }} />
-          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness System</span>
+          <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness</span>
         </Link>
         <ThemeToggle />
       </nav>

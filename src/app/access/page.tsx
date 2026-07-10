@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 import { useState } from 'react';
 import { Check, GraduationCap, UserCheck, Shield, ArrowRight } from 'lucide-react';
 
@@ -76,7 +77,7 @@ export default function AccessDashboardPage() {
                     justifyContent: 'flex-end',
                     padding: '10%',
                 }}>
-                    <img src="/logo.jpg" alt="KU Logo" style={{ width: 52, height: 52, borderRadius: 14, marginBottom: 32, objectFit: 'contain' }} />
+                    <Logo size={52} style={{ marginBottom: 32 }} />
                     <h2 style={{
                         fontSize: 'clamp(1.8rem, 3vw, 2.6rem)',
                         fontWeight: 800, color: '#fff',
@@ -86,7 +87,7 @@ export default function AccessDashboardPage() {
                         Mental health is a priority. Your well-being matters.
                     </h2>
                     <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, maxWidth: 380 }}>
-                        Join the KU Wellness System — a safe, confidential space for Kenyatta University students.
+                        Join the KU Wellness — a safe, confidential space for Kenyatta University students.
                     </p>
                     <div style={{ marginTop: 48, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                         {['Confidential', 'Secure', 'Student-Focused'].map(tag => (
@@ -140,7 +141,7 @@ export default function AccessDashboardPage() {
 
                 <div style={{ width: '100%', maxWidth: 460 }}>
                     {/* Logo + heading (mobile only) */}
-                    <img src="/logo.jpg" alt="KU Logo" className="access-mobile-logo" style={{ width: 44, height: 44, borderRadius: 12, marginBottom: 20, display: 'none', objectFit: 'contain' }} />
+                    <Logo size={44} className="access-mobile-logo" style={{ marginBottom: 20, display: 'none' }} />
 
                     <div style={{ marginBottom: 36 }}>
                         <h1 style={{
@@ -151,7 +152,7 @@ export default function AccessDashboardPage() {
                             Welcome back
                         </h1>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-                            Select your role to sign in to the KU Wellness System.
+                            Select your role to sign in to the KU Wellness.
                         </p>
                     </div>
 
@@ -206,7 +207,7 @@ export default function AccessDashboardPage() {
                     </div>
 
                     <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 40 }}>
-                        © {new Date().getFullYear()} Kenyatta University — KU Wellness System &nbsp;·&nbsp; All sessions are 100% confidential
+                        © {new Date().getFullYear()} Kenyatta University — KU Wellness &nbsp;·&nbsp; All sessions are 100% confidential
                     </p>
                 </div>
             </div>

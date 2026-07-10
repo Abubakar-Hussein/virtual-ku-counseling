@@ -14,7 +14,7 @@ export default function Navbar() {
         }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
                 <img src="/logo.jpg" alt="Logo" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain' }} />
-                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>KU Wellness System</span>
+                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>KU Wellness</span>
             </Link>
 
             <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>

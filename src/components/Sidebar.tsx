@@ -78,7 +78,7 @@ export default function Sidebar() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Logo size={36} />
                     <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Wellness System</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Wellness</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{role}</div>
                     </div>
                 </div>

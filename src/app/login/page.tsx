@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, GraduationCap, UserCheck, Shield, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/Toast';
 
@@ -95,7 +96,7 @@ export default function LoginPage() {
                     justifyContent: 'flex-end',
                     padding: '10%',
                 }}>
-                    <img src="/logo.jpg" alt="KU Logo" style={{ width: 52, height: 52, borderRadius: 14, marginBottom: 32, objectFit: 'contain' }} />
+                    <Logo size={52} style={{ marginBottom: 32 }} />
                     <h2 style={{
                         fontSize: 'clamp(1.8rem, 3vw, 2.6rem)',
                         fontWeight: 800, color: '#fff',
@@ -105,7 +106,7 @@ export default function LoginPage() {
                         Welcome back to your safe space.
                     </h2>
                     <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, maxWidth: 380 }}>
-                        Mental wellness starts here. Log in to continue your journey with the KU Wellness System.
+                        Mental wellness starts here. Log in to continue your journey with the KU Wellness.
                     </p>
                     <div style={{
                         marginTop: 48,
@@ -327,7 +328,7 @@ export default function LoginPage() {
                     )}
 
                     <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 48 }}>
-                        © {new Date().getFullYear()} Kenyatta University — KU Wellness System
+                        © {new Date().getFullYear()} Kenyatta University — KU Wellness
                     </p>
                 </div>
             </div>

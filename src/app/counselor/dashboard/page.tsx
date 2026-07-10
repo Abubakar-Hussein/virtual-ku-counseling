@@ -11,7 +11,7 @@ import SearchFilter from '@/components/SearchFilter';
 import { useToast } from '@/components/Toast';
 import Avatar from '@/components/Avatar';
 import EmptyState from '@/components/EmptyState';
-import { Star } from 'lucide-react';
+import { Star, LayoutDashboard, Info, Lock } from 'lucide-react';
 
 export default function CounselorDashboard() {
     const { data: session } = useSession();
@@ -35,7 +35,6 @@ export default function CounselorDashboard() {
             }
         }
 
-        // Fire both fetches in parallel — they are independent
         async function fetchAppointments() {
             try {
                 const res = await fetch('/api/appointments');
@@ -74,7 +73,6 @@ export default function CounselorDashboard() {
             }
         }
 
-        // Kick off both at the same time
         Promise.all([fetchAppointments(), fetchProfile()]);
     }, []);
 
@@ -137,33 +135,46 @@ export default function CounselorDashboard() {
         <div className="dashboard-layout">
             <Sidebar />
             <main className="dashboard-content page-transition">
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <Avatar name={session?.user?.name || 'User'} src={(session?.user as any)?.profileImage} size={56} fontSize="1.2rem" />
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                        <Avatar name={session?.user?.name || 'User'} src={(session?.user as any)?.profileImage} size={64} fontSize="1.4rem" />
                         <div>
-                            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.2 }}>Counselor Portal</h1>
-                            <p style={{ color: 'var(--text-secondary)' }}>Welcome back, {session?.user?.name}. Manage your sessions and student impact.</p>
+                            <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                background: 'rgba(50,83,67,0.07)', border: '1px solid rgba(50,83,67,0.15)',
+                                borderRadius: 20, padding: '4px 12px',
+                                fontSize: '0.72rem', fontWeight: 700, color: 'var(--ku-green)',
+                                letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8,
+                            }}>
+                                <LayoutDashboard size={12} strokeWidth={2.5} /> Counselor Portal
+                            </div>
+                            <h1 style={{ fontSize: '1.9rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                                Welcome back, {session?.user?.name?.split(' ')[0]}
+                            </h1>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                                Manage your sessions and student impact.
+                            </p>
                         </div>
                     </div>
                     <NotificationBell />
                 </header>
 
-                {/* Stats render as soon as appointments data arrives */}
                 <section className="stats-grid">
                     {apptLoading ? (
                         <>
-                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
-                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
-                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
-                            <div className="glass skeleton" style={{ height: 90, borderRadius: 12 }} />
+                            <div className="glass skeleton" style={{ height: 100, borderRadius: 16 }} />
+                            <div className="glass skeleton" style={{ height: 100, borderRadius: 16 }} />
+                            <div className="glass skeleton" style={{ height: 100, borderRadius: 16 }} />
+                            <div className="glass skeleton" style={{ height: 100, borderRadius: 16 }} />
                         </>
                     ) : (
                         <>
-                            <StatsCard label="Confirmed for Today" value={stats.today} icon="" color="var(--ku-green-light)" />
-                            <StatsCard label="Pending Requests" value={stats.pending} icon="" color="#facc15" />
-                            <StatsCard label="Total Lifetime Sessions" value={stats.total} icon="" color="#60a5fa" />
-                            <div className="glass" style={{ padding: '20px 24px', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', color: '#facc15' }}><Star size={20} fill="#facc15" stroke="#facc15" /></div>
+                            <StatsCard label="Confirmed for Today" value={stats.today} icon="" color="var(--ku-green)" />
+                            <StatsCard label="Pending Requests" value={stats.pending} icon="" color="#f59e0b" />
+                            <StatsCard label="Total Lifetime Sessions" value={stats.total} icon="" color="#3b82f6" />
+                            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '20px 24px', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', right: -20, top: -20, opacity: 0.05, transform: 'rotate(15deg)' }}><Star size={100} fill="currentColor" stroke="none" /></div>
+                                <div style={{ display: 'flex', alignItems: 'center', color: '#f59e0b' }}><Star size={20} fill="#f59e0b" stroke="#f59e0b" /></div>
                                 {ratingLoading ? (
                                     <>
                                         <div className="skeleton" style={{ height: 32, width: 60, borderRadius: 6 }} />
@@ -171,16 +182,16 @@ export default function CounselorDashboard() {
                                     </>
                                 ) : rating ? (
                                     <>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                                            <span style={{ fontSize: '2rem', fontWeight: 800, color: '#facc15', lineHeight: 1 }}>{rating.avg.toFixed(1)}</span>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, zIndex: 1 }}>
+                                            <span style={{ fontSize: '2rem', fontWeight: 800, color: '#f59e0b', lineHeight: 1 }}>{rating.avg.toFixed(1)}</span>
                                             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>/ 5</span>
                                         </div>
-                                        <div style={{ display: 'flex', gap: 3 }}>
+                                        <div style={{ display: 'flex', gap: 3, zIndex: 1 }}>
                                             {[1, 2, 3, 4, 5].map(s => (
-                                                <Star key={s} size={15} fill={s <= Math.round(rating.avg) ? '#facc15' : 'none'} stroke={s <= Math.round(rating.avg) ? '#facc15' : 'rgba(255,255,255,0.2)'} />
+                                                <Star key={s} size={15} fill={s <= Math.round(rating.avg) ? '#f59e0b' : 'none'} stroke={s <= Math.round(rating.avg) ? '#f59e0b' : 'var(--border)'} />
                                             ))}
                                         </div>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Average Rating ({rating.total} review{rating.total !== 1 ? 's' : ''})</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', zIndex: 1 }}>Average Rating ({rating.total} review{rating.total !== 1 ? 's' : ''})</div>
                                     </>
                                 ) : (
                                     <>
@@ -194,13 +205,12 @@ export default function CounselorDashboard() {
                     )}
                 </section>
 
-                {/* Appointments list */}
                 {apptLoading ? (
                     <DashboardSkeleton hideStats />
                 ) : (
-                    <section className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32, marginTop: 32 }}>
+                    <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 32, marginTop: 32 }}>
                         <div>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>Recent Activity</h2>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>Recent Activity</h2>
 
                             <SearchFilter
                                 searchValue={search}
@@ -235,17 +245,30 @@ export default function CounselorDashboard() {
                         </div>
 
                         <div>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20 }}>System Notices</h2>
-                            <div className="glass" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
-                                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
-                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--ku-gold)' }}>Exam Period Approaching</div>
-                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                                        Expected surge in academic session requests. Please ensure your schedule is up to date.
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>System Notices</h2>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                <div style={{
+                                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                                    borderRadius: 14, padding: '16px 20px', borderLeft: '3px solid var(--ku-green)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, color: 'var(--ku-green)' }}>
+                                        <Info size={16} strokeWidth={2.5} />
+                                        <div style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Exam Period Approaching</div>
+                                    </div>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                                        Expected surge in academic session requests. Please ensure your schedule is up to date to accommodate students.
                                     </div>
                                 </div>
-                                <div>
-                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4, color: 'var(--text-secondary)' }}>Private Notes</div>
-                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                
+                                <div style={{
+                                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                                    borderRadius: 14, padding: '16px 20px', borderLeft: '3px solid var(--text-muted)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, color: 'var(--text-muted)' }}>
+                                        <Lock size={16} strokeWidth={2.5} />
+                                        <div style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Private Notes</div>
+                                    </div>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                                         All session notes are encrypted and shielded from students. Only you can view your assigned patient history.
                                     </div>
                                 </div>

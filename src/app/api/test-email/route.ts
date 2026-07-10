@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         const startTime = Date.now();
         await sendEmail({
             to: testEmail,
-            subject: 'Test Email from KU Wellness System App',
+            subject: 'Test Email from KU Wellness App',
             html: `
                 <div style="font-family:sans-serif;padding:24px;">
                     <h1 style="color:#1a3a5c;">SMTP Configuration Test</h1>

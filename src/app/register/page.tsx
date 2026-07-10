@@ -78,7 +78,7 @@ export default function RegisterPage() {
                         <span className="gradient-text">Create Account</span>
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                        Join KU Wellness System with your university or personal email
+                        Join KU Wellness with your university or personal email
                     </p>
                 </div>
 
