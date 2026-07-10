@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
+import Logo from '@/components/Logo';
 
 export default function Navbar() {
     const { data: session } = useSession();
@@ -13,7 +14,7 @@ export default function Navbar() {
             position: 'sticky', top: 0, zIndex: 100,
         }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                <img src="/logo.jpg" alt="Logo" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'contain' }} />
+                <Logo size={32} />
                 <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>KU Wellness</span>
             </Link>
 

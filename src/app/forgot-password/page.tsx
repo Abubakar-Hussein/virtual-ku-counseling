@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/components/Toast';
+import Logo from '@/components/Logo';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
@@ -45,7 +46,7 @@ export default function ForgotPasswordPage() {
         }}>
             <div style={{ width: '100%', maxWidth: 420 }}>
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                    <img src="/logo.jpg" alt="Logo" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'contain' }} />
+                    <Logo size={64} />
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 6 }}>
                         <span className="gradient-text">Forgot Password</span>
                     </h1>

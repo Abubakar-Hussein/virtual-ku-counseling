@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { MessageCircle, X, Send, Check, ArrowRight } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 type Step =
     | 'initial'
@@ -310,7 +311,7 @@ export default function VirtualAssistant() {
                         background: 'linear-gradient(135deg, var(--ku-green), var(--ku-green-light))',
                         color: '#fff', display: 'flex', alignItems: 'center', gap: 14,
                     }}>
-                        <img src="/logo.jpg" alt="Logo" style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'contain' }} />
+                        <Logo size={44} />
                         <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>KU Virtual Assistant</div>
                             <div style={{ fontSize: '0.78rem', opacity: 0.9, display: 'flex', alignItems: 'center', gap: 6 }}>

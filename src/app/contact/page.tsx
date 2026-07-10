@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import Logo from '@/components/Logo';
 
 const CONTACT_TYPES = [
     { value: 'I am a registered student and need support', icon: '-' },
@@ -77,7 +78,7 @@ export default function ContactSupportPage() {
                 padding: '0 5vw', zIndex: 10,
             }}>
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-                    <img src="/logo.jpg" alt="Logo" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain' }} />
+                    <Logo size={40} />
                     <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness</span>
                 </Link>
                 <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
@@ -117,7 +118,7 @@ export default function ContactSupportPage() {
                             background: 'rgba(16,185,129,0.12)', border: '2px solid rgba(16,185,129,0.3)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '2.5rem',
-                        }}>Done</div>
+                        }}>✓</div>
                         <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>Message Sent!</h2>
                         <p style={{ color: 'var(--text-secondary)', maxWidth: 400, lineHeight: 1.6 }}>
                             Thank you for reaching out. We've sent a confirmation to your email.

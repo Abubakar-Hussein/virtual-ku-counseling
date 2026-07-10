@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 import PasswordStrength from '@/components/PasswordStrength';
 import { useToast } from '@/components/Toast';
 
@@ -73,7 +74,7 @@ export default function RegisterPage() {
         }}>
             <div style={{ width: '100%', maxWidth: 480 }}>
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                    <img src="/logo.jpg" alt="Logo" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'contain', display: 'block', margin: '0 auto 16px' }} />
+                    <Logo size={64} style={{ display: 'block', margin: '0 auto 16px' }} />
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 6 }}>
                         <span className="gradient-text">Create Account</span>
                     </h1>

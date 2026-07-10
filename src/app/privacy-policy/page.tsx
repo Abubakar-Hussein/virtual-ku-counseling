@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import Logo from '@/components/Logo';
 
 export default function PrivacyPolicyPage() {
   return (
@@ -14,7 +15,7 @@ export default function PrivacyPolicyPage() {
         background: 'var(--bg-main)'
       }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-          <img src="/logo.jpg" alt="Logo" style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'contain' }} />
+          <Logo size={40} />
           <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)' }}>KU Wellness</span>
         </Link>
         <ThemeToggle />
