@@ -68,7 +68,7 @@ export default function UserDemographicsPage() {
             </style></head><body>
             <div class="header">
                 <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
-                    <img src="${window.location.origin}/logo.jpg" alt="Logo" style="width: 56px; height: 56px; object-fit: contain; border-radius: 8px;" />
+                    <div style="width:56px;height:56px;border-radius:14px;background:#325343;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M3 10h18'/><path d='M8 2v4m8-4v4'/><rect x='3' y='4' width='18' height='18' rx='2'/><path d='M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01'/><path d='M12 14c.667-.667 2-1 2-2.5a1.5 1.5 0 0 0-3 0'/></svg></div>
                     <div>
                         <p class="confidential" style="margin: 0 0 4px 0;">Confidential — Administrative Report</p>
                         <h1 style="margin: 0;">KU Wellness</h1>
