@@ -11,7 +11,78 @@ import SearchFilter from '@/components/SearchFilter';
 import { useToast } from '@/components/Toast';
 import Avatar from '@/components/Avatar';
 import EmptyState from '@/components/EmptyState';
-import { Star, LayoutDashboard, Info, Lock } from 'lucide-react';
+import { Star, LayoutDashboard, AlertTriangle, TrendingDown, UserX, Clock, ShieldAlert, X } from 'lucide-react';
+
+const SEVERITY_STYLE: Record<string, { border: string; icon: string; bg: string }> = {
+    critical: { border: '#ef4444', icon: '#ef4444', bg: 'rgba(239,68,68,0.06)' },
+    warning: { border: '#f59e0b', icon: '#f59e0b', bg: 'rgba(245,158,11,0.06)' },
+    info: { border: '#3b82f6', icon: '#3b82f6', bg: 'rgba(59,130,246,0.06)' },
+};
+const ALERT_ICON: Record<string, any> = {
+    low_mood: AlertTriangle, mood_decline: TrendingDown, inactivity: Clock,
+    missed_session: UserX, high_urgency: ShieldAlert,
+};
+
+function CaseloadAlerts() {
+    const [alerts, setAlerts] = useState<any[]>([]);
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        // Generate alerts then fetch
+        fetch('/api/alerts/generate', { method: 'POST' })
+            .then(() => fetch('/api/alerts'))
+            .then(r => r.json())
+            .then(d => { if (Array.isArray(d)) setAlerts(d); })
+            .catch(() => {})
+            .finally(() => setLoaded(true));
+    }, []);
+
+    const dismiss = async (id: string) => {
+        await fetch('/api/alerts', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id] }) });
+        setAlerts(prev => prev.filter(a => a._id !== id));
+    };
+
+    if (!loaded) return <div className="skeleton" style={{ height: 120, borderRadius: 14 }} />;
+    if (alerts.length === 0) return (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '24px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>✅</div>
+            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>All clear</div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>No active alerts for your caseload.</div>
+        </div>
+    );
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {alerts.map(a => {
+                const s = SEVERITY_STYLE[a.severity] || SEVERITY_STYLE.info;
+                const Icon = ALERT_ICON[a.type] || AlertTriangle;
+                const studentName = a.studentId?.name || 'Student';
+                return (
+                    <div key={a._id} style={{ background: s.bg, border: `1px solid ${s.border}30`, borderRadius: 14, padding: '14px 18px', borderLeft: `3px solid ${s.border}`, position: 'relative' }}>
+                        <button onClick={() => dismiss(a._id)} style={{ position: 'absolute', top: 10, right: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 2 }}><X size={14} /></button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <Icon size={16} color={s.icon} strokeWidth={2.5} />
+                            <span style={{ fontWeight: 700, fontSize: '0.82rem', color: s.icon, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                {a.type.replace(/_/g, ' ')}
+                            </span>
+                            <span style={{ fontSize: '0.72rem', color: '#9ca3af', marginLeft: 'auto', paddingRight: 20 }}>
+                                {new Date(a.createdAt).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                            </span>
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: 2 }}>{studentName}</div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{a.message}</div>
+                    </div>
+                );
+            })}
+            {alerts.length > 1 && (
+                <button onClick={async () => { await fetch('/api/alerts', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: alerts.map(a => a._id) }) }); setAlerts([]); }}
+                    style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 10, padding: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>
+                    Dismiss All
+                </button>
+            )}
+        </div>
+    );
+}
 
 export default function CounselorDashboard() {
     const { data: session } = useSession();
@@ -245,34 +316,8 @@ export default function CounselorDashboard() {
                         </div>
 
                         <div>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>System Notices</h2>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                <div style={{
-                                    background: 'var(--bg-card)', border: '1px solid var(--border)',
-                                    borderRadius: 14, padding: '16px 20px', borderLeft: '3px solid var(--ku-green)'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, color: 'var(--ku-green)' }}>
-                                        <Info size={16} strokeWidth={2.5} />
-                                        <div style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Exam Period Approaching</div>
-                                    </div>
-                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                                        Expected surge in academic session requests. Please ensure your schedule is up to date to accommodate students.
-                                    </div>
-                                </div>
-                                
-                                <div style={{
-                                    background: 'var(--bg-card)', border: '1px solid var(--border)',
-                                    borderRadius: 14, padding: '16px 20px', borderLeft: '3px solid var(--text-muted)'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, color: 'var(--text-muted)' }}>
-                                        <Lock size={16} strokeWidth={2.5} />
-                                        <div style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Private Notes</div>
-                                    </div>
-                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                                        All session notes are encrypted and shielded from students. Only you can view your assigned patient history.
-                                    </div>
-                                </div>
-                            </div>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>Caseload Alerts</h2>
+                            <CaseloadAlerts />
                         </div>
                     </section>
                 )}

@@ -230,6 +230,31 @@ export default function StudentDashboard() {
                         </div>
 
                         <div>
+                            {/* Mood Check-in Widget */}
+                            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px 24px', marginBottom: 24 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                    <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Daily Check-in</h3>
+                                    <Link href="/student/mood" style={{ fontSize: '0.78rem', color: 'var(--ku-green)', fontWeight: 600, textDecoration: 'none' }}>View Tracker →</Link>
+                                </div>
+                                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 12 }}>How are you feeling today?</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.6rem' }}>
+                                    {['😞','😟','😐','🙂','😊','😄','🤩'].map((emoji, i) => (
+                                        <Link key={i} href="/student/mood" style={{ cursor: 'pointer', textDecoration: 'none', transition: 'transform 0.2s' }} title={`Log mood: ${i + 1}`}>
+                                            {emoji}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Assessment CTA */}
+                            <Link href="/student/intake" style={{ display: 'block', textDecoration: 'none', marginBottom: 24 }}>
+                                <div style={{ background: 'linear-gradient(135deg, #325343, #3d6b54)', borderRadius: 16, padding: '20px 24px', color: '#fff' }}>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8, marginBottom: 6 }}>Personalized Matching</div>
+                                    <div style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: 4 }}>Take Your Assessment</div>
+                                    <div style={{ fontSize: '0.82rem', opacity: 0.75 }}>Find the best counselor for your needs →</div>
+                                </div>
+                            </Link>
+
                             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-primary)' }}>Health Tips</h2>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                 {[

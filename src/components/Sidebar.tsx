@@ -10,6 +10,8 @@ import { Menu, X } from 'lucide-react';
 
 const STUDENT_LINKS = [
     { href: '/student/dashboard', label: 'Dashboard', icon: '' },
+    { href: '/student/intake', label: 'Take Assessment', icon: '' },
+    { href: '/student/mood', label: 'Mood Tracker', icon: '' },
     { href: '/student/counselors', label: 'Find Counselors', icon: '' },
     { href: '/student/appointments', label: 'My Appointments', icon: '' },
     { href: '/profile', label: 'My Profile', icon: '' },
