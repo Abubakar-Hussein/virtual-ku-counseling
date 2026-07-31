@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import { Calendar, Link2, Unlink, CheckCircle, ExternalLink, Download, Upload, ShieldCheck, RefreshCw } from 'lucide-react';
@@ -8,19 +8,76 @@ export default function CalendarSyncPage() {
     const [synced, setSynced] = useState(false);
     const [provider, setProvider] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [fetchingStatus, setFetchingStatus] = useState(true);
 
-    const handleConnect = (p: string) => {
+    useEffect(() => {
+        const fetchStatus = async () => {
+            try {
+                const res = await fetch('/api/calendar/sync');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.provider) {
+                        setProvider(data.provider);
+                        setSynced(true);
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setFetchingStatus(false);
+            }
+        };
+        fetchStatus();
+    }, []);
+
+    const handleConnect = async (p: string) => {
         setLoading(true);
-        setTimeout(() => {
-            setProvider(p);
-            setSynced(true);
-            setLoading(false);
-        }, 1200);
+        // Simulate OAuth delay for UX
+        setTimeout(async () => {
+            try {
+                const res = await fetch('/api/calendar/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'connect', provider: p })
+                });
+                if (res.ok) {
+                    setProvider(p);
+                    setSynced(true);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        }, 800);
     };
 
-    const handleDisconnect = () => {
-        setSynced(false);
-        setProvider(null);
+    const handleDisconnect = async () => {
+        if (!confirm('Are you sure you want to disconnect your calendar?')) return;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/calendar/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'disconnect' })
+            });
+            if (res.ok) {
+                setSynced(false);
+                setProvider(null);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleExport = () => {
+        window.open('/api/calendar/export', '_blank');
+    };
+
+    const handleImport = () => {
+        alert('File picker would open here to upload an .ics file. (Feature in development)');
     };
 
     const providers = [
@@ -66,6 +123,17 @@ export default function CalendarSyncPage() {
             desc: 'Export your schedule as a standard .ics feed compatible with Apple iCal.'
         },
     ];
+
+    if (fetchingStatus) {
+        return (
+            <div className="dashboard-layout">
+                <Sidebar />
+                <main className="dashboard-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RefreshCw className="animate-spin" size={32} color="var(--ku-green)" />
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-layout">
@@ -133,13 +201,15 @@ export default function CalendarSyncPage() {
                     {synced && (
                         <button
                             onClick={handleDisconnect}
+                            disabled={loading}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 12,
                                 border: '1.5px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.06)', color: '#dc2626',
-                                fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s ease'
+                                fontWeight: 700, fontSize: '0.85rem', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease',
+                                opacity: loading ? 0.6 : 1
                             }}
                         >
-                            <Unlink size={14} /> Disconnect
+                            {loading ? <RefreshCw size={14} className="animate-spin" /> : <><Unlink size={14} /> Disconnect</>}
                         </button>
                     )}
                 </div>
@@ -194,7 +264,7 @@ export default function CalendarSyncPage() {
                     </p>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-                        <button style={{
+                        <button onClick={handleExport} style={{
                             display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', borderRadius: 16,
                             border: '1px solid var(--border)', background: 'var(--bg-main)', cursor: 'pointer', textAlign: 'left',
                             transition: 'all 0.2s ease'
@@ -208,7 +278,7 @@ export default function CalendarSyncPage() {
                             </div>
                         </button>
 
-                        <button style={{
+                        <button onClick={handleImport} style={{
                             display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', borderRadius: 16,
                             border: '1px solid var(--border)', background: 'var(--bg-main)', cursor: 'pointer', textAlign: 'left',
                             transition: 'all 0.2s ease'

@@ -12,6 +12,7 @@ export interface IUser extends Document {
     phone?: string;
     smsConsent?: boolean;
     profileImage?: string;
+    calendarProvider?: string;
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
     createdAt: Date;
@@ -53,6 +54,7 @@ const UserSchema = new Schema<IUser>(
         },
         smsConsent: { type: Boolean, default: false },
         profileImage: { type: String },
+        calendarProvider: { type: String },
         resetPasswordToken: { type: String, index: true, sparse: true },
         resetPasswordExpires: { type: Date },
     },
