@@ -3,32 +3,36 @@ import { connectDB } from '@/lib/mongodb';
 import Appointment from '@/models/Appointment';
 import User from '@/models/User';
 import GroupSession from '@/models/GroupSession';
-import { sendAppointmentReminder, sendGroupSessionReminder } from '@/lib/twilio';
+import Notification from '@/models/Notification';
 
-// POST: Trigger reminder scan — call via cron or manually
+// POST: Trigger reminder scan — creates in-app notifications
 export async function POST() {
     try {
         await connectDB();
         const now = new Date();
         const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        const in1h = new Date(now.getTime() + 60 * 60 * 1000);
         let sent = 0;
 
-        // 1. Appointment reminders (24h and 1h before)
+        // 1. Appointment reminders (24h before)
         const upcomingAppts = await Appointment.find({
             status: 'confirmed',
             date: { $gte: now, $lte: in24h },
         }).lean() as any[];
 
         for (const appt of upcomingAppts) {
-            const student = await User.findById(appt.studentId).select('name phone smsConsent').lean() as any;
+            const student = await User.findById(appt.studentId).select('name').lean() as any;
             const counselor = await User.findById(appt.counselorId).select('name').lean() as any;
 
-            if (student?.phone && student?.smsConsent !== false) {
+            if (student) {
                 const apptDate = new Date(appt.date);
                 const dateStr = apptDate.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' });
-                const timeStr = appt.time || apptDate.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
-                await sendAppointmentReminder(student.phone, student.name, counselor?.name || 'your counselor', dateStr, timeStr);
+                const timeStr = appt.timeSlot || apptDate.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+                
+                await Notification.create({
+                    userId: appt.studentId,
+                    type: 'reminder',
+                    message: `Reminder: Your session with ${counselor?.name || 'your counselor'} is scheduled for ${dateStr} at ${timeStr}.`,
+                });
                 sent++;
             }
         }
@@ -41,16 +45,17 @@ export async function POST() {
 
         for (const gs of upcomingGroups) {
             for (const studentId of gs.enrolledStudents) {
-                const student = await User.findById(studentId).select('name phone smsConsent').lean() as any;
-                if (student?.phone && student?.smsConsent !== false) {
-                    const dateStr = new Date(gs.scheduledAt).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                    await sendGroupSessionReminder(student.phone, student.name, gs.title, dateStr);
-                    sent++;
-                }
+                const dateStr = new Date(gs.scheduledAt).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                await Notification.create({
+                    userId: studentId,
+                    type: 'reminder',
+                    message: `Reminder: Your group session "${gs.title}" starts on ${dateStr}.`,
+                });
+                sent++;
             }
         }
 
-        return NextResponse.json({ success: true, remindersSent: sent });
+        return NextResponse.json({ success: true, remindersCreated: sent });
     } catch (err) {
         console.error('[CRON REMINDERS]', err);
         return NextResponse.json({ error: 'Failed' }, { status: 500 });
