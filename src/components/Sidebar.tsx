@@ -12,16 +12,23 @@ const STUDENT_LINKS = [
     { href: '/student/dashboard', label: 'Dashboard', icon: '' },
     { href: '/student/intake', label: 'Take Assessment', icon: '' },
     { href: '/student/mood', label: 'Mood Tracker', icon: '' },
+    { href: '/student/messages', label: 'Messages', icon: '' },
     { href: '/student/counselors', label: 'Find Counselors', icon: '' },
     { href: '/student/appointments', label: 'My Appointments', icon: '' },
+    { href: '/student/worksheets', label: 'Worksheets', icon: '' },
+    { href: '/student/groups', label: 'Group Sessions', icon: '' },
     { href: '/profile', label: 'My Profile', icon: '' },
 ];
 
 const COUNSELOR_LINKS = [
     { href: '/counselor/dashboard', label: 'Dashboard', icon: '' },
+    { href: '/counselor/messages', label: 'Messages', icon: '' },
     { href: '/counselor/appointments', label: 'Appointments', icon: '' },
     { href: '/counselor/records', label: 'Session Records', icon: '' },
+    { href: '/counselor/worksheets', label: 'Worksheets', icon: '' },
+    { href: '/counselor/groups', label: 'Group Sessions', icon: '' },
     { href: '/counselor/schedule', label: 'My Schedule', icon: '' },
+    { href: '/counselor/calendar-sync', label: 'Calendar Sync', icon: '' },
     { href: '/profile', label: 'My Profile', icon: '' },
 ];
 

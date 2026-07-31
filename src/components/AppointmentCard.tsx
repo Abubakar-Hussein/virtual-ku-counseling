@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Avatar from './Avatar';
 import RatingModal from './RatingModal';
-import { Check, X, Mail, Star, Clock, User, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Check, X, Mail, Star, Clock, User, AlertTriangle, MessageSquare, Video } from 'lucide-react';
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; border: string; label: string; strip: string }> = {
     pending:   { bg: 'rgba(245,158,11,0.08)',  color: '#b45309',        border: 'rgba(245,158,11,0.25)', label: 'Pending',   strip: '#f59e0b' },
@@ -202,10 +202,28 @@ export default function AppointmentCard({
                     </>)}
 
                     {/* Counselor: confirmed */}
-                    {viewerRole === 'counselor' && status === 'confirmed' && onStatusChange && (
+                    {viewerRole === 'counselor' && status === 'confirmed' && onStatusChange && (<>
+                        <button style={{
+                            padding: '7px 16px', fontSize: '0.82rem', borderRadius: 10,
+                            border: 'none', background: '#325343', color: '#fff',
+                            fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                        }} onClick={() => router.push(`/session/${_id}`)}>
+                            <Video size={14} strokeWidth={2.5} /> Join Session
+                        </button>
                         <button className="btn-secondary" style={{ padding: '7px 16px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}
                             onClick={() => onStatusChange(_id, 'completed')}>
                             <Check size={14} strokeWidth={3} /> Mark Completed
+                        </button>
+                    </>)}
+
+                    {/* Student: confirmed — join session */}
+                    {viewerRole === 'student' && status === 'confirmed' && (
+                        <button style={{
+                            padding: '7px 16px', fontSize: '0.82rem', borderRadius: 10,
+                            border: 'none', background: '#325343', color: '#fff',
+                            fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                        }} onClick={() => router.push(`/session/${_id}`)}>
+                            <Video size={14} strokeWidth={2.5} /> Join Session
                         </button>
                     )}
 

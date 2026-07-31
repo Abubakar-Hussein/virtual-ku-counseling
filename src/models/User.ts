@@ -10,6 +10,7 @@ export interface IUser extends Document {
     approvalStatus?: 'pending' | 'approved';
     studentId?: string;
     phone?: string;
+    smsConsent?: boolean;
     profileImage?: string;
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
@@ -50,6 +51,7 @@ const UserSchema = new Schema<IUser>(
                 message: 'Phone number must be in format +2547XXXXXXXX',
             },
         },
+        smsConsent: { type: Boolean, default: false },
         profileImage: { type: String },
         resetPasswordToken: { type: String, index: true, sparse: true },
         resetPasswordExpires: { type: Date },
