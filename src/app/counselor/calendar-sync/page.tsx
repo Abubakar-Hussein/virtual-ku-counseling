@@ -32,24 +32,21 @@ export default function CalendarSyncPage() {
 
     const handleConnect = async (p: string) => {
         setLoading(true);
-        // Simulate OAuth delay for UX
-        setTimeout(async () => {
-            try {
-                const res = await fetch('/api/calendar/sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'connect', provider: p })
-                });
-                if (res.ok) {
-                    setProvider(p);
-                    setSynced(true);
-                }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
+        try {
+            const res = await fetch('/api/calendar/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'connect', provider: p })
+            });
+            if (res.ok) {
+                setProvider(p);
+                setSynced(true);
             }
-        }, 800);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDisconnect = async () => {
@@ -187,7 +184,7 @@ export default function CalendarSyncPage() {
                                     background: 'rgba(34,197,94,0.1)', color: '#166534', border: '1px solid rgba(34,197,94,0.2)',
                                     display: 'inline-flex', alignItems: 'center', gap: 4
                                 }}>
-                                    <ShieldCheck size={12} /> Active 2-Way Sync
+                                    <ShieldCheck size={12} /> Connected
                                 </span>
                             )}
                         </div>

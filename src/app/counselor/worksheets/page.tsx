@@ -26,6 +26,8 @@ export default function CounselorWorksheetsPage() {
     const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
     const [feedback, setFeedback] = useState('');
 
+    const CATEGORIES = ['CBT', 'Anxiety', 'Depression', 'Stress', 'Self-Esteem', 'Relationships', 'General'];
+
     const defaultTemplates = [
         {
             _id: 'ws-1',
@@ -33,9 +35,9 @@ export default function CounselorWorksheetsPage() {
             description: 'Cognitive Behavioral Therapy worksheet for identifying and reframing automatic negative thoughts.',
             category: 'CBT',
             questions: [
-                { id: 'q1', text: 'What situation triggered your emotional response?', type: 'text' },
-                { id: 'q2', text: 'What automatic thoughts went through your mind?', type: 'text' },
-                { id: 'q3', text: 'Rate the intensity of your distress (1-10)', type: 'scale' }
+                { id: 'q1', label: 'What situation triggered your emotional response?', type: 'text' },
+                { id: 'q2', label: 'What automatic thoughts went through your mind?', type: 'text' },
+                { id: 'q3', label: 'Rate the intensity of your distress (1-10)', type: 'scale' }
             ]
         },
         {
@@ -44,17 +46,17 @@ export default function CounselorWorksheetsPage() {
             description: 'Track daily stressors, physical reactions, and effective coping strategies.',
             category: 'Stress',
             questions: [
-                { id: 'q1', text: 'What caused you stress or anxiety today?', type: 'text' },
-                { id: 'q2', text: 'What coping technique did you try?', type: 'text' }
+                { id: 'q1', label: 'What caused you stress or anxiety today?', type: 'text' },
+                { id: 'q2', label: 'What coping technique did you try?', type: 'text' }
             ]
         },
         {
             _id: 'ws-3',
             title: 'Mindfulness & Gratitude Journal',
             description: 'Promotes positive focus and grounding through daily gratitude reflection.',
-            category: 'Mindfulness',
+            category: 'General',
             questions: [
-                { id: 'q1', text: 'List three positive moments from your day.', type: 'text' }
+                { id: 'q1', label: 'List three positive moments from your day.', type: 'text' }
             ]
         }
     ];
@@ -103,6 +105,14 @@ export default function CounselorWorksheetsPage() {
 
     const handleCreateTemplate = async () => {
         try {
+            // Map 'text' field to 'label' to match model schema
+            const formattedQuestions = newWorksheet.questions.map(q => ({
+                id: q.id,
+                type: q.type,
+                label: q.label || q.text,
+                options: q.options || [],
+                required: true
+            }));
             const res = await fetch('/api/worksheets', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -110,23 +120,26 @@ export default function CounselorWorksheetsPage() {
                     title: newWorksheet.title,
                     description: newWorksheet.description,
                     category: newWorksheet.category,
-                    questions: newWorksheet.questions
+                    questions: formattedQuestions
                 })
             });
             if (res.ok) {
                 setIsCreateModalOpen(false);
                 setNewWorksheet({ title: '', description: '', category: 'CBT', questions: [] });
                 fetchWorksheets();
+            } else {
+                alert('Failed to create worksheet template.');
             }
         } catch (e) {
             console.error(e);
+            alert('Failed to create worksheet template.');
         }
     };
 
     const addQuestion = () => {
         setNewWorksheet(prev => ({
             ...prev,
-            questions: [...prev.questions, { id: Date.now().toString(), text: '', type: 'text', options: [] }]
+            questions: [...prev.questions, { id: Date.now().toString(), label: '', type: 'text', options: [] }]
         }));
     };
 
@@ -373,6 +386,147 @@ export default function CounselorWorksheetsPage() {
                             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
                                 <button onClick={() => setIsAssignModalOpen(false)} style={{ padding: '10px 18px', borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                                 <button onClick={handleAssign} disabled={!studentId} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: 'var(--ku-green)', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: !studentId ? 0.5 : 1 }}>Assign</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Create Template Modal */}
+                {isCreateModalOpen && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+                        <div className="glass" style={{ width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', padding: 28, borderRadius: 24, background: 'var(--bg-card)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                                <h3 style={{ fontWeight: 800, fontSize: '1.2rem', margin: 0 }}>Create Worksheet Template</h3>
+                                <button onClick={() => setIsCreateModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                <div className="form-group">
+                                    <label style={{ fontWeight: 700, fontSize: '0.85rem' }}>Title</label>
+                                    <input
+                                        type="text"
+                                        value={newWorksheet.title}
+                                        onChange={e => setNewWorksheet({ ...newWorksheet, title: e.target.value })}
+                                        placeholder="e.g. CBT Thought Record"
+                                        style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-main)', fontSize: '0.9rem', outline: 'none', width: '100%' }}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label style={{ fontWeight: 700, fontSize: '0.85rem' }}>Description</label>
+                                    <textarea
+                                        rows={2}
+                                        value={newWorksheet.description}
+                                        onChange={e => setNewWorksheet({ ...newWorksheet, description: e.target.value })}
+                                        placeholder="Brief description of this worksheet..."
+                                        style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-main)', fontSize: '0.9rem', outline: 'none', resize: 'vertical', fontFamily: 'inherit', width: '100%' }}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label style={{ fontWeight: 700, fontSize: '0.85rem' }}>Category</label>
+                                    <select
+                                        value={newWorksheet.category}
+                                        onChange={e => setNewWorksheet({ ...newWorksheet, category: e.target.value })}
+                                        style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-main)', fontSize: '0.9rem', outline: 'none' }}
+                                    >
+                                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+
+                                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                        <label style={{ fontWeight: 700, fontSize: '0.85rem' }}>Questions ({newWorksheet.questions.length})</label>
+                                        <button onClick={addQuestion} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 10, border: '1px solid rgba(50,83,67,0.2)', background: 'rgba(50,83,67,0.06)', color: 'var(--ku-green)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+                                            <Plus size={14} /> Add Question
+                                        </button>
+                                    </div>
+
+                                    {newWorksheet.questions.map((q, idx) => (
+                                        <div key={q.id} style={{ padding: 14, borderRadius: 14, border: '1px solid var(--border)', marginBottom: 12, background: 'var(--bg-main)' }}>
+                                            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                                                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--ku-green)', minWidth: 24 }}>Q{idx + 1}</span>
+                                                <input
+                                                    type="text"
+                                                    value={q.label || ''}
+                                                    onChange={e => updateQuestion(idx, 'label', e.target.value)}
+                                                    placeholder="Enter question text..."
+                                                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.85rem', outline: 'none' }}
+                                                />
+                                                <select
+                                                    value={q.type}
+                                                    onChange={e => updateQuestion(idx, 'type', e.target.value)}
+                                                    style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.8rem', outline: 'none' }}
+                                                >
+                                                    <option value="text">Text</option>
+                                                    <option value="scale">Scale (1-10)</option>
+                                                    <option value="multiChoice">Multiple Choice</option>
+                                                </select>
+                                                <button onClick={() => removeQuestion(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {newWorksheet.questions.length === 0 && (
+                                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: 20 }}>No questions added yet. Click "Add Question" to start.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 20 }}>
+                                <button onClick={() => setIsCreateModalOpen(false)} style={{ padding: '10px 18px', borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                                <button onClick={handleCreateTemplate} disabled={!newWorksheet.title || newWorksheet.questions.length === 0} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: 'var(--ku-green)', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: (!newWorksheet.title || newWorksheet.questions.length === 0) ? 0.5 : 1 }}>Create Template</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Review & Feedback Modal */}
+                {isReviewModalOpen && selectedAssignment && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+                        <div className="glass" style={{ width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', padding: 28, borderRadius: 24, background: 'var(--bg-card)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                                <h3 style={{ fontWeight: 800, fontSize: '1.2rem', margin: 0 }}>Review Student Responses</h3>
+                                <button onClick={() => { setIsReviewModalOpen(false); setFeedback(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: 16 }}>
+                                Student: <strong>{selectedAssignment.studentId?.name || 'Student'}</strong> — {selectedAssignment.worksheetId?.title || 'Worksheet'}
+                            </p>
+
+                            {selectedAssignment.responses?.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                                    {selectedAssignment.responses.map((r: any, idx: number) => (
+                                        <div key={idx} style={{ padding: 14, borderRadius: 14, border: '1px solid var(--border)', background: 'var(--bg-main)' }}>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--ku-green)', marginBottom: 4 }}>Question {idx + 1}</div>
+                                            <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{typeof r.answer === 'object' ? JSON.stringify(r.answer) : r.answer}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 20 }}>No responses recorded.</p>
+                            )}
+
+                            <div className="form-group" style={{ marginBottom: 20 }}>
+                                <label style={{ fontWeight: 700, fontSize: '0.85rem' }}>Your Feedback</label>
+                                <textarea
+                                    rows={4}
+                                    value={feedback}
+                                    onChange={e => setFeedback(e.target.value)}
+                                    placeholder="Provide constructive feedback for the student..."
+                                    style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-main)', fontSize: '0.9rem', outline: 'none', resize: 'vertical', fontFamily: 'inherit', width: '100%' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                                <button onClick={() => { setIsReviewModalOpen(false); setFeedback(''); }} style={{ padding: '10px 18px', borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                                <button onClick={handleReviewFeedback} disabled={!feedback.trim()} style={{ padding: '10px 22px', borderRadius: 12, border: 'none', background: 'var(--ku-green)', color: '#fff', fontWeight: 700, cursor: 'pointer', opacity: !feedback.trim() ? 0.5 : 1 }}>Submit Feedback</button>
                             </div>
                         </div>
                     </div>

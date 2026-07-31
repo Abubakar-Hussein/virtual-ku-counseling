@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
             const gs = await GroupSession.findById(body.sessionId);
             if (!gs) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
             if (gs.enrolledStudents.length >= gs.maxParticipants) return NextResponse.json({ error: 'Session is full' }, { status: 400 });
-            if (gs.enrolledStudents.includes(userId)) return NextResponse.json({ error: 'Already enrolled' }, { status: 400 });
+            if (gs.enrolledStudents.some((id: any) => id.toString() === userId)) return NextResponse.json({ error: 'Already enrolled' }, { status: 400 });
             gs.enrolledStudents.push(userId);
             await gs.save();
             return NextResponse.json({ success: true, enrolled: gs.enrolledStudents.length });

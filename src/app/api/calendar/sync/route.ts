@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 
-// GET: Check current sync provider
+const VALID_PROVIDERS = ['google', 'outlook', 'apple'];
+
 export async function GET() {
     try {
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
         if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         await connectDB();
@@ -18,24 +20,27 @@ export async function GET() {
     }
 }
 
-// POST: Update sync provider (connect/disconnect)
 export async function POST(req: Request) {
     try {
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
         if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await req.json();
         const { provider, action } = body;
 
         await connectDB();
-        
+
         if (action === 'disconnect') {
-            await User.updateOne({ email: session.user.email }, { $unset: { calendarProvider: 1 } });
+            await User.updateOne({ email: session.user.email }, { $set: { calendarProvider: null } });
             return NextResponse.json({ success: true, provider: null });
-        } else {
-            await User.updateOne({ email: session.user.email }, { $set: { calendarProvider: provider } });
-            return NextResponse.json({ success: true, provider });
         }
+
+        if (!provider || !VALID_PROVIDERS.includes(provider)) {
+            return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
+        }
+
+        await User.updateOne({ email: session.user.email }, { $set: { calendarProvider: provider } });
+        return NextResponse.json({ success: true, provider });
     } catch (err) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 });
     }

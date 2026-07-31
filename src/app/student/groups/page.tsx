@@ -20,33 +20,7 @@ export default function StudentGroupsPage() {
                 const data = await res.json();
                 setSessions(data.sessions || data || []);
             } else {
-                setSessions([
-                    {
-                        _id: '1',
-                        topic: 'Anxiety Management',
-                        title: 'Overcoming Midterm Stress',
-                        description: 'Join us for an interactive, counselor-led workshop on managing anxiety and pressure during exam season.',
-                        counselorName: 'Dr. Jane Smith',
-                        scheduledAt: '2026-08-05T15:00:00Z',
-                        duration: 60,
-                        maxParticipants: 20,
-                        enrolledStudents: ['user1', 'user2', 'user3'],
-                        status: 'upcoming',
-                    },
-                    {
-                        _id: '2',
-                        topic: 'Mindfulness',
-                        title: 'Daily Meditation & Stress Relief',
-                        description: 'A calming 30-minute group mindfulness session to reset your focus and reduce tension.',
-                        counselorName: 'Dr. John Doe',
-                        scheduledAt: new Date().toISOString(),
-                        duration: 30,
-                        maxParticipants: 10,
-                        enrolledStudents: ['user1'],
-                        status: 'live',
-                        roomUrl: '/session/live-meditation'
-                    }
-                ]);
+                setSessions([]);
             }
         } catch (error) {
             console.error('Failed to fetch sessions:', error);
@@ -62,11 +36,15 @@ export default function StudentGroupsPage() {
     const handleEnrollAction = async (action: string, sessionId: string) => {
         setEnrollingId(sessionId);
         try {
-            await fetch('/api/groups', {
+            const res = await fetch('/api/groups', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action, sessionId }),
             });
+            if (!res.ok) {
+                const data = await res.json();
+                alert(data.error || 'Something went wrong');
+            }
             fetchSessions();
         } catch (error) {
             console.error(`Error modifying enrollment:`, error);
@@ -163,13 +141,21 @@ export default function StudentGroupsPage() {
                                             }}>
                                                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#dc2626' }}></span> LIVE NOW
                                             </span>
-                                        ) : (
+                                        ) : session.isAnonymous ? (
                                             <span style={{
                                                 fontSize: '0.7rem', fontWeight: 700, padding: '4px 10px', borderRadius: 20,
                                                 background: 'rgba(50,83,67,0.06)', color: 'var(--ku-green)', border: '1px solid rgba(50,83,67,0.12)',
                                                 display: 'inline-flex', alignItems: 'center', gap: 4
                                             }}>
                                                 <Shield size={10} /> Anonymous
+                                            </span>
+                                        ) : (
+                                            <span style={{
+                                                fontSize: '0.7rem', fontWeight: 700, padding: '4px 10px', borderRadius: 20,
+                                                background: 'rgba(59,130,246,0.08)', color: '#2563eb', border: '1px solid rgba(59,130,246,0.15)',
+                                                display: 'inline-flex', alignItems: 'center', gap: 4
+                                            }}>
+                                                Open Session
                                             </span>
                                         )}
                                     </div>
@@ -184,15 +170,15 @@ export default function StudentGroupsPage() {
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.82rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-                                        {session.counselorName && (
+                                        {session.counselorId?.name && (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                                 <UserCheck size={14} color="var(--ku-green)" />
-                                                <span>Hosted by <strong>{session.counselorName}</strong></span>
+                                                <span>Hosted by <strong>{session.counselorId?.name}</strong></span>
                                             </div>
                                         )}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <Calendar size={14} color="var(--ku-green)" />
-                                            <span>{new Date(session.scheduledAt || session.datetime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(session.scheduledAt || session.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span>{new Date(session.scheduledAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <Clock size={14} color="var(--ku-green)" />
@@ -217,6 +203,22 @@ export default function StudentGroupsPage() {
                                             }}>
                                                 <Video size={16} /> Join Live Workshop
                                             </a>
+                                        ) : activeTab === 'my' ? (
+                                            <button
+                                                onClick={() => handleEnrollAction('unenroll', session._id || session.id)}
+                                                disabled={enrollingId === (session._id || session.id)}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                    width: '100%', padding: '12px', borderRadius: 14,
+                                                    background: 'transparent',
+                                                    color: '#dc2626',
+                                                    fontWeight: 700, fontSize: '0.88rem',
+                                                    border: '2px solid #dc2626',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Leave Session
+                                            </button>
                                         ) : (
                                             <button
                                                 onClick={() => handleEnrollAction('enroll', session._id || session.id)}

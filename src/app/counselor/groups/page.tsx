@@ -33,19 +33,7 @@ export default function CounselorGroupsPage() {
                 const data = await res.json();
                 setSessions(data.sessions || data || []);
             } else {
-                setSessions([
-                    {
-                        _id: '1',
-                        topic: 'Anxiety Management',
-                        title: 'Overcoming Midterm Stress',
-                        description: 'Join us for an interactive, counselor-led workshop on managing anxiety and pressure during exam season.',
-                        scheduledAt: '2026-08-05T15:00:00Z',
-                        duration: 60,
-                        maxParticipants: 20,
-                        enrolledStudents: ['s1', 's2', 's3', 's4', 's5'],
-                        status: 'upcoming',
-                    }
-                ]);
+                setSessions([]);
             }
         } catch (error) {
             console.error('Failed to fetch sessions:', error);

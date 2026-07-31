@@ -49,9 +49,10 @@ export default function StudentWorksheetsPage() {
     const handleSubmitResponses = async () => {
         if (!activeWorksheet) return;
 
-        const formattedResponses = activeWorksheet.questions?.map((q: any) => ({
+        // Get questions from the populated worksheetId or from the assignment itself
+        const questions = activeWorksheet.worksheetId?.questions || activeWorksheet.questions || [];
+        const formattedResponses = questions.map((q: any) => ({
             questionId: q.id,
-            questionText: q.text,
             answer: responses[q.id]
         })) || [];
 
@@ -68,10 +69,12 @@ export default function StudentWorksheetsPage() {
                 setActiveWorksheet(null);
                 setResponses({});
                 fetchAssignments();
+            } else {
+                alert('Failed to submit responses.');
             }
         } catch (e) {
             console.error(e);
-            setActiveWorksheet(null);
+            alert('Failed to submit responses.');
         }
     };
 
@@ -163,7 +166,7 @@ export default function StudentWorksheetsPage() {
 
                                 <button
                                     onClick={() => {
-                                        setActiveWorksheet(a.worksheetId || a);
+                                        setActiveWorksheet(a);
                                         setResponses({});
                                     }}
                                     style={{
@@ -230,7 +233,7 @@ export default function StudentWorksheetsPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
                                 <div>
                                     <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                                        {activeWorksheet.title || activeWorksheet.worksheetTitle}
+                                        {activeWorksheet.worksheetId?.title || activeWorksheet.worksheetTitle || activeWorksheet.title}
                                     </h2>
                                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>Please answer the questions below.</p>
                                 </div>
@@ -240,11 +243,11 @@ export default function StudentWorksheetsPage() {
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 28 }}>
-                                {activeWorksheet.questions?.map((q: any, idx: number) => (
+                                {(activeWorksheet.worksheetId?.questions || activeWorksheet.questions || []).map((q: any, idx: number) => (
                                     <div key={q.id || idx} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                         <label style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                                             <span style={{ color: 'var(--ku-green)', fontWeight: 800, marginRight: 6 }}>{idx + 1}.</span>
-                                            {q.text || q.label}
+                                            {q.label || q.text}
                                         </label>
 
                                         {q.type === 'text' && (
