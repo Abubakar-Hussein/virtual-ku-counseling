@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
-import { Users, Calendar, Clock, Plus, Video, Sparkles, Check, Tag } from 'lucide-react';
+import { Users, Calendar, Clock, Plus, Video, Sparkles, Check, Tag, Trash2 } from 'lucide-react';
 
 export default function CounselorGroupsPage() {
     const [activeTab, setActiveTab] = useState<'my' | 'create'>('my');
@@ -63,6 +63,25 @@ export default function CounselorGroupsPage() {
             }
         } catch (error) {
             console.error('Failed to launch session:', error);
+        }
+    };
+
+    const handleDelete = async (sessionId: string) => {
+        if (!confirm('Are you sure you want to cancel and delete this group session? This cannot be undone.')) return;
+        
+        try {
+            const res = await fetch(`/api/groups?id=${sessionId}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                fetchSessions();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to delete session');
+            }
+        } catch (error) {
+            console.error('Failed to delete session:', error);
+            alert('Failed to delete session');
         }
     };
 
@@ -231,6 +250,19 @@ export default function CounselorGroupsPage() {
                                                     }}
                                                 >
                                                     <Video size={16} /> Launch Video Room
+                                                </button>
+                                            )}
+                                            {!isLive && (
+                                                <button
+                                                    onClick={() => handleDelete(session._id || session.id)}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                        width: '100%', padding: '10px', borderRadius: 14, background: 'transparent',
+                                                        color: '#dc2626', fontWeight: 600, fontSize: '0.85rem', border: '1px solid rgba(220, 38, 38, 0.2)', cursor: 'pointer',
+                                                        marginTop: 8
+                                                    }}
+                                                >
+                                                    <Trash2 size={14} /> Cancel Session
                                                 </button>
                                             )}
                                         </div>

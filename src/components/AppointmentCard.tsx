@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Avatar from './Avatar';
 import RatingModal from './RatingModal';
-import { Check, X, Mail, Star, Clock, User, AlertTriangle, MessageSquare, Video } from 'lucide-react';
+import { Check, X, Mail, Star, Clock, User, AlertTriangle, MessageSquare, Video, Calendar, ChevronDown, Download } from 'lucide-react';
+import { buildCalendarEvent, generateGoogleCalendarUrl, generateOutlookCalendarUrl, generateICSString } from '@/lib/calendarLinks';
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; border: string; label: string; strip: string }> = {
     pending:   { bg: 'rgba(245,158,11,0.08)',  color: '#b45309',        border: 'rgba(245,158,11,0.25)', label: 'Pending',   strip: '#f59e0b' },
@@ -34,10 +35,50 @@ export default function AppointmentCard({
     const [ratingVal, setRatingVal] = useState<number>(initialRating || 0);
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
     const [ratingError, setRatingError] = useState('');
+    const [calDropdownOpen, setCalDropdownOpen] = useState(false);
+
+    // Close calendar dropdown when clicking outside
+    useEffect(() => {
+        if (!calDropdownOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (!(e.target as HTMLElement).closest('.appt-cal-dropdown')) {
+                setCalDropdownOpen(false);
+            }
+        };
+        document.addEventListener('click', handler);
+        return () => document.removeEventListener('click', handler);
+    }, [calDropdownOpen]);
 
     const participant = viewerRole === 'student' ? counselorId : studentId;
     const participantLabel = viewerRole === 'student' ? 'Counselor' : 'Student';
     const st = STATUS_STYLE[status] ?? STATUS_STYLE.pending;
+
+    const showCalendar = status === 'confirmed' || status === 'pending';
+    const calEvent = showCalendar ? buildCalendarEvent({
+        date, timeSlot,
+        specialization,
+        otherPartyName: participant?.name || participantLabel,
+    }) : null;
+
+    const handleCalAction = (target: 'google' | 'outlook' | 'ics') => {
+        if (!calEvent) return;
+        if (target === 'google') {
+            window.open(generateGoogleCalendarUrl(calEvent), '_blank', 'noopener');
+        } else if (target === 'outlook') {
+            window.open(generateOutlookCalendarUrl(calEvent), '_blank', 'noopener');
+        } else {
+            const blob = new Blob([generateICSString(calEvent)], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ku_session_${_id}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        setCalDropdownOpen(false);
+    };
 
     const handleRateSubmit = async (rating: number, feedback: string) => {
         setRatingError('');
@@ -215,6 +256,57 @@ export default function AppointmentCard({
                             <Check size={14} strokeWidth={3} /> Mark Completed
                         </button>
                     </>)}
+
+                    {/* Add to Calendar dropdown — for confirmed/pending */}
+                    {showCalendar && calEvent && (
+                        <div className="appt-cal-dropdown" style={{ position: 'relative', marginLeft: 'auto' }}>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setCalDropdownOpen(!calDropdownOpen); }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 5, padding: '7px 13px', borderRadius: 10,
+                                    border: '1px solid rgba(50,83,67,0.2)', background: 'rgba(50,83,67,0.04)',
+                                    color: 'var(--ku-green)', fontWeight: 700, fontSize: '0.78rem',
+                                    cursor: 'pointer', transition: 'all 0.15s ease', whiteSpace: 'nowrap',
+                                }}
+                            >
+                                <Calendar size={12} /> Add to Calendar <ChevronDown size={11} />
+                            </button>
+                            {calDropdownOpen && (
+                                <div style={{
+                                    position: 'absolute', right: 0, top: '100%', marginTop: 5, zIndex: 100,
+                                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                                    borderRadius: 12, padding: 6, minWidth: 190,
+                                    boxShadow: '0 10px 36px rgba(0,0,0,0.12)',
+                                }}>
+                                    <button onClick={() => handleCalAction('google')} style={{
+                                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                                        padding: '9px 12px', borderRadius: 8, border: 'none',
+                                        background: 'transparent', cursor: 'pointer', fontSize: '0.82rem',
+                                        fontWeight: 600, color: 'var(--text-primary)', textAlign: 'left',
+                                    }}>
+                                        <Calendar size={14} color="#4285F4" /> Google Calendar
+                                    </button>
+                                    <button onClick={() => handleCalAction('outlook')} style={{
+                                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                                        padding: '9px 12px', borderRadius: 8, border: 'none',
+                                        background: 'transparent', cursor: 'pointer', fontSize: '0.82rem',
+                                        fontWeight: 600, color: 'var(--text-primary)', textAlign: 'left',
+                                    }}>
+                                        <Calendar size={14} color="#0078D4" /> Outlook
+                                    </button>
+                                    <div style={{ height: 1, background: 'var(--border)', margin: '3px 6px' }} />
+                                    <button onClick={() => handleCalAction('ics')} style={{
+                                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                                        padding: '9px 12px', borderRadius: 8, border: 'none',
+                                        background: 'transparent', cursor: 'pointer', fontSize: '0.82rem',
+                                        fontWeight: 600, color: 'var(--text-primary)', textAlign: 'left',
+                                    }}>
+                                        <Download size={14} color="var(--ku-green)" /> Download .ics
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Student: confirmed — join session */}
                     {viewerRole === 'student' && status === 'confirmed' && (

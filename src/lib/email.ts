@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { buildCalendarEvent, generateGoogleCalendarUrl, generateOutlookCalendarUrl, generateICSString } from './calendarLinks';
 
 /* ------------------------------------------------------------------ */
 /*  Transport Strategy                                                 */
@@ -14,7 +15,7 @@ import nodemailer from 'nodemailer';
 
 async function sendViaResend(
     apiKey: string,
-    { from, to, subject, html, text }: { from: string; to: string; subject: string; html: string; text?: string }
+    { from, to, subject, html, text, attachments }: { from: string; to: string; subject: string; html: string; text?: string; attachments?: Array<{ filename: string; content: string }> }
 ) {
     const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -22,7 +23,7 @@ async function sendViaResend(
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({ from, to: [to], subject, html, text }),
+        body: JSON.stringify({ from, to: [to], subject, html, text, attachments }),
     });
 
     if (!res.ok) {
@@ -88,16 +89,17 @@ interface SendEmailOptions {
     subject: string;
     html: string;
     text?: string;
+    attachments?: Array<{ filename: string; content: string }>;
 }
 
-export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
+export async function sendEmail({ to, subject, html, text, attachments }: SendEmailOptions) {
     const from = process.env.EMAIL_FROM || 'noreply@ku.ac.ke';
     const resendKey = process.env.RESEND_API_KEY;
 
     /* ── Strategy 1: Resend HTTP API (network-firewall-proof) ── */
     if (resendKey) {
         try {
-            await sendViaResend(resendKey, { from, to, subject, html, text });
+            await sendViaResend(resendKey, { from, to, subject, html, text, attachments });
             return;
         } catch (err) {
             console.error('[EMAIL] Resend API failed, falling through to SMTP:', err);
@@ -133,7 +135,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
     let lastError: any;
     for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-            const info = await transporter.sendMail({ from, to, subject, html, text });
+            const info = await transporter.sendMail({ from, to, subject, html, text, attachments });
             console.log('[EMAIL] Sent via SMTP →', to, '| messageId:', info.messageId, '| response:', info.response);
             return;
         } catch (sendErr: any) {
@@ -212,6 +214,11 @@ export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
         month: 'long',
         day: 'numeric',
     });
+
+    const event = buildCalendarEvent({ date, timeSlot, specialization, otherPartyName: counselorName, meetLink: meetLink || undefined });
+    const googleCalUrl = generateGoogleCalendarUrl(event);
+    const outlookCalUrl = generateOutlookCalendarUrl(event);
+    const icsContent = generateICSString(event);
 
     const html = `
 <!DOCTYPE html>
@@ -309,6 +316,17 @@ export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
               </table>
               `}
 
+              <!-- Add to Calendar Buttons -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0 0 12px;font-size:13px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Add to Calendar</p>
+                    <a href="${googleCalUrl}" target="_blank" style="display:inline-block;background:#4285F4;color:#ffffff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:6px;text-decoration:none;margin-right:8px;">Google Calendar</a>
+                    <a href="${outlookCalUrl}" target="_blank" style="display:inline-block;background:#0078D4;color:#ffffff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:6px;text-decoration:none;">Outlook</a>
+                  </td>
+                </tr>
+              </table>
+
               <p style="font-size:13px;color:#9ca3af;line-height:1.6;margin:0;">
                 Kenyatta University Student Counseling Services
               </p>
@@ -356,6 +374,7 @@ Please ensure the session is confirmed by your counselor before joining.
         subject: `Session Booked – ${formattedDate} at ${timeSlot} | KU Wellness`,
         html,
         text,
+        attachments: [{ filename: 'ku_wellness_session.ics', content: icsContent }],
     });
 }
 

@@ -16,22 +16,51 @@ export async function GET() {
 
         const isCouns = user.role === 'counselor';
         const query = isCouns
-            ? { counselorId: user._id, status: 'confirmed' }
-            : { studentId: user._id, status: 'confirmed' };
+            ? { counselorId: user._id, status: { $in: ['confirmed', 'pending'] } }
+            : { studentId: user._id, status: { $in: ['confirmed', 'pending'] } };
 
         const appointments = await Appointment.find(query)
             .populate(isCouns ? 'studentId' : 'counselorId', 'name')
             .lean() as any[];
 
-        let ics = [
+        // VTIMEZONE for Africa/Nairobi (EAT, UTC+3 — no DST transitions)
+        const ics = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
             'PRODID:-//KU Wellness//Calendar Sync//EN',
             'CALSCALE:GREGORIAN',
-            'METHOD:PUBLISH'
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:KU Wellness Schedule',
+            'X-WR-TIMEZONE:Africa/Nairobi',
+            'BEGIN:VTIMEZONE',
+            'TZID:Africa/Nairobi',
+            'BEGIN:STANDARD',
+            'DTSTART:19700101T000000',
+            'TZOFFSETFROM:+0300',
+            'TZOFFSETTO:+0300',
+            'TZNAME:EAT',
+            'END:STANDARD',
+            'END:VTIMEZONE',
         ];
 
-        const fmtDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        /**
+         * Format a date + time components into ICS local-time format
+         * using the Africa/Nairobi TZID (declared above).
+         * The appointment.date is stored as a UTC midnight date,
+         * and timeSlot contains the local EAT hours — so we write
+         * those hours directly as local DTSTART/DTEND values.
+         */
+        const fmtLocal = (d: Date, hour: number, minute: number): string => {
+            const y = d.getUTCFullYear();
+            const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const h = String(hour).padStart(2, '0');
+            const mi = String(minute).padStart(2, '0');
+            return `${y}${m}${day}T${h}${mi}00`;
+        };
+
+        const now = new Date();
+        const dtstamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 
         for (const appt of appointments) {
             const date = new Date(appt.date);
@@ -49,24 +78,28 @@ export async function GET() {
                 }
             }
 
-            const startDate = new Date(date);
-            startDate.setHours(startH, startM, 0, 0);
-            const endDate = new Date(date);
-            endDate.setHours(endH, endM, 0, 0);
-
             const otherName = isCouns
                 ? (appt.studentId?.name || 'Student')
                 : (appt.counselorId?.name || 'Counselor');
 
+            const summary = `KU Wellness: ${appt.specialization || 'General'} Session with ${otherName}`;
+            const description = `${appt.specialization || 'General'} counseling session with ${otherName}.\\nStatus: ${appt.status}`;
+
             ics.push(
                 'BEGIN:VEVENT',
                 `UID:${appt._id}@ku-wellness`,
-                `DTSTAMP:${fmtDate(new Date())}`,
-                `DTSTART:${fmtDate(startDate)}`,
-                `DTEND:${fmtDate(endDate)}`,
-                `SUMMARY:Session with ${otherName}`,
-                `DESCRIPTION:${appt.specialization || 'General'} counseling session`,
-                'STATUS:CONFIRMED',
+                `DTSTAMP:${dtstamp}`,
+                `DTSTART;TZID=Africa/Nairobi:${fmtLocal(date, startH, startM)}`,
+                `DTEND;TZID=Africa/Nairobi:${fmtLocal(date, endH, endM)}`,
+                `SUMMARY:${summary}`,
+                `DESCRIPTION:${description}`,
+                `STATUS:${appt.status === 'confirmed' ? 'CONFIRMED' : 'TENTATIVE'}`,
+                // 15-minute reminder
+                'BEGIN:VALARM',
+                'TRIGGER:-PT15M',
+                'ACTION:DISPLAY',
+                'DESCRIPTION:Your counseling session starts in 15 minutes',
+                'END:VALARM',
                 'END:VEVENT'
             );
         }

@@ -96,3 +96,34 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 });
     }
 }
+
+// DELETE: Delete a group session (counselor only)
+export async function DELETE(req: NextRequest) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const role = (session.user as any).role;
+    const userId = (session.user as any).id;
+
+    if (role !== 'counselor') return NextResponse.json({ error: 'Only counselors can delete sessions' }, { status: 403 });
+
+    try {
+        await connectDB();
+        const url = new URL(req.url);
+        const sessionId = url.searchParams.get('id');
+
+        if (!sessionId) return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
+
+        const gs = await GroupSession.findById(sessionId);
+        if (!gs) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        
+        if (gs.counselorId.toString() !== userId) {
+            return NextResponse.json({ error: 'Not your session' }, { status: 403 });
+        }
+
+        await GroupSession.findByIdAndDelete(sessionId);
+        return NextResponse.json({ success: true });
+    } catch (err) {
+        console.error('[GROUPS DELETE]', err);
+        return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+    }
+}
