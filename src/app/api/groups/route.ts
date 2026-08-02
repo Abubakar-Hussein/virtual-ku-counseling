@@ -108,8 +108,7 @@ export async function DELETE(req: NextRequest) {
 
     try {
         await connectDB();
-        const url = new URL(req.url);
-        const sessionId = url.searchParams.get('id');
+        const sessionId = req.nextUrl.searchParams.get('id');
 
         if (!sessionId) return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
 

@@ -28,7 +28,8 @@ export default function CounselorGroupsPage() {
     const fetchSessions = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/groups?filter=my');
+            const url = `/api/groups?filter=my&t=${Date.now()}`;
+            const res = await fetch(url, { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 setSessions(data.sessions || data || []);
