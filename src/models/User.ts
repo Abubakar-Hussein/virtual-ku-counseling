@@ -5,7 +5,7 @@ export interface IUser extends Document {
     lastName?: string;
     name: string;
     email: string;
-    password: string;
+    password?: string;
     role: 'student' | 'counselor' | 'admin';
     approvalStatus?: 'pending' | 'approved';
     studentId?: string;
@@ -15,6 +15,9 @@ export interface IUser extends Document {
     calendarProvider?: string;
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
+    googleId?: string;
+    authProvider?: 'credentials' | 'google';
+    image?: string;
     createdAt: Date;
 }
 
@@ -41,7 +44,7 @@ const UserSchema = new Schema<IUser>(
                 message: 'Email must be a valid @ku.ac.ke, @students.ku.ac.ke or @gmail.com address',
             },
         },
-        password: { type: String, required: true, minlength: 8 },
+        password: { type: String, minlength: 8 },
         role: { type: String, enum: ['student', 'counselor', 'admin'], default: 'student', index: true },
         approvalStatus: { type: String, enum: ['pending', 'approved'], default: 'approved' },
         studentId: { type: String },
@@ -57,6 +60,9 @@ const UserSchema = new Schema<IUser>(
         calendarProvider: { type: String },
         resetPasswordToken: { type: String, index: true, sparse: true },
         resetPasswordExpires: { type: Date },
+        googleId: { type: String, sparse: true },
+        authProvider: { type: String, enum: ['credentials', 'google'], default: 'credentials' },
+        image: { type: String },
     },
     { timestamps: true }
 );
